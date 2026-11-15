@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Volume2, VolumeX, Play, Pause } from 'lucide-react';
 
 interface MobileCampaignVideoProps {
   onExplore: () => void;
@@ -178,9 +177,13 @@ export const MobileCampaignVideo: React.FC<MobileCampaignVideoProps> = ({
           title={isPlaying ? 'Pause video' : 'Play video'}
         >
           {isPlaying ? (
-            <Pause className="w-4 h-4 text-white" />
+            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
+            </svg>
           ) : (
-            <Play className="w-4 h-4 text-white ml-0.5" />
+            <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5.14v14l11-7-11-7z" />
+            </svg>
           )}
         </button>
       </div>

@@ -113,9 +113,9 @@ export const CheckoutView: React.FC = () => {
     if (!phone.trim()) {
       errors.phone = 'Mobile number is required for courier delivery.';
     } else {
-      const cleaned = phone.replace(/[\s\-\+]/g, '');
-      if (cleaned.length < 10 || cleaned.length > 13) {
-        errors.phone = 'Enter a valid Pakistani mobile number (e.g. 0300 1234567).';
+      const cleaned = phone.replace(/[\s\-\(\)]/g, '');
+      if (!/^(?:\+92|0092|92|0)?3[0-9]{9}$/.test(cleaned)) {
+        errors.phone = 'Enter a valid Pakistani mobile number (e.g. 0300 1234567 or +92 300 1234567).';
       }
     }
 
@@ -219,10 +219,21 @@ export const CheckoutView: React.FC = () => {
         body: JSON.stringify(orderPayload),
       });
 
-      const data = await res.json();
+      const rawText = await res.text();
+      let data: any = null;
+      try {
+        data = rawText ? JSON.parse(rawText) : null;
+      } catch {
+        data = null;
+      }
 
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Server rejected the order. Please review your details.');
+      if (!res.ok || !data?.success) {
+        throw new Error(
+          data?.error ||
+            (res.status === 404
+              ? 'Order service endpoint was not found on this deployment. Please redeploy with the updated backend API configuration.'
+              : `Server could not complete the order (HTTP ${res.status}). Please try again.`)
+        );
       }
 
       // Success! Set confirmed order & transition

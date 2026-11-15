@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { X } from 'lucide-react';
 
 interface SizeGuideModalProps {
   isOpen: boolean;
@@ -60,7 +59,9 @@ export const SizeGuideModal: React.FC<SizeGuideModalProps> = ({
             className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 border border-white/25 flex items-center justify-center text-white transition-all cursor-pointer active:scale-95 outline-none"
             aria-label="Close size guide"
           >
-            <X className="w-4 h-4" />
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 

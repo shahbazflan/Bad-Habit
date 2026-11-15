@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { X, ArrowRight, ShoppingBag } from 'lucide-react';
 import { CategoryId } from './MobileCategorySection';
 import { PolicyType } from './PolicyModal';
 import { MAIN_COLLECTION, HOODIE_PRODUCTS, SHIRT_PRODUCTS } from '../data/products';
@@ -88,7 +87,9 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                 className="w-11 h-11 rounded-full border border-white/25 bg-white/15 hover:bg-white/25 active:scale-95 backdrop-blur-md flex items-center justify-center text-white transition-all cursor-pointer outline-none"
                 aria-label="Close navigation menu"
               >
-                <X className="w-5 h-5 text-white" />
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
 
@@ -117,7 +118,9 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                     </span>
                   </div>
                   <div className="w-8 h-8 rounded-full border border-cyan-200/40 bg-white/15 flex items-center justify-center text-white group-hover:border-white/60 transition-colors">
-                    <ArrowRight className="w-4 h-4" />
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                    </svg>
                   </div>
                 </button>
 
@@ -139,7 +142,9 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                     </span>
                   </div>
                   <div className="w-8 h-8 rounded-full border border-white/20 bg-white/10 flex items-center justify-center text-white/80 group-hover:text-white group-hover:border-white/40 transition-colors">
-                    <ArrowRight className="w-4 h-4" />
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                    </svg>
                   </div>
                 </button>
 
@@ -161,7 +166,9 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                     </span>
                   </div>
                   <div className="w-8 h-8 rounded-full border border-white/20 bg-white/10 flex items-center justify-center text-white/80 group-hover:text-white group-hover:border-white/40 transition-colors">
-                    <ArrowRight className="w-4 h-4" />
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                    </svg>
                   </div>
                 </button>
 
@@ -183,7 +190,9 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                     </span>
                   </div>
                   <div className="w-8 h-8 rounded-full border border-white/20 bg-white/10 flex items-center justify-center text-white/80 group-hover:text-white group-hover:border-white/40 transition-colors">
-                    <ArrowRight className="w-4 h-4" />
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                    </svg>
                   </div>
                 </button>
               </div>
@@ -199,7 +208,9 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
               >
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center text-white">
-                    <ShoppingBag className="w-4 h-4" />
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.9">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" />
+                    </svg>
                   </div>
                   <span className="font-display text-sm font-bold tracking-wide text-white">
                     Shopping Bag
