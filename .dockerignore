@@ -1,0 +1,15 @@
+node_modules
+dist
+build
+.git
+.aistudio
+downloaded_assets
+tmp
+*.log
+.env
+.env.local
+.env.*.local
+coverage
+.DS_Store
+*.md
+scripts

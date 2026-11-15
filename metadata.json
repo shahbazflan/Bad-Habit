@@ -1,0 +1,8 @@
+{
+  "name": "BadHabbits",
+  "description": "TOXIC luxury futuristic fashion brand experience set inside a living architectural laboratory.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

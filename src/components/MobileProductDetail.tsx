@@ -1,0 +1,382 @@
+import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { Product, getColorVariants } from '../data/products';
+import { useCart } from '../context/CartContext';
+import { CategoryId } from './MobileCategorySection';
+import { ColorSwatchRail } from './ColorSwatchRail';
+import { preloadProductDetailImages } from '../utils/preloadImages';
+
+const SizeGuideModal = lazy(() =>
+  import('./SizeGuideModal').then((m) => ({ default: m.SizeGuideModal }))
+);
+
+interface MobileProductDetailProps {
+  product: Product;
+  categoryId: CategoryId;
+  onBack: () => void;
+  onOpenBag: () => void;
+  onSelectProduct?: (product: Product) => void;
+  onPairProduct?: (product: Product) => void;
+}
+
+const SIZES = ['S', 'M', 'L', 'XL'] as const;
+type SizeType = (typeof SIZES)[number];
+
+/**
+ * MobileProductDetail (Screen 4)
+ * 
+ * Garment-only product detail view (MODELS COMPLETELY REMOVED):
+ * 1. Compact header and clear back control
+ * 2. High-resolution garment display showcasing the transparent clothes cutouts
+ *    with vertical colorway dot selector rail beside it
+ * 3. Detail gallery switcher: Front view, Back view, and Close-Up Details
+ * 4. Translucent frosted panel in normal flow with SOLD OUT support
+ */
+export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
+  product,
+  categoryId,
+  onBack,
+  onSelectProduct,
+  onPairProduct,
+}) => {
+  const { addToCart, isAdding } = useCart();
+  const [selectedSize, setSelectedSize] = useState<SizeType>('M');
+  const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
+  const [addedSuccess, setAddedSuccess] = useState(false);
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+
+  const colorVariants = React.useMemo(() => getColorVariants(product), [product]);
+
+  // Compile genuine garment images for this article:
+  // 1st image: Front View (cleanly isolated front garment)
+  // 2nd image: Back View / Front & Back showcase
+  // 3rd+ images: High-definition detail close-ups
+  const galleryImages: { label: string; src: string }[] = React.useMemo(() => {
+    const list: { label: string; src: string }[] = [
+      { label: 'Front', src: product.image },
+    ];
+    if (product.backImage) {
+      list.push({ label: 'Back', src: product.backImage });
+    } else if (product.frontAndBackImage) {
+      list.push({ label: 'Back', src: product.frontAndBackImage });
+    }
+    if (product.detailImages && product.detailImages.length > 0) {
+      product.detailImages.forEach((img, idx) => {
+        list.push({ label: `Detail ${idx + 1}`, src: img });
+      });
+    }
+    return list;
+  }, [product]);
+
+  // Clamp gallery index, reset feedback, and immediately pre-decode all angles & variants
+  useEffect(() => {
+    preloadProductDetailImages(product);
+    if (product.category === 'Trousers' || product.category === 'Shirts') {
+      void import('./SizeGuideModal');
+    }
+    setActiveImageIndex((prev) => {
+      if (prev === 1 && galleryImages.length > 1) return 1;
+      return 0;
+    });
+    setSelectedSize('M');
+    setAddedSuccess(false);
+    setIsSizeGuideOpen(false);
+  }, [product, galleryImages.length]);
+
+  const currentImage = galleryImages[activeImageIndex]?.src || product.image;
+
+  const handleAddToCart = async () => {
+    if (isAdding || product.soldOut) return;
+
+    // Parse numeric price from PKR string e.g. "PKR 6,499" -> 6499
+    const numericPrice = parseInt(product.price.replace(/[^\d]/g, ''), 10) || 6499;
+
+    const success = await addToCart({
+      productId: product.id,
+      name: product.name,
+      price: numericPrice,
+      formattedPrice: product.price,
+      size: selectedSize,
+      image: product.image,
+      quantity: 1,
+    });
+
+    if (success) {
+      setAddedSuccess(true);
+      setTimeout(() => {
+        setAddedSuccess(false);
+      }, 2500);
+    }
+  };
+
+  const categoryName = categoryId === 'hoodies' ? 'Hoodies & Sweatshirts' : categoryId.charAt(0).toUpperCase() + categoryId.slice(1);
+
+  return (
+    <div className="w-full text-white px-4 py-3 select-none pb-28">
+      {/* 1. Clear Back Navigation Control */}
+      <div className="mb-2 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-1.5 py-1 text-xs font-mono text-white/80 hover:text-white transition-opacity active:scale-95 cursor-pointer outline-none"
+          aria-label={`Back to ${categoryName}`}
+        >
+          <svg className="w-4 h-4 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+          <span>Back to {categoryName.toLowerCase()}</span>
+        </button>
+
+        {product.soldOut ? (
+          <span className="px-3 py-0.5 rounded-full bg-red-600/95 border border-white/50 text-white text-[10px] font-display font-black tracking-[0.16em] uppercase shadow-sm">
+            SOLD OUT
+          </span>
+        ) : product.subCollection === 'Streetwear' ? (
+          <span className="px-2.5 py-0.5 rounded-full bg-slate-900/50 border border-white/25 text-white/90 text-[10px] font-mono tracking-wider uppercase">
+            Streetwear
+          </span>
+        ) : null}
+      </div>
+
+      {/* 2. Centered Garment Display + Column of Color Dots Beside It */}
+      <div className="relative w-full flex flex-col items-center justify-center">
+        <div className="relative w-full h-[52vh] sm:h-[58vh] min-h-[340px] max-h-[540px] flex items-center justify-center pl-4 pr-12">
+          <img
+            src={currentImage}
+            alt={`${product.name} ${galleryImages[activeImageIndex]?.label || 'garment view'}`}
+            className={`w-full h-full object-contain object-center select-none transition-opacity duration-150 ${
+              product.category === 'Shirts' ? 'p-2' : ''
+            }`}
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+          />
+
+          {/* Current View Pill Indicator */}
+          <div className="absolute top-1 left-1 z-20">
+            <span className="px-2.5 py-1 rounded-full bg-black/40 border border-white/20 backdrop-blur-md text-[10px] font-mono text-white/90">
+              {galleryImages[activeImageIndex]?.label || 'Front'}
+            </span>
+          </div>
+
+          {/* Small Size Guide Button on Top Right of Trousers & Shirts Articles */}
+          {(product.category === 'Trousers' || product.category === 'Shirts') && (
+            <button
+              type="button"
+              onClick={() => setIsSizeGuideOpen(true)}
+              className="absolute top-1 right-1 z-25 px-2.5 py-1 rounded-full bg-black/40 hover:bg-black/55 active:scale-95 border border-white/25 backdrop-blur-md text-[10px] font-mono text-white/95 inline-flex items-center gap-1 shadow-sm transition-all cursor-pointer outline-none"
+              aria-label={`Open ${product.category.toLowerCase()} size guide`}
+            >
+              <svg className="w-3 h-3 text-cyan-200 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 8.25V15.75C3 16.9926 4.00736 18 5.25 18H18.75C19.9926 18 21 16.9926 21 15.75V8.25C21 7.00736 19.9926 6 18.75 6H5.25C4.00736 6 3 7.00736 3 8.25Z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 6V10M12 6V11.5M16.5 6V10" />
+              </svg>
+              <span>Size guide</span>
+            </button>
+          )}
+
+          {/* Vertical Column of Exact Color Dots Beside the Garment */}
+          {onSelectProduct && colorVariants.length > 1 && (
+            <div className="absolute right-0.5 top-1/2 -translate-y-1/2 z-25">
+              <ColorSwatchRail
+                currentProduct={product}
+                variants={colorVariants}
+                onSelectVariant={onSelectProduct}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Dedicated Front / Back Toggle Pill */}
+        <div className="relative z-20 mt-2.5 flex items-center justify-center">
+          <div className="p-1 rounded-full bg-black/40 border border-white/25 backdrop-blur-md flex items-center gap-1 shadow-md">
+            <button
+              type="button"
+              onClick={() => setActiveImageIndex(0)}
+              className={`px-4 py-1 rounded-full text-xs font-mono font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                activeImageIndex === 0
+                  ? 'bg-white text-slate-950 shadow-md scale-105'
+                  : 'text-white/75 hover:text-white'
+              }`}
+            >
+              Front
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveImageIndex(1)}
+              className={`px-4 py-1 rounded-full text-xs font-mono font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                activeImageIndex === 1
+                  ? 'bg-white text-slate-950 shadow-md scale-105'
+                  : 'text-white/75 hover:text-white'
+              }`}
+            >
+              Back
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Article Multi-View Thumbnails (Front, Back, Details) */}
+      {galleryImages.length > 1 && (
+        <div className="w-full flex items-center justify-center gap-2 my-2 py-1 overflow-x-auto">
+          {galleryImages.map((img, idx) => {
+            const isSelected = activeImageIndex === idx;
+            return (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setActiveImageIndex(idx)}
+                className={`relative w-14 h-14 rounded-xl overflow-hidden p-1 transition-all cursor-pointer outline-none flex items-center justify-center ${
+                  isSelected
+                    ? 'bg-white/30 border-2 border-white scale-105 shadow-md'
+                    : 'bg-white/10 border border-white/20 hover:bg-white/20 opacity-70 hover:opacity-100'
+                }`}
+                aria-label={`View ${img.label}`}
+              >
+                <img
+                  src={img.src}
+                  alt={img.label}
+                  className="w-full h-full object-contain"
+                  decoding="async"
+                />
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* 4. Translucent Frosted Details Card in Normal Flow */}
+      <div className="w-full rounded-2xl bg-white/[0.12] border border-white/20 backdrop-blur-xl p-3.5 sm:p-4 flex flex-col items-center text-center mt-2 shadow-[0_8px_32px_rgba(4,24,43,0.3)]">
+        {/* Product Name + Color */}
+        <h2 className="font-display text-base sm:text-lg font-bold tracking-tight text-white">
+          {product.name}
+        </h2>
+        <span className="text-[11px] font-sans text-white/80 mt-0.5">
+          {product.color}
+        </span>
+
+        {/* Highlighted Luminous Price Capsule */}
+        <div className="mt-2 mb-2.5 flex items-center justify-center gap-2 flex-wrap">
+          <div className="inline-flex items-center justify-center px-5 py-1.5 rounded-full bg-gradient-to-r from-sky-400/35 via-cyan-300/40 to-sky-400/35 border border-cyan-200/60 backdrop-blur-md shadow-[0_0_18px_rgba(56,189,248,0.35)]">
+            <span
+              className={`text-xs sm:text-sm font-display font-black tracking-wider uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] ${
+                product.soldOut ? 'text-white/80 line-through' : 'text-white'
+              }`}
+            >
+              {product.price}
+            </span>
+          </div>
+          {product.soldOut && (
+            <span className="px-3.5 py-1.5 rounded-full bg-red-600/95 border border-white/50 text-white font-display font-black text-xs tracking-[0.16em] uppercase shadow-md">
+              SOLD OUT
+            </span>
+          )}
+        </div>
+
+        {/* Size Controls */}
+        <div className="w-full flex items-center justify-center gap-2 mb-3">
+          {SIZES.map((size) => {
+            const isSelected = selectedSize === size;
+            return (
+              <button
+                key={size}
+                type="button"
+                disabled={product.soldOut}
+                onClick={() => setSelectedSize(size)}
+                className={`w-10 h-9 sm:w-11 sm:h-10 rounded-lg text-xs font-mono font-semibold transition-all outline-none flex items-center justify-center ${
+                  product.soldOut
+                    ? 'bg-white/[0.05] text-white/40 border border-white/15 cursor-not-allowed'
+                    : isSelected
+                    ? 'bg-white text-black font-bold shadow-md scale-105 cursor-pointer'
+                    : 'bg-white/[0.08] text-white/90 border border-white/30 hover:border-white/60 active:scale-95 cursor-pointer'
+                }`}
+                aria-label={`Select size ${size}`}
+              >
+                {size}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Wide Glass "Add to bag" / "SOLD OUT" Button */}
+        <button
+          type="button"
+          onClick={handleAddToCart}
+          disabled={isAdding || product.soldOut}
+          className={`w-full py-3 px-5 rounded-full border backdrop-blur-md font-medium text-sm sm:text-base tracking-tight flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(4,24,43,0.3)] transition-all outline-none ${
+            product.soldOut
+              ? 'bg-red-950/60 border-red-300/40 text-red-100 font-display font-black tracking-[0.16em] uppercase cursor-not-allowed'
+              : addedSuccess
+              ? 'bg-emerald-600/80 border-emerald-400 text-white cursor-pointer'
+              : 'bg-white/[0.22] hover:bg-white/[0.32] active:scale-[0.98] border-white/50 text-white cursor-pointer'
+          }`}
+          aria-label={
+            product.soldOut
+              ? `${product.name} is sold out`
+              : `Add ${product.name} size ${selectedSize} to shopping bag`
+          }
+        >
+          {product.soldOut ? (
+            <span>SOLD OUT</span>
+          ) : addedSuccess ? (
+            <>
+              <svg className="w-4 h-4 text-emerald-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              <span>Added to bag ({selectedSize})</span>
+            </>
+          ) : (
+            <span>Add to bag</span>
+          )}
+        </button>
+
+        {/* Pair it with Trousers (for Shirts/Hoodies) or Pair it with A shirt (for Trousers) */}
+        {onPairProduct &&
+          (product.category === 'Shirts' ||
+            product.category === 'Hoodies' ||
+            product.category === 'Trousers') && (
+            <button
+              type="button"
+              onClick={() => onPairProduct(product)}
+              className="w-full mt-2.5 py-2.5 px-4 rounded-full bg-gradient-to-r from-sky-400/25 via-cyan-300/30 to-sky-400/25 hover:from-sky-400/35 hover:to-cyan-300/40 active:scale-[0.98] border border-cyan-200/55 backdrop-blur-md text-white font-display text-xs sm:text-sm font-bold tracking-wide flex items-center justify-between gap-2 shadow-[0_6px_20px_rgba(56,189,248,0.25)] transition-all cursor-pointer outline-none"
+            >
+              <span className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-cyan-200 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 16.875h3.375m0 0h3.375m-3.375 0V13.5m0 3.375v3.375M6 10.5h2.25a2.25 2.25 0 002.25-2.25V6a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 6v2.25A2.25 2.25 0 006 10.5zm0 9.75h2.25A2.25 2.25 0 0010.5 18v-2.25a2.25 2.25 0 00-2.25-2.25H6a2.25 2.25 0 00-2.25 2.25V18A2.25 2.25 0 006 20.25zm9.75-9.75H18a2.25 2.25 0 002.25-2.25V6A2.25 2.25 0 0018 3.75h-2.25A2.25 2.25 0 0013.5 6v2.25a2.25 2.25 0 002.25 2.25z" />
+                </svg>
+                <span>
+                  {product.category === 'Shirts' || product.category === 'Hoodies'
+                    ? 'Pair it with Trousers'
+                    : 'Pair it with A shirt'}
+                </span>
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full bg-white text-slate-950 font-display font-black text-[10px] tracking-wider uppercase shrink-0">
+                15% OFF
+              </span>
+            </button>
+          )}
+
+        {/* Fabric & Article Specifications */}
+        {product.fabric && (
+          <div className="w-full mt-4 pt-3 border-t border-white/10 text-left">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-200/90 block mb-1">
+              Fabric & Tailoring Details
+            </span>
+            <p className="text-[11px] font-mono text-white/80 leading-relaxed">
+              {product.fabric}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {isSizeGuideOpen && (
+        <Suspense fallback={null}>
+          <SizeGuideModal
+            isOpen={isSizeGuideOpen}
+            category={product.category}
+            onClose={() => setIsSizeGuideOpen(false)}
+          />
+        </Suspense>
+      )}
+    </div>
+  );
+};

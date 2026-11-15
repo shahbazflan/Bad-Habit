@@ -1,0 +1,283 @@
+@import "tailwindcss";
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  :root {
+    --retake-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --retake-slow-ease: cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  html, body {
+    width: 100%;
+    min-height: 100%;
+    background: #1f486d;
+    color: #ffffff;
+    font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  :focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+  }
+}
+
+/* Custom font utilities */
+.font-display {
+  font-family: 'Outfit', 'Plus Jakarta Sans', 'Manrope', system-ui, -apple-system, sans-serif;
+}
+
+.font-condensed {
+  font-family: 'Barlow Condensed', 'Outfit', sans-serif;
+  font-style: normal;
+}
+
+.font-poster-condensed {
+  font-family: 'Big Shoulders Display', 'Barlow Condensed', sans-serif;
+  font-style: normal;
+}
+
+/* Frosted glass styling */
+.glass-capsule {
+  background: rgba(246, 251, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  -webkit-backdrop-filter: blur(14px) saturate(130%) contrast(108%) brightness(105%);
+  backdrop-filter: blur(14px) saturate(130%) contrast(108%) brightness(105%);
+  box-shadow:
+    0 12px 30px rgba(4, 24, 43, 0.18),
+    0 2px 6px rgba(4, 24, 43, 0.10),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.65),
+    inset -1px -1px 0 rgba(20, 49, 73, 0.18),
+    inset 0 0 14px rgba(255, 255, 255, 0.06);
+}
+
+.glass-capsule-hover:hover {
+  background: rgba(246, 251, 255, 0.34);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 16px 36px rgba(4, 24, 43, 0.22),
+    0 4px 10px rgba(4, 24, 43, 0.12),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.82),
+    inset -1px -1px 0 rgba(20, 49, 73, 0.18),
+    inset 0 0 16px rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+/* Reference-Matched Liquid Glass Capsule for Pricing */
+.showroom-glass-capsule {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.70);
+  -webkit-backdrop-filter: blur(4px) saturate(110%);
+  backdrop-filter: blur(4px) saturate(110%);
+  box-shadow:
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -1.5px 2px 0 rgba(15, 23, 42, 0.12),
+    0 6px 20px rgba(7, 27, 45, 0.12);
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.showroom-glass-capsule:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.88);
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 2px 3px 0 rgba(255, 255, 255, 1),
+    inset 0 -1.5px 2px 0 rgba(15, 23, 42, 0.15),
+    0 10px 24px rgba(7, 27, 45, 0.16);
+}
+
+/* Selected Product In-Scene Glass Capsule (Pure White Text, Fully Rounded, Subtle Rim & Highlight) */
+.selected-reveal-capsule {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.42);
+  border: 1.2px solid rgba(255, 255, 255, 0.65);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  backdrop-filter: blur(10px) saturate(120%);
+  box-shadow:
+    inset 0 1.5px 2.5px 0 rgba(255, 255, 255, 0.60),
+    inset 0 -1px 2px 0 rgba(15, 23, 42, 0.3),
+    0 8px 24px rgba(7, 27, 45, 0.22);
+  color: #ffffff;
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.selected-reveal-capsule:hover {
+  background: rgba(15, 23, 42, 0.55);
+  border-color: rgba(255, 255, 255, 0.88);
+  box-shadow:
+    inset 0 2px 3.5px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -1px 2px 0 rgba(15, 23, 42, 0.3),
+    0 12px 30px rgba(7, 27, 45, 0.28);
+  transform: translateY(-1.5px);
+}
+
+/* Mobile Browsing Price Capsule with White Text and Subtle Neutral Tint */
+.showroom-mobile-price-capsule {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.45);
+  border: 1.2px solid rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  backdrop-filter: blur(10px) saturate(120%);
+  box-shadow:
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.5),
+    0 6px 18px rgba(7, 27, 45, 0.2);
+  color: #ffffff;
+}
+
+/* HABIT Outline Stroke */
+.habit-outline {
+  color: transparent;
+  -webkit-text-stroke: clamp(1.8px, 0.26vw, 3.2px) #ffffff;
+  text-stroke: clamp(1.8px, 0.26vw, 3.2px) #ffffff;
+}
+
+/* Tagline Left-to-Right Glow Sweep Animation:
+   - 2 seconds sweep from left ("Y") to right ("T")
+   - 2 seconds pause (highlight parked off right)
+   - Total period: 4 seconds
+   - Brightens only letters beneath travelling highlight
+   - Remaining letters clearly readable throughout
+   - Luminous glow with subtle cool-blue halo
+   - No backwards sweep, no flashing, no pulsing
+   - Confined strictly to text glyphs
+*/
+@keyframes tagline-sweep {
+  0% {
+    -webkit-mask-position: -40% 0;
+    mask-position: -40% 0;
+  }
+  50% {
+    -webkit-mask-position: 140% 0;
+    mask-position: 140% 0;
+  }
+  100% {
+    -webkit-mask-position: 140% 0;
+    mask-position: 140% 0;
+  }
+}
+
+.tagline-sweep-glow {
+  position: absolute;
+  inset: 0;
+  color: #ffffff;
+  pointer-events: none;
+  filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 12px rgba(125, 211, 252, 0.85));
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 35%,
+    rgba(0, 0, 0, 1) 50%,
+    transparent 65%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 35%,
+    rgba(0, 0, 0, 1) 50%,
+    transparent 65%,
+    transparent 100%
+  );
+  -webkit-mask-size: 250% 100%;
+  mask-size: 250% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  animation: tagline-sweep 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Structural Slab Linear Underside Light */
+.recessed-linear-light {
+  background: #ffffff;
+  box-shadow:
+    0 0 8px 1px #ffffff,
+    0 0 24px 4px rgba(255, 255, 255, 0.9),
+    0 8px 36px 8px rgba(186, 230, 253, 0.7),
+    0 16px 60px 12px rgba(125, 211, 252, 0.45);
+}
+
+/* Suspended Metallic Rail Styling */
+.metallic-rail {
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #e2e8f0 20%,
+    #94a3b8 55%,
+    #475569 85%,
+    #334155 100%
+  );
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 -1px 0 rgba(15, 23, 42, 0.8) inset,
+    0 8px 24px rgba(4, 24, 43, 0.25);
+}
+
+.metallic-rod {
+  background: linear-gradient(
+    90deg,
+    #cbd5e1 0%,
+    #ffffff 45%,
+    #94a3b8 80%,
+    #64748b 100%
+  );
+  box-shadow:
+    1px 0 2px rgba(0, 0, 0, 0.15),
+    -1px 0 1px rgba(255, 255, 255, 0.6);
+}
+
+/* Continuous Hero Strip Marquee ("FLAT 15% OFF") behind Hero Model */
+@keyframes hero-strip-marquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.hero-strip-track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  will-change: transform;
+  animation: hero-strip-marquee 22s linear infinite;
+}
+
+/* Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+  .tagline-sweep-glow {
+    display: none !important;
+  }
+  .hero-strip-track {
+    animation: none !important;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

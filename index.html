@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      (function() {
+        try {
+          var nativeFetch = window.fetch;
+          var activeFetch = nativeFetch ? nativeFetch.bind(window) : null;
+          Object.defineProperty(window, 'fetch', {
+            get: function() {
+              return activeFetch;
+            },
+            set: function(fn) {
+              activeFetch = fn;
+            },
+            configurable: true,
+            enumerable: true
+          });
+        } catch (e) {
+          // Fallback if window.fetch cannot be reconfigured
+        }
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>BAD HABIT</title>
+    <meta name="description" content="BAD HABIT — Luxury architectural fashion runway and clothing showroom. YOU KNOW YOU WANT IT." />
+    <meta property="og:title" content="BAD HABIT" />
+    <meta property="og:description" content="BAD HABIT — Luxury architectural fashion runway and clothing showroom. YOU KNOW YOU WANT IT." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Preload critical hero assets for instant first paint -->
+    <link rel="preload" as="image" href="/clean_plate.jpg" fetchpriority="high" />
+    <link rel="preload" as="image" href="/assets/aistudio/hero_mobile_model_cutout.webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="/bad_habit_transparent.webp" fetchpriority="high" />
+
+    <!-- Google Fonts Preconnect & Stylesheets -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Big+Shoulders+Display:wght@800;900&family=Manrope:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-[#1f486d] text-white antialiased overflow-x-hidden m-0 p-0" style="background-color: #1f486d;">
+    <div id="root">
+      <div style="position: fixed; inset: 0; width: 100%; height: 100vh; overflow: hidden; background: linear-gradient(180deg, #5a94c6 0%, #376d9e 58%, #e8eef4 74%, #dce4ec 100%); display: flex; flex-direction: column; justify-content: space-between; padding: 24px; box-sizing: border-box;">
+        <header style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; padding: 12px 20px;">
+          <div>
+            <div style="font-family: system-ui, -apple-system, sans-serif; font-size: 22px; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; color: #ffffff;">BAD HABIT</div>
+          </div>
+        </header>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translateY(-4vh);">
+          <img src="/bad_habit_transparent.webp" alt="BAD HABIT" style="width: 58vw; max-width: 680px; object-fit: contain; pointer-events: none;" />
+        </div>
+        <div style="width: 100%; height: 60px;"></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
