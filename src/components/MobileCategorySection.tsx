@@ -31,27 +31,27 @@ export const CATEGORY_ITEMS: CategoryItem[] = [
   {
     id: 'trousers',
     name: 'TROUSERS',
-    image: '/assets/categories/category_trousers_v2.webp',
+    image: '/assets/categories/category_trousers_cutout.webp',
     alt: 'BAD HABIT Trousers Collection',
     count: `${MAIN_COLLECTION.length} Articles`,
   },
   {
     id: 'shirts',
     name: 'SHIRTS',
-    image: '/assets/categories/category_shirts_v2.webp',
+    image: '/assets/categories/category_shirts_cutout.webp',
     alt: 'BAD HABIT Shirts Category',
     count: `${SHIRT_PRODUCTS.length} Articles`,
   },
   {
     id: 'hoodies',
     name: 'HOODIES & SWEATSHIRTS',
-    image: '/assets/categories/category_hoodies_v2.webp',
+    image: '/assets/categories/category_hoodies_cutout.webp',
     alt: 'BAD HABIT Hoodies & Sweatshirts Category',
     count: `${HOODIE_PRODUCTS.length} Articles`,
   },
 ];
 
-const POSTER_SHIRT = SHIRT_PRODUCTS.find((p) => p.id === 'BH-S05') || SHIRT_PRODUCTS[4];
+const POSTER_SHIRT = SHIRT_PRODUCTS.find((p) => p.id === 'BH-S05') || SHIRT_PRODUCTS[5];
 const POSTER_TROUSER = MAIN_COLLECTION.find((p) => p.id === 'BH-T10') || MAIN_COLLECTION[4];
 
 /**
@@ -60,7 +60,7 @@ const POSTER_TROUSER = MAIN_COLLECTION.find((p) => p.id === 'BH-T10') || MAIN_CO
  * Category section matching the keyblue sky theme:
  * - Serene sky blue atmosphere
  * - "Shop by category" crisp heading
- * - Stacked horizontal landscape tiles including Make a Pair (Get a flat 15% off)
+ * - Stacked horizontal landscape tiles with unified /clean_plate.jpg background
  */
 export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
   onSelectCategory,
@@ -86,6 +86,10 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
       <div className="w-full flex flex-col gap-2.5 sm:gap-3">
         {CATEGORY_ITEMS.map((cat) => {
           const isPair = cat.id === 'pair';
+          const isTrousers = cat.id === 'trousers';
+          const isShirts = cat.id === 'shirts';
+          const isHoodies = cat.id === 'hoodies';
+
           return (
             <button
               key={cat.id}
@@ -99,22 +103,54 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
               }`}
               aria-label={`Shop ${cat.name}${cat.badgeText ? ` — ${cat.badgeText}` : ''}`}
             >
-              {/* High-Resolution Fashion Tile Imagery */}
+              {/* Unified Architectural Sky-Blue Runway Background across all category tiles */}
               <img
-                src={cat.image}
-                alt={cat.alt}
-                className={`w-full h-full object-cover select-none pointer-events-none transition-transform duration-300 group-hover:scale-105 ${
-                  cat.id === 'trousers'
-                    ? 'object-[center_42%]'
-                    : cat.id === 'hoodies'
-                    ? 'object-[30%_20%]'
-                    : cat.id === 'shirts'
-                    ? 'object-[30%_18%]'
-                    : 'object-center'
-                }`}
+                src="/clean_plate.jpg"
+                alt=""
+                aria-hidden="true"
+                className="w-full h-full object-cover object-center select-none pointer-events-none transition-transform duration-300 group-hover:scale-105"
                 loading="eager"
                 decoding="async"
               />
+
+              {/* Trousers Model Cutout: Full vertical framing on open runway floor so both black shoes are completely visible */}
+              {isTrousers && (
+                <div className="absolute inset-0 flex items-end justify-center pl-10 pr-24 pb-1 pointer-events-none">
+                  <img
+                    src={cat.image}
+                    alt={cat.alt}
+                    className="h-[97%] w-auto object-contain object-bottom select-none transition-transform duration-300 group-hover:scale-105 origin-bottom"
+                    loading="eager"
+                    decoding="async"
+                  />
+                </div>
+              )}
+
+              {/* Shirts Model Cutout: Flush-left arm framing cleanly inside sky portal */}
+              {isShirts && (
+                <div className="absolute inset-0 flex items-end justify-start pointer-events-none">
+                  <img
+                    src={cat.image}
+                    alt={cat.alt}
+                    className="h-[97%] w-auto object-contain object-left-bottom select-none transition-transform duration-300 group-hover:scale-105 origin-bottom-left"
+                    loading="eager"
+                    decoding="async"
+                  />
+                </div>
+              )}
+
+              {/* Hoodies Model Cutout: Centered cleanly inside sky portal */}
+              {isHoodies && (
+                <div className="absolute inset-0 flex items-end justify-center pl-16 sm:pl-20 pointer-events-none">
+                  <img
+                    src={cat.image}
+                    alt={cat.alt}
+                    className="h-[96%] w-auto object-contain object-bottom select-none transition-transform duration-300 group-hover:scale-105 origin-bottom"
+                    loading="eager"
+                    decoding="async"
+                  />
+                </div>
+              )}
 
               {/* Magnum BOXY Shirt + Classic Brown Trousers Preview inside the Make a Pair Tile */}
               {isPair && (

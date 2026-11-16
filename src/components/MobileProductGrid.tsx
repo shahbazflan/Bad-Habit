@@ -114,7 +114,7 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
   );
 
   return (
-    <div className="w-full text-white px-4 py-3 select-none pb-24">
+    <div className="w-full text-white px-4 py-3 select-none pb-12">
       {/* Back to Categories Control matching Phone 3 */}
       <div className="mb-2">
         <button
@@ -178,6 +178,33 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
               </div>
             </div>
           )}
+
+          {/* End-of-list quick navigation buttons */}
+          <div className="pt-3 flex items-center justify-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-slate-900/75 hover:bg-slate-900/90 text-white border border-white/25 backdrop-blur-md text-xs font-mono font-medium tracking-tight shadow-[0_6px_18px_rgba(4,24,43,0.25)] transition-all active:scale-95 cursor-pointer outline-none"
+              aria-label="Back to top"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+              </svg>
+              <span>Back to top</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onBackToCategories}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/95 hover:bg-white text-slate-900 border border-white text-xs font-mono font-semibold tracking-tight shadow-[0_6px_18px_rgba(4,24,43,0.2)] transition-all active:scale-95 cursor-pointer outline-none"
+              aria-label="Go to Categories"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+              </svg>
+              <span>Categories</span>
+            </button>
+          </div>
         </div>
       )}
     </div>

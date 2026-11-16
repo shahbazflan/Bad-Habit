@@ -141,53 +141,6 @@ export function DesktopShowroomExperience() {
             )}
           </div>
         </div>
-
-        {!isDedicatedViewActive && (
-          <nav
-            className="fixed right-5 sm:right-8 top-1/2 -translate-y-1/2 z-40 flex flex-col items-end gap-3 select-none"
-            aria-label="Elevator Level Navigation"
-          >
-            <div className="p-1.5 rounded-full glass-capsule flex flex-col items-center gap-1.5 shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
-              <button
-                type="button"
-                onClick={() => scrollToFloor('hero')}
-                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 text-[10px] font-mono font-bold cursor-pointer outline-none ${
-                  activeFloor === 'hero'
-                    ? 'bg-white text-black shadow-[0_0_12px_rgba(255,255,255,0.7)] scale-105'
-                    : 'text-white/60 hover:text-white hover:bg-white/10'
-                }`}
-                title="Level 02: Runway"
-                aria-label="Navigate to Level 02: Runway"
-              >
-                L2
-              </button>
-
-              <div className="w-[2px] h-8 bg-white/20 relative rounded-full overflow-hidden">
-                <div
-                  className="w-full bg-cyan-300 rounded-full transition-transform duration-75"
-                  style={{
-                    height: '40%',
-                    transform: `translateY(${scrollProgress * 150}%)`,
-                  }}
-                />
-              </div>
-
-              <button
-                type="button"
-                onClick={() => scrollToFloor('showroom')}
-                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 text-[10px] font-mono font-bold cursor-pointer outline-none ${
-                  activeFloor === 'showroom'
-                    ? 'bg-white text-black shadow-[0_0_12px_rgba(255,255,255,0.7)] scale-105'
-                    : 'text-white/60 hover:text-white hover:bg-white/10'
-                }`}
-                title="Level 01: Showroom"
-                aria-label="Navigate to Level 01: Showroom"
-              >
-                L1
-              </button>
-            </div>
-          </nav>
-        )}
       </main>
     </div>
   );

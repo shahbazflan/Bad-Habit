@@ -25,6 +25,7 @@ const CATALOG_ITEMS = [
   { id: 'BH-H06', name: 'Charcoal Raglan Hoodie', price: 4499, stock: 10 },
   { id: 'BH-H07', name: 'Slate Grey Sweatshirt', price: 4499, stock: 10 },
   { id: 'BH-H08', name: 'Washed Umber Hoodie', price: 4499, stock: 10 },
+  { id: 'BH-H09', name: 'Oatmeal Hoodie', price: 4499, stock: 12 },
 
   // Authoritative Shirts Collection
   { id: 'BH-S01', name: 'Foam BOXY', price: 4999, stock: 12 },
@@ -192,13 +193,100 @@ const getEmailTransportConfig = () => {
 const resolvePublicAssetUrl = (assetPath?: string, fallbackOrigin?: string) => {
   if (!assetPath) return '';
   if (assetPath.startsWith('http://') || assetPath.startsWith('https://')) return assetPath;
-  const base = ((process.env.APP_URL || '').trim() || (fallbackOrigin || '').trim()).replace(/\/+$/, '');
-  return base ? `${base}${assetPath.startsWith('/') ? '' : '/'}${assetPath}` : '';
+  const envBase = (process.env.APP_URL || '').trim();
+  const rawFallback = (fallbackOrigin || '').trim();
+  const isPrivateOrAuthOrigin =
+    /localhost|127\.0\.0\.1|ais-dev-|ais-pre-|\.run\.app|\.ai\.studio/i.test(rawFallback);
+  const base = (
+    envBase ||
+    (!isPrivateOrAuthOrigin && rawFallback ? rawFallback : 'https://www.storebadhabit.com')
+  ).replace(/\/+$/, '');
+  return `${base}${assetPath.startsWith('/') ? '' : '/'}${assetPath}`;
+};
+
+const escapeHtml = (value: unknown) =>
+  String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+interface EmailInlineAttachment {
+  filename: string;
+  content: Buffer;
+  contentType: string;
+  contentDisposition: 'inline';
+  cid: string;
+}
+
+const prepareOrderEmailThumbnails = async (
+  order: any,
+  baseOrigin?: string
+): Promise<{ srcByItemIndex: string[]; attachments: EmailInlineAttachment[] }> => {
+  const attachments: EmailInlineAttachment[] = [];
+  const cidByProductId = new Map<string, string>();
+  const srcByItemIndex: string[] = [];
+
+  for (const item of order.items || []) {
+    const productId = String(item.productId || '').trim();
+    const existingCid = productId ? cidByProductId.get(productId) : undefined;
+    if (existingCid) {
+      srcByItemIndex.push(`cid:${existingCid}`);
+      continue;
+    }
+
+    const thumbRelPath = productId ? `/assets/email-thumbs/${productId}.png` : '';
+    const diskThumbPath = thumbRelPath
+      ? path.join(process.cwd(), 'public', thumbRelPath.replace(/^\/+/, ''))
+      : '';
+    const publicThumbUrl = thumbRelPath
+      ? resolvePublicAssetUrl(thumbRelPath, baseOrigin)
+      : resolvePublicAssetUrl(item.image, baseOrigin);
+
+    let pngBuffer: Buffer | null = null;
+    if (diskThumbPath && fs.existsSync(diskThumbPath)) {
+      try {
+        pngBuffer = fs.readFileSync(diskThumbPath);
+      } catch {
+        pngBuffer = null;
+      }
+    }
+
+    if (!pngBuffer && publicThumbUrl && publicThumbUrl.toLowerCase().endsWith('.png')) {
+      try {
+        const res = await fetch(publicThumbUrl, { signal: AbortSignal.timeout(3000) });
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.startsWith('image/')) {
+          pngBuffer = Buffer.from(await res.arrayBuffer());
+        }
+      } catch {
+        pngBuffer = null;
+      }
+    }
+
+    if (pngBuffer && pngBuffer.length > 0 && productId) {
+      const cid = `bh-item-${productId.toLowerCase()}@storebadhabit.com`;
+      cidByProductId.set(productId, cid);
+      attachments.push({
+        filename: `${productId}.png`,
+        content: pngBuffer,
+        contentType: 'image/png',
+        contentDisposition: 'inline',
+        cid,
+      });
+      srcByItemIndex.push(`cid:${cid}`);
+    } else {
+      srcByItemIndex.push(publicThumbUrl || resolvePublicAssetUrl(item.image, baseOrigin));
+    }
+  }
+
+  return { srcByItemIndex, attachments };
 };
 
 const buildOrderSummaryContent = (
   order: any,
-  options: { forCustomer?: boolean; baseOrigin?: string } = {}
+  options: { forCustomer?: boolean; baseOrigin?: string; itemImageSrcs?: string[] } = {}
 ) => {
   const isBankTransfer = order.payment?.method === 'bank_transfer';
   const totalArticlesCount = order.items.reduce((s: number, it: any) => s + (it.quantity || 1), 0);
@@ -211,139 +299,240 @@ const buildOrderSummaryContent = (
     .join('\n');
 
   const subject = options.forCustomer
-    ? `BAD HABIT DETECTED · Order ${order.orderNumber} Confirmed`
-    : `[BAD HABIT Order ${order.orderNumber}] ${order.delivery.firstName} ${order.delivery.lastName} · ${order.pricing.formattedTotal}`;
+    ? `BAD HABIT · Order #${order.orderNumber} Invoice`
+    : `[BAD HABIT Order #${order.orderNumber}] ${order.delivery.firstName} ${order.delivery.lastName} · ${order.pricing.formattedTotal}`;
 
   const textBody = [
-    `BAD HABIT DETECTED`,
-    `YOUR ORDER HAS BEEN RECEIVED.`,
-    `ORDER NUMBER: ${order.orderNumber}`,
+    `BAD HABIT · ORDER INVOICE`,
+    `ORDER #${order.orderNumber}`,
+    `BAD HABIT DETECTED. Your order has been received.`,
     `Placed At: ${order.createdAt}`,
     `========================================`,
     ``,
     `ORDERED ARTICLES (${totalArticlesCount})`,
     itemsLines,
     ``,
-    `DELIVERY DESTINATION`,
-    `Name: ${order.delivery.firstName} ${order.delivery.lastName}`,
-    `Email: ${order.customer.email}`,
-    `Phone: ${order.customer.phone}`,
-    `Address: ${order.delivery.address}${order.delivery.apartment ? `, ${order.delivery.apartment}` : ''}`,
-    `City / Province: ${order.delivery.city}, ${order.delivery.province}${order.delivery.postalCode ? ` (${order.delivery.postalCode})` : ''}`,
-    `Country: ${order.delivery.country}`,
-    order.delivery.landmark ? `Landmark: ${order.delivery.landmark}` : '',
-    order.delivery.instructions ? `Instructions: ${order.delivery.instructions}` : '',
-    ``,
-    `PAYMENT METHOD`,
-    `Method: ${order.payment.methodName}`,
-    isBankTransfer
-      ? `Account number: ${order.payment.accountNumber} (${order.payment.accountTitle || 'Meezan Bank - Hassan Ahmed'}) · Send screenshot to: ${order.payment.confirmationPhone}`
-      : `Status: ${order.payment.statusLabel}`,
-    ``,
-    `DELIVERY ESTIMATE`,
-    `${order.shippingMethod.estimate} (${order.shippingMethod.name})`,
-    ``,
-    `PRICING SUMMARY`,
     order.pricing.pairDiscount > 0 ? `Articles Total: ${order.pricing.formattedRawSubtotal}` : '',
     order.pricing.pairDiscount > 0
       ? `Pair Discount (15% Off · ${order.pricing.pairCount} ${order.pricing.pairCount === 1 ? 'pair' : 'pairs'}): -${order.pricing.formattedPairDiscount}`
       : '',
-    `Subtotal: ${order.pricing.formattedSubtotal}`,
     `Delivery Charge: ${order.pricing.shippingCharge === 0 ? 'FREE (PKR 0)' : order.pricing.formattedShippingCharge}`,
-    `${isBankTransfer ? 'Total Amount (Bank Transfer)' : 'Total Due on Arrival'}: ${order.pricing.formattedTotal}`,
+    `Order total: ${order.pricing.formattedTotal}`,
+    ``,
+    `DELIVERY DESTINATION`,
+    `${order.delivery.firstName} ${order.delivery.lastName}`,
+    `${order.delivery.address}${order.delivery.apartment ? `, ${order.delivery.apartment}` : ''}`,
+    `${order.delivery.city}, ${order.delivery.province}${order.delivery.postalCode ? ` ${order.delivery.postalCode}` : ''}, ${order.delivery.country}`,
+    `${order.customer.phone} · ${order.customer.email}`,
+    order.delivery.landmark ? `Landmark: ${order.delivery.landmark}` : '',
+    order.delivery.instructions ? `Instructions: ${order.delivery.instructions}` : '',
+    ``,
+    `PAYMENT METHOD`,
+    `${order.payment.methodName}`,
+    isBankTransfer
+      ? `Account number: ${order.payment.accountNumber} (${order.payment.accountTitle || 'Meezan Bank - Hassan Ahmed'}) · Send screenshot to: ${order.payment.confirmationPhone}`
+      : `${order.payment.statusLabel} · ${order.shippingMethod.estimate} (${order.shippingMethod.name})`,
+    ``,
+    `storebadhabit.com`,
   ]
     .filter(Boolean)
     .join('\n');
 
   const htmlItemsRows = order.items
-    .map((it: any) => {
-      const imgSrc = resolvePublicAssetUrl(it.image, options.baseOrigin);
+    .map((it: any, idx: number) => {
+      const thumbFallback = it.productId
+        ? resolvePublicAssetUrl(`/assets/email-thumbs/${it.productId}.png`, options.baseOrigin)
+        : resolvePublicAssetUrl(it.image, options.baseOrigin);
+      const imgSrc = options.itemImageSrcs?.[idx] || thumbFallback;
       return `
         <tr>
-          <td style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.16);color:#ffffff;">
-            <div style="display:flex;align-items:center;gap:10px;">
-              ${
-                imgSrc
-                  ? `<img src="${imgSrc}" alt="${it.name}" width="40" height="48" style="width:40px;height:48px;object-fit:contain;border-radius:8px;background:rgba(255,255,255,0.12);padding:3px;" />`
-                  : ''
-              }
-              <div>
-                <div style="font-weight:700;font-size:13px;color:#ffffff;">${it.name}</div>
-                <div style="font-size:11px;color:rgba(255,255,255,0.78);">Size: ${it.size} · Quantity: ${it.quantity}</div>
-              </div>
-            </div>
+          <td style="padding:14px 0;border-bottom:1px solid #cbd9e6;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
+              <tr>
+                <td width="56" height="56" valign="middle" style="width:56px;height:56px;background-color:#dbeaf7;padding:0;text-align:center;">
+                  ${
+                    imgSrc
+                      ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(it.name)}" width="56" height="56" style="display:block;width:56px;height:56px;margin:0;border:0;" />`
+                      : ''
+                  }
+                </td>
+                <td valign="middle" style="padding-left:16px;">
+                  <div style="font-size:16px;font-weight:800;line-height:1.25;color:#133853;">${escapeHtml(it.name)}</div>
+                  <div style="font-size:13px;line-height:1.4;color:#2b4c65;margin-top:3px;">Size ${escapeHtml(it.size)} &nbsp;/&nbsp; Qty ${escapeHtml(it.quantity)}</div>
+                </td>
+                <td valign="middle" align="right" style="padding-left:12px;text-align:right;white-space:nowrap;font-size:15px;font-weight:600;color:#133853;">
+                  PKR ${Number(it.lineTotal || 0).toLocaleString()}
+                </td>
+              </tr>
+            </table>
           </td>
-          <td style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.16);text-align:right;font-weight:700;font-size:13px;color:#ffffff;white-space:nowrap;">PKR ${it.lineTotal.toLocaleString()}</td>
         </tr>`;
     })
     .join('');
 
-  const htmlBody = `
-    <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:640px;margin:0 auto;background:linear-gradient(160deg,#7ab4e2 0%,#5698d4 52%,#6ea8dc 100%);padding:28px 20px;border-radius:20px;color:#ffffff;">
-      <div style="background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.32);border-radius:18px;padding:26px 22px;">
-        <div style="text-align:center;margin-bottom:22px;">
-          <div style="width:42px;height:3px;background:#ffffff;border-radius:999px;margin:0 auto 14px;"></div>
-          <h1 style="margin:0;font-size:26px;font-weight:900;letter-spacing:0.08em;color:#ffffff;text-transform:uppercase;">BAD HABIT DETECTED</h1>
-          <p style="margin:8px 0 0;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.88);">YOUR ORDER HAS BEEN RECEIVED.</p>
-          <div style="display:inline-block;margin-top:14px;padding:7px 16px;border-radius:999px;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.34);font-size:12px;color:#ffffff;">
-            <span style="opacity:0.8;text-transform:uppercase;letter-spacing:0.08em;">ORDER NUMBER:</span>
-            <strong style="margin-left:6px;letter-spacing:0.06em;">${order.orderNumber}</strong>
-          </div>
-        </div>
+  const fullAddressLine = [
+    order.delivery.address,
+    order.delivery.apartment,
+    `${order.delivery.city}, ${order.delivery.province}${order.delivery.postalCode ? ` ${order.delivery.postalCode}` : ''}`,
+    order.delivery.country,
+  ]
+    .filter(Boolean)
+    .map((part) => escapeHtml(part))
+    .join('<br/>');
 
-        <div style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.22);border-radius:14px;padding:18px;">
-          <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.86);margin-bottom:8px;">
-            ORDERED ARTICLES (${totalArticlesCount})
-          </div>
-          <table style="width:100%;border-collapse:collapse;">
-            <tbody>${htmlItemsRows}</tbody>
-          </table>
+  const htmlBody = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light only" />
+  <meta name="supported-color-schemes" content="light only" />
+  <title>BAD HABIT · Order #${escapeHtml(order.orderNumber)}</title>
+  <style>
+    :root { color-scheme: light only; supported-color-schemes: light only; }
+    @media (prefers-color-scheme: dark) {
+      .bh-top-bar { background-color: #133853 !important; }
+      .bh-top-brand { color: #ffffff !important; }
+      .bh-top-label { color: #e2edf6 !important; }
+      .bh-hero-box { background-color: #173d59 !important; }
+      .bh-hero-ink { color: #ffffff !important; }
+      .bh-hero-sub { color: #dcecf8 !important; }
+    }
+    [data-ogsc] .bh-top-bar { background-color: #133853 !important; }
+    [data-ogsc] .bh-top-brand { color: #ffffff !important; }
+    [data-ogsc] .bh-top-label { color: #e2edf6 !important; }
+    [data-ogsc] .bh-hero-box { background-color: #173d59 !important; }
+    [data-ogsc] .bh-hero-ink { color: #ffffff !important; }
+    [data-ogsc] .bh-hero-sub { color: #dcecf8 !important; }
+  </style>
+</head>
+<body style="margin:0;padding:0;background-color:#eef4f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:#133853;-webkit-font-smoothing:antialiased;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#eef4f9;padding:16px 10px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;background-color:#ffffff;border-collapse:collapse;overflow:hidden;">
+          <!-- TOP NAVY HEADER BAR -->
+          <tr>
+            <td class="bh-top-bar" style="background-color:#133853;padding:15px 32px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
+                <tr>
+                  <td align="left" valign="middle" class="bh-top-brand" style="font-size:15px;font-weight:800;letter-spacing:0.05em;color:#ffffff;text-transform:uppercase;">
+                    BAD HABIT
+                  </td>
+                  <td align="right" valign="middle" class="bh-top-label" style="font-size:12px;font-weight:500;letter-spacing:0.08em;color:#e2edf6;text-transform:uppercase;">
+                    ORDER INVOICE
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-          <table style="width:100%;border-collapse:collapse;margin-top:16px;border-bottom:1px solid rgba(255,255,255,0.16);padding-bottom:14px;">
-            <tr>
-              <td style="vertical-align:top;width:50%;padding:8px 8px 14px 0;font-size:12px;color:#ffffff;">
-                <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.72);margin-bottom:4px;">DELIVERY DESTINATION</div>
-                <div style="font-weight:700;">${order.delivery.firstName} ${order.delivery.lastName}</div>
-                <div>${order.delivery.address}${order.delivery.apartment ? `, ${order.delivery.apartment}` : ''}</div>
-                <div>${order.delivery.city}, ${order.delivery.province} ${order.delivery.postalCode || ''}</div>
-                ${order.delivery.landmark ? `<div style="opacity:0.85;">Landmark: ${order.delivery.landmark}</div>` : ''}
-                ${order.delivery.instructions ? `<div style="opacity:0.85;">Notes: ${order.delivery.instructions}</div>` : ''}
-                <div style="font-weight:700;margin-top:4px;">${order.delivery.country}</div>
-                <div style="margin-top:4px;opacity:0.9;">${order.customer.email} · ${order.customer.phone}</div>
-              </td>
-              <td style="vertical-align:top;width:50%;padding:8px 0 14px 8px;font-size:12px;color:#ffffff;">
-                <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.72);margin-bottom:4px;">PAYMENT METHOD</div>
-                <div style="font-weight:700;">${order.payment.methodName}</div>
-                <div style="opacity:0.9;">${order.payment.statusLabel}</div>
-                ${
-                  isBankTransfer
-                    ? `<div style="margin-top:6px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.1);font-size:11px;">Account: <strong>${order.payment.accountNumber}</strong><br/>${order.payment.accountTitle || 'Meezan Bank - Hassan Ahmed'}<br/>Send screenshot to: <strong>${order.payment.confirmationPhone}</strong></div>`
-                    : ''
-                }
-                <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.72);margin:12px 0 4px;">DELIVERY ESTIMATE</div>
-                <div>${order.shippingMethod.estimate} (${order.shippingMethod.name})</div>
-              </td>
-            </tr>
-          </table>
+          <!-- SKY-BLUE HERO BANNER (Solid dark-mode-safe background so text never washes out) -->
+          <tr>
+            <td class="bh-hero-box" style="background-color:#a5d1ef;padding:34px 32px 32px;">
+              <div class="bh-hero-sub" style="font-size:12px;font-weight:700;letter-spacing:0.06em;color:#0e2c42;text-transform:uppercase;margin-bottom:14px;">
+                ORDER #${escapeHtml(order.orderNumber)}
+              </div>
+              <div class="bh-hero-ink" style="font-size:44px;font-weight:900;line-height:0.98;letter-spacing:-0.01em;color:#0e2c42;text-transform:uppercase;margin:0 0 16px 0;">
+                BAD HABIT<br/>DETECTED.
+              </div>
+              <div class="bh-hero-sub" style="font-size:15px;font-weight:500;line-height:1.4;color:#0e2c42;">
+                Your order has been received.
+              </div>
+            </td>
+          </tr>
 
-          <table style="width:100%;border-collapse:collapse;margin-top:12px;font-size:12px;color:#ffffff;">
-            ${
-              order.pricing.pairDiscount > 0
-                ? `<tr><td style="padding:3px 0;opacity:0.86;">Articles Total</td><td style="padding:3px 0;text-align:right;opacity:0.86;">${order.pricing.formattedRawSubtotal}</td></tr>
-                   <tr><td style="padding:3px 0;color:#bbf7d0;font-weight:600;">Pair Discount (15% Off · ${order.pricing.pairCount} ${order.pricing.pairCount === 1 ? 'pair' : 'pairs'})</td><td style="padding:3px 0;text-align:right;color:#bbf7d0;font-weight:600;">-${order.pricing.formattedPairDiscount}</td></tr>`
-                : ''
-            }
-            <tr><td style="padding:3px 0;opacity:0.9;">Subtotal</td><td style="padding:3px 0;text-align:right;opacity:0.9;">${order.pricing.formattedSubtotal}</td></tr>
-            <tr><td style="padding:3px 0;opacity:0.9;">Delivery Charge</td><td style="padding:3px 0;text-align:right;opacity:0.9;">${order.pricing.shippingCharge === 0 ? 'FREE (PKR 0)' : order.pricing.formattedShippingCharge}</td></tr>
-            <tr>
-              <td style="padding:10px 0 0;border-top:1px solid rgba(255,255,255,0.22);font-size:15px;font-weight:800;">${isBankTransfer ? 'Total Amount (Bank Transfer)' : 'Total Due on Arrival'}</td>
-              <td style="padding:10px 0 0;border-top:1px solid rgba(255,255,255,0.22);text-align:right;font-size:17px;font-weight:800;">${order.pricing.formattedTotal}</td>
-            </tr>
-          </table>
-        </div>
-      </div>
-    </div>
-  `;
+          <!-- MAIN WHITE BODY -->
+          <tr>
+            <td style="background-color:#ffffff;padding:28px 32px 26px;">
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;color:#133853;text-transform:uppercase;padding-bottom:10px;border-bottom:1px solid #cbd9e6;">
+                ORDERED ARTICLES (${totalArticlesCount})
+              </div>
+
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
+                ${htmlItemsRows}
+              </table>
+
+              ${
+                order.pricing.pairDiscount > 0 || order.pricing.shippingCharge > 0 || isBankTransfer
+                  ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:14px;font-size:13px;color:#2b4c65;">
+                      ${
+                        order.pricing.pairDiscount > 0
+                          ? `<tr>
+                              <td style="padding:3px 0;">Articles Total</td>
+                              <td align="right" style="padding:3px 0;text-align:right;">${escapeHtml(order.pricing.formattedRawSubtotal)}</td>
+                            </tr>
+                            <tr>
+                              <td style="padding:3px 0;color:#0f766e;font-weight:600;">Pair Discount (15% Off · ${order.pricing.pairCount} ${order.pricing.pairCount === 1 ? 'pair' : 'pairs'})</td>
+                              <td align="right" style="padding:3px 0;text-align:right;color:#0f766e;font-weight:600;">-${escapeHtml(order.pricing.formattedPairDiscount)}</td>
+                            </tr>`
+                          : ''
+                      }
+                      <tr>
+                        <td style="padding:3px 0;">Delivery (${escapeHtml(order.shippingMethod.name)})</td>
+                        <td align="right" style="padding:3px 0;text-align:right;">${order.pricing.shippingCharge === 0 ? 'FREE (PKR 0)' : escapeHtml(order.pricing.formattedShippingCharge)}</td>
+                      </tr>
+                    </table>`
+                  : ''
+              }
+
+              <!-- ORDER TOTAL HIGHLIGHT BOX -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:16px;background-color:#e9f2f9;">
+                <tr>
+                  <td align="left" valign="middle" style="padding:16px 18px;font-size:16px;font-weight:800;color:#133853;">
+                    Order total
+                  </td>
+                  <td align="right" valign="middle" style="padding:16px 18px;font-size:19px;font-weight:800;color:#133853;text-align:right;white-space:nowrap;">
+                    ${escapeHtml(order.pricing.formattedTotal)}
+                  </td>
+                </tr>
+              </table>
+
+              <!-- DELIVERY DESTINATION -->
+              <div style="margin-top:26px;">
+                <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;color:#133853;text-transform:uppercase;margin-bottom:6px;">
+                  DELIVERY DESTINATION
+                </div>
+                <div style="font-size:14px;line-height:1.55;color:#1f3f58;">
+                  <strong style="color:#133853;">${escapeHtml(order.delivery.firstName)} ${escapeHtml(order.delivery.lastName)}</strong><br/>
+                  ${fullAddressLine}<br/>
+                  ${escapeHtml(order.customer.phone)} &middot; ${escapeHtml(order.customer.email)}
+                  ${order.delivery.landmark ? `<br/>Landmark: ${escapeHtml(order.delivery.landmark)}` : ''}
+                  ${order.delivery.instructions ? `<br/>Notes: ${escapeHtml(order.delivery.instructions)}` : ''}
+                </div>
+              </div>
+
+              <!-- PAYMENT METHOD -->
+              <div style="margin-top:22px;">
+                <div style="font-size:12px;font-weight:800;letter-spacing:0.05em;color:#133853;text-transform:uppercase;margin-bottom:6px;">
+                  PAYMENT METHOD
+                </div>
+                <div style="font-size:14px;line-height:1.55;color:#1f3f58;">
+                  <strong style="color:#133853;">${escapeHtml(order.payment.methodName)}</strong>
+                  ${
+                    isBankTransfer
+                      ? `<br/>Account: <strong>${escapeHtml(order.payment.accountNumber)}</strong> (${escapeHtml(order.payment.accountTitle || 'Meezan Bank - Hassan Ahmed')})<br/>Send transfer screenshot to: <strong>${escapeHtml(order.payment.confirmationPhone)}</strong>`
+                      : `<br/>${escapeHtml(order.payment.statusLabel)} &middot; ${escapeHtml(order.shippingMethod.estimate)}`
+                  }
+                </div>
+              </div>
+            </td>
+          </tr>
+
+          <!-- FOOTER BAR -->
+          <tr>
+            <td style="background-color:#ffffff;border-top:1px solid #cbd9e6;padding:18px 32px 22px;">
+              <a href="https://www.storebadhabit.com" style="font-size:13px;color:#133853;text-decoration:none;font-weight:500;">
+                storebadhabit.com
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 
   return { subject, textBody, htmlBody, itemsLines, isBankTransfer };
 };
@@ -355,6 +544,7 @@ const dispatchEmailToRecipient = async ({
   subject,
   textBody,
   htmlBody,
+  attachments,
   itemsLines,
   allowRelayFallback,
 }: {
@@ -364,6 +554,7 @@ const dispatchEmailToRecipient = async ({
   subject: string;
   textBody: string;
   htmlBody: string;
+  attachments?: EmailInlineAttachment[];
   itemsLines: string;
   isBankTransfer: boolean;
   allowRelayFallback: boolean;
@@ -375,20 +566,28 @@ const dispatchEmailToRecipient = async ({
   // 1. Direct Resend API (when RESEND_API_KEY is configured)
   if (cfg.resendKey) {
     try {
+      const resendBody: Record<string, any> = {
+        from: rawEmailFrom || 'BAD HABIT Orders <onboarding@resend.dev>',
+        to: [toEmail],
+        reply_to: replyTo,
+        subject,
+        text: textBody,
+        html: htmlBody,
+      };
+      if (attachments && attachments.length > 0) {
+        resendBody.attachments = attachments.map((att) => ({
+          filename: att.filename,
+          content: att.content.toString('base64'),
+          content_id: att.cid,
+        }));
+      }
       const resendRes = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${cfg.resendKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          from: rawEmailFrom || 'BAD HABIT Orders <onboarding@resend.dev>',
-          to: [toEmail],
-          reply_to: replyTo,
-          subject,
-          text: textBody,
-          html: htmlBody,
-        }),
+        body: JSON.stringify(resendBody),
         signal: AbortSignal.timeout(8000),
       });
       if (!resendRes.ok) {
@@ -428,6 +627,7 @@ const dispatchEmailToRecipient = async ({
         subject,
         text: textBody,
         html: htmlBody,
+        attachments: attachments && attachments.length > 0 ? attachments : undefined,
       });
       console.log(`[BAD HABIT] Order email sent via Custom SMTP (${cfg.smtpHost}) to ${toEmail} for ${order.orderNumber}`);
       return {
@@ -463,6 +663,7 @@ const dispatchEmailToRecipient = async ({
         subject,
         text: textBody,
         html: htmlBody,
+        attachments: attachments && attachments.length > 0 ? attachments : undefined,
       });
       console.log(`[BAD HABIT] Order email sent via Gmail SMTP to ${toEmail} for ${order.orderNumber}`);
       return {
@@ -568,7 +769,12 @@ const sendOrderNotifications = async (
   baseOrigin?: string
 ) => {
   const cfg = getEmailTransportConfig();
-  const storePayload = buildOrderSummaryContent(order, { forCustomer: false, baseOrigin });
+  const { srcByItemIndex, attachments } = await prepareOrderEmailThumbnails(order, baseOrigin);
+  const storePayload = buildOrderSummaryContent(order, {
+    forCustomer: false,
+    baseOrigin,
+    itemImageSrcs: srcByItemIndex,
+  });
   const automationEmail = (process.env.ORDER_AUTOMATION_EMAIL || '').trim();
   const customerEmailEnabled = sendCustomerSummary && cfg.customerEmailEnvEnabled;
   const webhookUrl = (process.env.ORDER_WEBHOOK_URL || '').trim();
@@ -578,6 +784,7 @@ const sendOrderNotifications = async (
     toEmail: ORDER_NOTIFICATION_EMAIL,
     replyTo: order.customer.email,
     ...storePayload,
+    attachments,
     allowRelayFallback: true,
   });
 
@@ -588,6 +795,7 @@ const sendOrderNotifications = async (
           toEmail: automationEmail,
           replyTo: order.customer.email,
           ...storePayload,
+          attachments,
           allowRelayFallback: true,
         })
       : Promise.resolve(null);
@@ -598,7 +806,12 @@ const sendOrderNotifications = async (
           order,
           toEmail: order.customer.email,
           replyTo: ORDER_NOTIFICATION_EMAIL,
-          ...buildOrderSummaryContent(order, { forCustomer: true, baseOrigin }),
+          ...buildOrderSummaryContent(order, {
+            forCustomer: true,
+            baseOrigin,
+            itemImageSrcs: srcByItemIndex,
+          }),
+          attachments,
           allowRelayFallback: false,
         })
       : Promise.resolve(null);

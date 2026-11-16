@@ -15,8 +15,6 @@
 
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import {
-  TAILORED_TROUSERS,
-  STREETWEAR_TROUSERS,
   MAIN_COLLECTION,
   HOODIE_PRODUCTS,
   SHIRT_PRODUCTS,
@@ -60,7 +58,7 @@ export function ShowroomFloor({
   const [selectedSize, setSelectedSize] = useState<string>('M');
   const [addedToCart, setAddedToCart] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
-  const [itemsPerPage, setItemsPerPage] = useState(3);
+  const [itemsPerPage, setItemsPerPage] = useState(4);
   const [mobileIndex, setMobileIndex] = useState(0);
   const [curationModalCategory, setCurationModalCategory] = useState<CategoryItem | null>(null);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
@@ -149,7 +147,7 @@ export function ShowroomFloor({
     }
   }, [selectedProduct, activeSection]);
 
-  // Responsive items-per-page calculation for desktop/tablet
+  // Responsive items-per-page calculation matching original 4-across desktop showroom
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 640) {
@@ -157,7 +155,7 @@ export function ShowroomFloor({
       } else if (window.innerWidth < 1024) {
         setItemsPerPage(2);
       } else {
-        setItemsPerPage(3);
+        setItemsPerPage(4);
       }
     };
 
@@ -528,59 +526,53 @@ export function ShowroomFloor({
 
         {/* 2A. DESKTOP CATEGORIES VIEW (When activeSection === 'categories') */}
         {activeSection === 'categories' && !isRevealed && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-start pt-[14vh] lg:pt-[13vh] px-4 sm:px-8 w-full max-w-[1720px] mx-auto select-none pointer-events-auto">
-            {/* Header: Compact gap beneath navigation pills, Eyebrow & Title */}
-            <div className="text-center mb-5 lg:mb-6">
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-start pt-[76px] lg:pt-[84px] pb-5 px-4 sm:px-8 w-full max-w-[1720px] mx-auto select-none pointer-events-auto">
+            {/* Header: Tightened directly below top bar */}
+            <div className="text-center mb-3 lg:mb-4">
               <span className="text-[10px] sm:text-[11px] font-mono tracking-[0.28em] text-cyan-200 uppercase font-semibold">
                 ARCHITECTURAL RUNWAY
               </span>
-              <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)] mt-1">
+              <h2 className="font-display text-2xl sm:text-3xl lg:text-[34px] font-black tracking-tight text-white uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)] mt-0.5 leading-tight">
                 SHOP BY CATEGORY
               </h2>
             </div>
 
             {/* Continuous 4-Panel Split Strip (Make a pair, Trousers, Shirts, Hoodies & Sweatshirts) */}
-            <div className="w-[94%] max-w-[1640px] h-[58vh] min-h-[420px] max-h-[640px] rounded-2xl overflow-hidden border border-white/20 shadow-[0_20px_60px_rgba(4,24,43,0.35)] grid grid-cols-4 divide-x divide-white/15 bg-slate-950/20 backdrop-blur-sm">
+            <div className="w-[94%] max-w-[1640px] h-[min(calc(100vh-172px),40vw)] min-h-[420px] max-h-[650px] rounded-2xl overflow-hidden border border-white/25 shadow-[0_20px_60px_rgba(4,24,43,0.35)] grid grid-cols-4 divide-x divide-white/20 bg-gradient-to-b from-[#6ea8dc]/75 via-[#a6d2f3]/60 to-[#e6f1fa]/80 backdrop-blur-[3px]">
               {/* PANEL 1: MAKE A PAIR (15% OFF) */}
               <button
                 type="button"
                 onClick={() => handleCategoryTileClick(CATEGORY_ITEMS[0])}
-                className="group relative w-full h-full overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset text-left"
+                className="group relative w-full h-full overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset text-left bg-gradient-to-b from-[#5594cc]/35 via-transparent to-black/15"
                 aria-label="Make a pair — 15% off"
               >
-                <img
-                  src="/clean_plate.jpg"
-                  alt="BAD HABIT Make a Pair"
-                  className="w-full h-full object-cover object-center select-none pointer-events-none transition-transform duration-350 ease-out group-hover:scale-[1.025]"
-                  decoding="async"
-                />
-                {/* Clean Editorial 15% OFF Lockup in Upper-Left Corner (No Box / No Pill) */}
+                {/* Clean Editorial 15% OFF Lockup in Upper-Left Corner */}
                 <div className="absolute top-4 left-4 lg:top-5 lg:left-5 z-20 pointer-events-none">
-                  <div className="font-poster-condensed not-italic text-white inline-flex items-end gap-1.5 leading-none whitespace-nowrap">
-                    <span className="font-extrabold text-[clamp(86px,10.8vw,156px)] leading-[0.78] tracking-[-0.02em] tabular-nums">
+                  <div className="font-poster-condensed not-italic text-white inline-flex items-end gap-1.5 leading-none whitespace-nowrap drop-shadow-[0_2px_12px_rgba(10,35,60,0.28)]">
+                    <span className="font-extrabold text-[clamp(72px,6.4vw,116px)] leading-[0.78] tracking-[-0.02em] tabular-nums">
                       15%
                     </span>
                     <div className="flex flex-col items-stretch leading-none">
                       <span className="w-full h-[2px] bg-white mb-[4px]" aria-hidden="true" />
-                      <span className="font-extrabold text-[clamp(34px,4.3vw,62px)] leading-[0.80] tracking-[0.02em] uppercase">
+                      <span className="font-extrabold text-[clamp(28px,2.6vw,48px)] leading-[0.80] tracking-[0.02em] uppercase">
                         OFF
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Live Magnum BOXY Shirt + Classic Brown Trousers Collage Showcase */}
-                <div className="absolute inset-x-2 top-[106px] md:top-[116px] lg:top-[152px] xl:top-[166px] bottom-[84px] flex items-center justify-center gap-1 pointer-events-none">
+                {/* Live Magnum BOXY Shirt + Classic Brown Trousers Showcase */}
+                <div className="absolute inset-x-1 top-[86px] lg:top-[104px] bottom-[66px] flex items-center justify-center -space-x-3 pointer-events-none">
                   <img
-                    src={(SHIRT_PRODUCTS.find((p) => p.id === 'BH-S05') || SHIRT_PRODUCTS[4]).image}
+                    src={(SHIRT_PRODUCTS.find((p) => p.id === 'BH-S05') || SHIRT_PRODUCTS[5]).image}
                     alt="Magnum BOXY shirt pairing"
-                    className="h-[82%] w-auto max-w-[48%] object-contain transition-transform duration-350 group-hover:scale-105"
+                    className="relative z-10 h-[86%] w-auto max-w-[54%] object-contain transition-transform duration-350 group-hover:scale-105"
                     decoding="async"
                   />
                   <img
                     src={(MAIN_COLLECTION.find((p) => p.id === 'BH-T10') || MAIN_COLLECTION[4]).image}
                     alt="Classic Brown Trousers pairing"
-                    className="h-[88%] w-auto max-w-[48%] object-contain transition-transform duration-350 group-hover:scale-105"
+                    className="h-[92%] w-auto max-w-[54%] object-contain transition-transform duration-350 group-hover:scale-105"
                     decoding="async"
                   />
                 </div>
@@ -606,20 +598,21 @@ export function ShowroomFloor({
                 </div>
               </button>
 
-              {/* PANEL 2: TROUSERS */}
+              {/* PANEL 2: TROUSERS (Full-height Trousers Editorial Cutout with zero sky void above) */}
               <button
                 type="button"
                 onClick={() => handleCategoryTileClick(CATEGORY_ITEMS[1])}
                 className="group relative w-full h-full overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset text-left"
                 aria-label="Shop Trousers Category"
               >
-                <img
-                  src="/assets/categories/category_trousers_v2.webp"
-                  alt="BAD HABIT Trousers"
-                  className="w-full h-full object-cover object-[center_42%] select-none pointer-events-none transition-transform duration-350 ease-out group-hover:scale-[1.025] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-                  decoding="async"
-                />
-                {/* Restrained dark-to-transparent gradient across the bottom portion */}
+                <div className="absolute inset-0 pointer-events-none">
+                  <img
+                    src="/assets/categories/category_trousers_cutout.webp"
+                    alt="BAD HABIT Trousers"
+                    className="w-full h-full object-cover object-[94%_top] select-none transition-transform duration-350 ease-out group-hover:scale-[1.03] origin-bottom motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                    decoding="async"
+                  />
+                </div>
                 <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black/80 via-black/35 to-transparent pointer-events-none" />
 
                 {/* Bottom Baseline: Bold White Label & Glass Arrow Button */}
@@ -635,19 +628,21 @@ export function ShowroomFloor({
                 </div>
               </button>
 
-              {/* PANEL 3: SHIRTS */}
+              {/* PANEL 3: SHIRTS (Full-height Portrait Framing focusing on model & shirt torso) */}
               <button
                 type="button"
                 onClick={() => handleCategoryTileClick(CATEGORY_ITEMS[2])}
                 className="group relative w-full h-full overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset text-left"
                 aria-label="Shop Shirts Category"
               >
-                <img
-                  src="/assets/categories/category_shirts_v2.webp"
-                  alt="BAD HABIT Shirts"
-                  className="w-full h-full object-cover object-[30%_16%] select-none pointer-events-none transition-transform duration-350 ease-out group-hover:scale-[1.025] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-                  decoding="async"
-                />
+                <div className="absolute inset-0 pt-2.5 pointer-events-none">
+                  <img
+                    src="/assets/categories/category_shirts_cutout.webp"
+                    alt="BAD HABIT Shirts"
+                    className="w-full h-full object-cover object-[84%_top] select-none transition-transform duration-350 ease-out group-hover:scale-[1.03] origin-bottom motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                    decoding="async"
+                  />
+                </div>
                 <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black/80 via-black/35 to-transparent pointer-events-none" />
 
                 <div className="absolute inset-x-0 bottom-0 p-5 lg:p-6 flex items-end justify-between pointer-events-none z-10 gap-2">
@@ -662,19 +657,21 @@ export function ShowroomFloor({
                 </div>
               </button>
 
-              {/* PANEL 4: HOODIES & SWEATSHIRTS */}
+              {/* PANEL 4: HOODIES & SWEATSHIRTS (Full-height Editorial Portrait Framing) */}
               <button
                 type="button"
                 onClick={() => handleCategoryTileClick(CATEGORY_ITEMS[3])}
                 className="group relative w-full h-full overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset text-left"
                 aria-label="Shop Hoodies & Sweatshirts Category"
               >
-                <img
-                  src="/assets/categories/category_hoodies_v2.webp"
-                  alt="BAD HABIT Hoodies & Sweatshirts"
-                  className="w-full h-full object-cover object-[30%_18%] select-none pointer-events-none transition-transform duration-350 ease-out group-hover:scale-[1.025] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-                  decoding="async"
-                />
+                <div className="absolute inset-0 pt-2.5 pointer-events-none">
+                  <img
+                    src="/assets/categories/category_hoodies_cutout.webp"
+                    alt="BAD HABIT Hoodies & Sweatshirts"
+                    className="w-full h-full object-cover object-top select-none transition-transform duration-350 ease-out group-hover:scale-[1.03] origin-bottom motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                    decoding="async"
+                  />
+                </div>
                 <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black/80 via-black/35 to-transparent pointer-events-none" />
 
                 <div className="absolute inset-x-0 bottom-0 p-5 lg:p-6 flex items-end justify-between pointer-events-none z-10 gap-2">
@@ -723,130 +720,8 @@ export function ShowroomFloor({
           </div>
         )}
 
-        {/* 2B. DESKTOP COLLECTION VIEW (Garment-only, NO models) */}
-        {activeSection === 'trousers' && (
-          <div
-            className="absolute inset-0 z-20 overflow-y-auto overscroll-contain pt-[112px] pb-16 px-8 sm:px-14 lg:px-20 transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[transform,opacity]"
-            style={{
-              transform: isRevealed
-                ? 'translate3d(-34vw, -24vh, -280px) scale(0.28)'
-                : 'translate3d(0, 0, 0) scale(1)',
-              transformOrigin: 'top left',
-              pointerEvents: isRevealed ? 'none' : 'auto',
-              opacity: isRevealed ? 0.88 : 1,
-            }}
-          >
-            <div className="w-full max-w-[1440px] mx-auto space-y-10">
-              {/* Tailored Trousers in exact order: Midnight Blue, Ivory, Sage, Stone, Classic Brown */}
-              <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 lg:gap-10">
-                {TAILORED_TROUSERS.map((product) => (
-                  <div
-                    key={product.id}
-                    className="w-[260px] sm:w-[290px] lg:w-[320px] flex flex-col items-center justify-start group cursor-pointer transition-transform duration-300 ease-out hover:-translate-y-2 relative"
-                    onClick={() => setSelectedProduct(product)}
-                    onPointerEnter={() => preloadProductDetailImages(product)}
-                  >
-                    <div className="relative w-full h-[270px] sm:h-[290px] flex items-center justify-center p-1">
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-full h-full object-contain select-none transition-transform duration-300 group-hover:scale-[1.02]"
-                        loading="eager"
-                        decoding="async"
-                      />
-                    </div>
-                    <div
-                      className={`mt-2 flex flex-col items-center text-center transition-opacity duration-300 ${
-                        isRevealed ? 'opacity-0 pointer-events-none' : 'opacity-100'
-                      }`}
-                    >
-                      <span className="font-display text-xs sm:text-[13px] font-semibold text-slate-800 tracking-tight text-center max-w-[220px] leading-tight px-1 drop-shadow-[0_1px_2px_rgba(255,255,255,0.35)]">
-                        {product.name}
-                      </span>
-                      <div className="showroom-glass-capsule w-[148px] sm:w-[164px] h-[40px] px-4 mt-1.5 cursor-pointer shadow-[0_6px_20px_rgba(7,27,45,0.12)]">
-                        <span className="absolute inset-x-2 top-[2.5px] h-[45%] rounded-full bg-gradient-to-b from-white/80 via-white/20 to-transparent pointer-events-none" />
-                        <span className="absolute inset-x-3.5 bottom-[2px] h-[30%] rounded-full bg-gradient-to-t from-white/40 to-transparent pointer-events-none opacity-50" />
-                        <span className="relative z-10 font-display text-sm sm:text-base font-bold text-[#0f172a] tracking-tight whitespace-nowrap">
-                          {product.price}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Short Heading: STREETWEAR */}
-              <div className="max-w-4xl mx-auto flex items-center gap-4 px-2">
-                <div className="flex-1 h-px bg-white/30" aria-hidden="true" />
-                <h3 className="font-display text-base sm:text-lg font-black tracking-[0.22em] text-white uppercase drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]">
-                  Streetwear
-                </h3>
-                <div className="flex-1 h-px bg-white/30" aria-hidden="true" />
-              </div>
-
-              {/* Streetwear Trousers: Deep Charcoal Balloon Pants, Ash Baggy, Chocolate Balloon Pants (SOLD OUT) */}
-              <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 lg:gap-10">
-                {STREETWEAR_TROUSERS.map((product) => (
-                  <div
-                    key={product.id}
-                    className="w-[260px] sm:w-[290px] lg:w-[320px] flex flex-col items-center justify-start group cursor-pointer transition-transform duration-300 ease-out hover:-translate-y-2 relative"
-                    onClick={() => setSelectedProduct(product)}
-                    onPointerEnter={() => preloadProductDetailImages(product)}
-                  >
-                    {product.soldOut && (
-                      <div className="absolute top-1 right-3 z-30">
-                        <span className="px-3.5 py-1 rounded-full bg-red-600/95 border border-white/50 text-white font-display font-black text-[11px] tracking-[0.16em] uppercase shadow-[0_4px_16px_rgba(220,38,38,0.45)]">
-                          SOLD OUT
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="relative w-full h-[270px] sm:h-[290px] flex items-center justify-center p-1">
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className={`w-full h-full object-contain select-none transition-transform duration-300 group-hover:scale-[1.02] ${
-                          product.soldOut ? 'opacity-85' : ''
-                        }`}
-                        loading="eager"
-                        decoding="async"
-                      />
-                    </div>
-                    <div
-                      className={`mt-2 flex flex-col items-center text-center transition-opacity duration-300 ${
-                        isRevealed ? 'opacity-0 pointer-events-none' : 'opacity-100'
-                      }`}
-                    >
-                      <span className="font-display text-xs sm:text-[13px] font-semibold text-slate-800 tracking-tight text-center max-w-[220px] leading-tight px-1 drop-shadow-[0_1px_2px_rgba(255,255,255,0.35)]">
-                        {product.name}
-                      </span>
-                      <div className="flex items-center justify-center gap-2 mt-1.5">
-                        <div className="showroom-glass-capsule w-[148px] sm:w-[164px] h-[40px] px-4 cursor-pointer shadow-[0_6px_20px_rgba(7,27,45,0.12)]">
-                          <span className="absolute inset-x-2 top-[2.5px] h-[45%] rounded-full bg-gradient-to-b from-white/80 via-white/20 to-transparent pointer-events-none" />
-                          <span className="absolute inset-x-3.5 bottom-[2px] h-[30%] rounded-full bg-gradient-to-t from-white/40 to-transparent pointer-events-none opacity-50" />
-                          <span
-                            className={`relative z-10 font-display text-sm sm:text-base font-bold text-[#0f172a] tracking-tight whitespace-nowrap ${
-                              product.soldOut ? 'line-through opacity-65' : ''
-                            }`}
-                          >
-                            {product.price}
-                          </span>
-                        </div>
-                        {product.soldOut && (
-                          <span className="px-2.5 py-1 rounded-full bg-red-600/95 text-white font-display font-black text-[10px] tracking-[0.14em] uppercase shadow-sm">
-                            SOLD OUT
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {(activeSection === 'hoodies' || activeSection === 'shirts') && (
+        {/* 2B. DESKTOP COLLECTION CAROUSEL VIEW (Original horizontal floating row across Trousers, Shirts & Hoodies) */}
+        {(activeSection === 'trousers' || activeSection === 'hoodies' || activeSection === 'shirts') && (
           <div
             className="absolute inset-0 z-20 flex flex-col items-center justify-center transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[transform,opacity]"
             style={{
@@ -860,7 +735,7 @@ export function ShowroomFloor({
           >
             <div
               ref={containerRef}
-              className="relative w-full h-[68vh] sm:h-[70vh] md:h-[74vh] max-h-[700px] flex items-center overflow-hidden"
+              className="relative w-full h-[68vh] sm:h-[72vh] md:h-[76vh] max-h-[720px] flex items-center overflow-hidden"
             >
               <div
                 className="flex transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] w-full h-full"
@@ -871,34 +746,44 @@ export function ShowroomFloor({
                 {pages.map((pageProducts, pageIdx) => (
                   <div
                     key={pageIdx}
-                    className="w-full shrink-0 h-full flex items-center justify-center px-6 sm:px-14 md:px-18 lg:px-24"
+                    className="w-full shrink-0 h-full flex items-center justify-center px-14 md:px-18 lg:px-24"
                   >
-                    <div className="w-full mx-auto flex flex-wrap items-center justify-center gap-6 sm:gap-8 lg:gap-12">
+                    <div className="w-full max-w-[1380px] mx-auto flex items-center justify-center gap-4 md:gap-6 lg:gap-8 xl:gap-12 flex-nowrap">
                       {pageProducts.map((product) => {
                         return (
                           <div
                             key={product.id}
-                            className="w-[260px] sm:w-[300px] lg:w-[350px] flex flex-col items-center justify-start group cursor-pointer transition-transform duration-300 ease-out hover:-translate-y-2 relative"
+                            className="w-[190px] md:w-[215px] lg:w-[240px] xl:w-[275px] shrink-0 flex flex-col items-center justify-start group cursor-pointer transition-transform duration-300 ease-out hover:-translate-y-2 relative"
                             onClick={() => setSelectedProduct(product)}
                             onPointerEnter={() => preloadProductDetailImages(product)}
                           >
-                            {/* Transparent Garment-Only Cutout: clean proportional fit across all pages */}
+                            {product.soldOut && (
+                              <div className="absolute top-1 right-2 z-30">
+                                <span className="px-3 py-1 rounded-full bg-red-600/95 border border-white/50 text-white font-display font-black text-[10px] tracking-[0.16em] uppercase shadow-[0_4px_16px_rgba(220,38,38,0.45)]">
+                                  SOLD OUT
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Transparent Garment-Only Cutout floating in skyline runway */}
                             <div
-                              className={`relative w-full h-[38vh] sm:h-[42vh] md:h-[46vh] min-h-[260px] max-h-[300px] flex items-center justify-center ${
-                                product.category === 'Shirts' ? 'p-4' : 'p-1'
+                              className={`relative w-full h-[36vh] sm:h-[40vh] md:h-[44vh] min-h-[250px] max-h-[340px] flex items-center justify-center ${
+                                product.category === 'Shirts' ? 'p-3' : 'p-1'
                               }`}
                             >
                               <img
                                 src={product.image}
                                 alt={product.name}
-                                className="w-full h-full object-contain select-none transition-transform duration-300 group-hover:scale-[1.02]"
+                                className={`w-full h-full object-contain select-none transition-transform duration-300 group-hover:scale-[1.03] ${
+                                  product.soldOut ? 'opacity-85' : ''
+                                }`}
                                 loading="eager"
                                 decoding="async"
                               />
                             </div>
 
                             <div
-                              className={`mt-2 flex flex-col items-center text-center transition-opacity duration-300 ${
+                              className={`mt-2.5 flex flex-col items-center text-center transition-opacity duration-300 ${
                                 isRevealed ? 'opacity-0 pointer-events-none' : 'opacity-100'
                               }`}
                             >
@@ -906,12 +791,18 @@ export function ShowroomFloor({
                                 {product.name}
                               </span>
 
-                              <div className="showroom-glass-capsule w-[148px] sm:w-[164px] h-[40px] px-4 mt-1.5 cursor-pointer shadow-[0_6px_20px_rgba(7,27,45,0.12)]">
-                                <span className="absolute inset-x-2 top-[2.5px] h-[45%] rounded-full bg-gradient-to-b from-white/80 via-white/20 to-transparent pointer-events-none" />
-                                <span className="absolute inset-x-3.5 bottom-[2px] h-[30%] rounded-full bg-gradient-to-t from-white/40 to-transparent pointer-events-none opacity-50" />
-                                <span className="relative z-10 font-display text-sm sm:text-base font-bold text-[#0f172a] tracking-tight whitespace-nowrap">
-                                  {product.price}
-                                </span>
+                              <div className="flex items-center justify-center gap-1.5 mt-1.5">
+                                <div className="showroom-glass-capsule w-[144px] sm:w-[162px] h-[40px] px-4 cursor-pointer shadow-[0_6px_20px_rgba(7,27,45,0.12)]">
+                                  <span className="absolute inset-x-2 top-[2.5px] h-[45%] rounded-full bg-gradient-to-b from-white/80 via-white/20 to-transparent pointer-events-none" />
+                                  <span className="absolute inset-x-3.5 bottom-[2px] h-[30%] rounded-full bg-gradient-to-t from-white/40 to-transparent pointer-events-none opacity-50" />
+                                  <span
+                                    className={`relative z-10 font-display text-sm sm:text-base font-bold text-[#0f172a] tracking-tight whitespace-nowrap ${
+                                      product.soldOut ? 'line-through opacity-65' : ''
+                                    }`}
+                                  >
+                                    {product.price}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -925,8 +816,8 @@ export function ShowroomFloor({
           </div>
         )}
 
-        {/* CAROUSEL ARROWS & PAGINATION (Desktop Hoodies & Shirts) */}
-        {(activeSection === 'hoodies' || activeSection === 'shirts') && (
+        {/* CAROUSEL ARROWS & PAGINATION (All Desktop Collections: Trousers, Hoodies & Shirts) */}
+        {(activeSection === 'trousers' || activeSection === 'hoodies' || activeSection === 'shirts') && (
           <div
             className={`transition-opacity duration-300 ${
               isRevealed ? 'opacity-0 pointer-events-none' : 'opacity-100'

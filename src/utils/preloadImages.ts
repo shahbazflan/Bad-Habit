@@ -67,15 +67,25 @@ export function preloadGarmentImages() {
   if (typeof window === 'undefined' || initialPreloaded) return;
   initialPreloaded = true;
 
-  const posterShirt = SHIRT_PRODUCTS.find((p) => p.id === 'BH-S05') || SHIRT_PRODUCTS[4];
+  const posterShirt = SHIRT_PRODUCTS.find((p) => p.id === 'BH-S05') || SHIRT_PRODUCTS[5];
   const posterTrouser = MAIN_COLLECTION.find((p) => p.id === 'BH-T10') || MAIN_COLLECTION[4];
 
   const startWarmup = () => {
+    const isDesktopViewport = window.innerWidth >= 768;
+    const categoryCovers = isDesktopViewport
+      ? [
+          '/assets/categories/category_trousers_desktop.webp',
+          '/assets/categories/category_shirts_desktop.webp',
+          '/assets/categories/category_hoodies_desktop.webp',
+        ]
+      : [
+          '/assets/categories/category_trousers_cutout.webp',
+          '/assets/categories/category_shirts_cutout.webp',
+          '/assets/categories/category_hoodies_cutout.webp',
+        ];
     preloadUrls(
       [
-        '/assets/categories/category_trousers_v2.webp',
-        '/assets/categories/category_shirts_v2.webp',
-        '/assets/categories/category_hoodies_v2.webp',
+        ...categoryCovers,
         posterShirt?.image || '',
         posterTrouser?.image || '',
       ],
