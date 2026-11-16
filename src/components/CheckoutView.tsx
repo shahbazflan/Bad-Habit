@@ -114,7 +114,7 @@ export const CheckoutView: React.FC = () => {
       errors.phone = 'Mobile number is required for courier delivery.';
     } else {
       const cleaned = phone.replace(/[\s\-\(\)]/g, '');
-      if (!/^(?:\+92|0092|92|0)?3[0-9]{9}$/.test(cleaned)) {
+      if (!/^(?:\+92|0092|92)?0?3[0-9]{9}$/.test(cleaned)) {
         errors.phone = 'Enter a valid Pakistani mobile number (e.g. 0300 1234567 or +92 300 1234567).';
       }
     }
@@ -131,16 +131,23 @@ export const CheckoutView: React.FC = () => {
 
     setFieldErrors(errors);
 
-    // Focus first field with an error
-    if (errors.email && emailRef.current) emailRef.current.focus();
-    else if (errors.phone && phoneRef.current) phoneRef.current.focus();
-    else if (errors.firstName && firstNameRef.current) firstNameRef.current.focus();
-    else if (errors.lastName && lastNameRef.current) lastNameRef.current.focus();
-    else if (errors.address && addressRef.current) addressRef.current.focus();
-    else if (errors.city && cityRef.current) cityRef.current.focus();
-    else if (errors.terms && termsRef.current) termsRef.current.focus();
+    // Focus and scroll first field with an error into view
+    const firstErrorEl =
+      (errors.email && emailRef.current) ||
+      (errors.phone && phoneRef.current) ||
+      (errors.firstName && firstNameRef.current) ||
+      (errors.lastName && lastNameRef.current) ||
+      (errors.address && addressRef.current) ||
+      (errors.city && cityRef.current) ||
+      (errors.terms && termsRef.current) ||
+      null;
 
-    return Object.keys(errors).length === 0;
+    if (firstErrorEl) {
+      firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      firstErrorEl.focus({ preventScroll: true });
+    }
+
+    return errors;
   };
 
   const handleSubmitOrder = async (e: React.FormEvent) => {
@@ -152,8 +159,10 @@ export const CheckoutView: React.FC = () => {
       return;
     }
 
-    if (!validateForm()) {
-      setSubmissionError('Please correct the highlighted fields above to continue.');
+    const errors = validateForm();
+    const errorMessages = Object.values(errors);
+    if (errorMessages.length > 0) {
+      setSubmissionError(errorMessages.join(' · '));
       return;
     }
 
@@ -518,7 +527,9 @@ export const CheckoutView: React.FC = () => {
                         if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: '' }));
                       }}
                       placeholder="e.g. client@example.com"
-                      className="w-full px-5 py-3.5 rounded-2xl bg-black/35 hover:bg-black/45 focus:bg-black/55 text-white placeholder:text-white/55 border border-white/25 focus:border-white/60 focus:outline-none focus:ring-1 focus:ring-white/40 text-sm font-display transition-all backdrop-blur-md shadow-inner"
+                      className={`w-full px-5 py-3.5 rounded-2xl bg-black/35 hover:bg-black/45 focus:bg-black/55 text-white placeholder:text-white/55 border ${
+                        fieldErrors.email ? 'border-red-400 focus:border-red-300' : 'border-white/25 focus:border-white/60'
+                      } focus:outline-none focus:ring-1 focus:ring-white/40 text-sm font-display transition-all backdrop-blur-md shadow-inner`}
                     />
                     {fieldErrors.email && (
                       <p className="text-xs text-red-300 mt-1.5 font-display">{fieldErrors.email}</p>
@@ -544,7 +555,9 @@ export const CheckoutView: React.FC = () => {
                         if (fieldErrors.phone) setFieldErrors((prev) => ({ ...prev, phone: '' }));
                       }}
                       placeholder="e.g. 0300 1234567 or +92 300 1234567"
-                      className="w-full px-5 py-3.5 rounded-2xl bg-black/35 hover:bg-black/45 focus:bg-black/55 text-white placeholder:text-white/55 border border-white/25 focus:border-white/60 focus:outline-none focus:ring-1 focus:ring-white/40 text-sm font-display transition-all backdrop-blur-md shadow-inner"
+                      className={`w-full px-5 py-3.5 rounded-2xl bg-black/35 hover:bg-black/45 focus:bg-black/55 text-white placeholder:text-white/55 border ${
+                        fieldErrors.phone ? 'border-red-400 focus:border-red-300' : 'border-white/25 focus:border-white/60'
+                      } focus:outline-none focus:ring-1 focus:ring-white/40 text-sm font-display transition-all backdrop-blur-md shadow-inner`}
                     />
                     {fieldErrors.phone && (
                       <p className="text-xs text-red-300 mt-1.5 font-display">{fieldErrors.phone}</p>
@@ -635,7 +648,9 @@ export const CheckoutView: React.FC = () => {
                           if (fieldErrors.firstName) setFieldErrors((prev) => ({ ...prev, firstName: '' }));
                         }}
                         placeholder="e.g. Shahbaz"
-                        className="w-full px-5 py-3.5 rounded-2xl bg-black/35 hover:bg-black/45 focus:bg-black/55 text-white placeholder:text-white/55 border border-white/25 focus:border-white/60 focus:outline-none focus:ring-1 focus:ring-white/40 text-sm font-display transition-all backdrop-blur-md shadow-inner"
+                        className={`w-full px-5 py-3.5 rounded-2xl bg-black/35 hover:bg-black/45 focus:bg-black/55 text-white placeholder:text-white/55 border ${
+                          fieldErrors.firstName ? 'border-red-400 focus:border-red-300' : 'border-white/25 focus:border-white/60'
+                        } focus:outline-none focus:ring-1 focus:ring-white/40 text-sm font-display transition-all backdrop-blur-md shadow-inner`}
                       />
                       {fieldErrors.firstName && (
                         <p className="text-xs text-red-300 mt-1 font-display">{fieldErrors.firstName}</p>
@@ -658,7 +673,9 @@ export const CheckoutView: React.FC = () => {
                           if (fieldErrors.lastName) setFieldErrors((prev) => ({ ...prev, lastName: '' }));
                         }}
                         placeholder="e.g. Khan"
-                        className="w-full px-5 py-3.5 rounded-2xl bg-black/35 hover:bg-black/45 focus:bg-black/55 text-white placeholder:text-white/55 border border-white/25 focus:border-white/60 focus:outline-none focus:ring-1 focus:ring-white/40 text-sm font-display transition-all backdrop-blur-md shadow-inner"
+                        className={`w-full px-5 py-3.5 rounded-2xl bg-black/35 hover:bg-black/45 focus:bg-black/55 text-white placeholder:text-white/55 border ${
+                          fieldErrors.lastName ? 'border-red-400 focus:border-red-300' : 'border-white/25 focus:border-white/60'
+                        } focus:outline-none focus:ring-1 focus:ring-white/40 text-sm font-display transition-all backdrop-blur-md shadow-inner`}
                       />
                       {fieldErrors.lastName && (
                         <p className="text-xs text-red-300 mt-1 font-display">{fieldErrors.lastName}</p>
@@ -683,7 +700,9 @@ export const CheckoutView: React.FC = () => {
                         if (fieldErrors.address) setFieldErrors((prev) => ({ ...prev, address: '' }));
                       }}
                       placeholder="House / building number and street name"
-                      className="w-full px-5 py-3.5 rounded-2xl bg-black/35 hover:bg-black/45 focus:bg-black/55 text-white placeholder:text-white/55 border border-white/25 focus:border-white/60 focus:outline-none focus:ring-1 focus:ring-white/40 text-sm font-display transition-all backdrop-blur-md shadow-inner"
+                      className={`w-full px-5 py-3.5 rounded-2xl bg-black/35 hover:bg-black/45 focus:bg-black/55 text-white placeholder:text-white/55 border ${
+                        fieldErrors.address ? 'border-red-400 focus:border-red-300' : 'border-white/25 focus:border-white/60'
+                      } focus:outline-none focus:ring-1 focus:ring-white/40 text-sm font-display transition-all backdrop-blur-md shadow-inner`}
                     />
                     {fieldErrors.address && (
                       <p className="text-xs text-red-300 mt-1 font-display">{fieldErrors.address}</p>
@@ -724,7 +743,9 @@ export const CheckoutView: React.FC = () => {
                           if (fieldErrors.city) setFieldErrors((prev) => ({ ...prev, city: '' }));
                         }}
                         placeholder="e.g. Lahore"
-                        className="w-full px-5 py-3.5 rounded-2xl bg-black/35 hover:bg-black/45 focus:bg-black/55 text-white placeholder:text-white/55 border border-white/25 focus:border-white/60 focus:outline-none focus:ring-1 focus:ring-white/40 text-sm font-display transition-all backdrop-blur-md shadow-inner"
+                        className={`w-full px-5 py-3.5 rounded-2xl bg-black/35 hover:bg-black/45 focus:bg-black/55 text-white placeholder:text-white/55 border ${
+                          fieldErrors.city ? 'border-red-400 focus:border-red-300' : 'border-white/25 focus:border-white/60'
+                        } focus:outline-none focus:ring-1 focus:ring-white/40 text-sm font-display transition-all backdrop-blur-md shadow-inner`}
                       />
                       {fieldErrors.city && (
                         <p className="text-xs text-red-300 mt-1 font-display">{fieldErrors.city}</p>
@@ -963,6 +984,13 @@ export const CheckoutView: React.FC = () => {
                     <p className="text-xs text-red-300 mt-1.5 font-display">{fieldErrors.terms}</p>
                   )}
                 </div>
+
+                {submissionError && (
+                  <div className="p-3.5 rounded-2xl bg-red-950/75 border border-red-400/45 text-red-200 text-xs font-display">
+                    <p className="font-bold">Order could not be submitted</p>
+                    <p className="mt-0.5 text-red-200/90">{submissionError}</p>
+                  </div>
+                )}
 
                 {/* Final Submit Button */}
                 <button

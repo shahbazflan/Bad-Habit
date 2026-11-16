@@ -654,21 +654,62 @@ apiRouter.get('/health', (_req, res) => {
 });
 
 // Safe non-secret email configuration check endpoint (for deployment verification)
-apiRouter.get('/email-config-status', (_req, res) => {
+apiRouter.get('/email-config-status', async (req, res) => {
   const cfg = getEmailTransportConfig();
   const directDeliveryConfigured = cfg.useCustomSmtp || cfg.useGmailSmtp || Boolean(cfg.resendKey);
-  res.json({
+  const payload: any = {
     storeNotificationRecipient: ORDER_NOTIFICATION_EMAIL,
     customerOrderEmailEnabled: cfg.customerEmailEnvEnabled,
     directDeliveryConfigured,
     providersConfigured: {
       customSmtp: cfg.useCustomSmtp,
       smtpHost: cfg.smtpHost || null,
+      smtpPort: cfg.smtpPort || null,
       smtpUserConfigured: Boolean(cfg.smtpUser),
       gmailSmtp: cfg.useGmailSmtp,
       resend: Boolean(cfg.resendKey),
     },
-  });
+  };
+
+  if (req.query.verify === '1') {
+    const checks: Record<string, { ok: boolean; error?: string }> = {};
+    if (cfg.useCustomSmtp) {
+      try {
+        const t = nodemailer.createTransport({
+          host: cfg.smtpHost,
+          port: cfg.smtpPort,
+          secure: cfg.smtpPort === 465,
+          connectionTimeout: 8000,
+          greetingTimeout: 8000,
+          socketTimeout: 8000,
+          tls: { minVersion: 'TLSv1.2' },
+          auth: { user: cfg.smtpUser, pass: cfg.smtpPass },
+        });
+        await t.verify();
+        checks.customSmtp = { ok: true };
+      } catch (err: any) {
+        checks.customSmtp = { ok: false, error: err?.message || String(err) };
+      }
+    }
+    if (cfg.useGmailSmtp) {
+      try {
+        const t = nodemailer.createTransport({
+          service: 'gmail',
+          connectionTimeout: 8000,
+          greetingTimeout: 8000,
+          socketTimeout: 8000,
+          auth: { user: cfg.gmailUser, pass: cfg.gmailPass },
+        });
+        await t.verify();
+        checks.gmailSmtp = { ok: true };
+      } catch (err: any) {
+        checks.gmailSmtp = { ok: false, error: err?.message || String(err) };
+      }
+    }
+    payload.smtpVerify = checks;
+  }
+
+  res.json(payload);
 });
 
 // 1. GET /api/config: Store configuration, shipping rules, payment methods
@@ -801,9 +842,9 @@ apiRouter.post(['/orders', '/orders/create'], async (req, res) => {
     });
   }
 
-  // Pakistani phone normalization & validation (supports 03XX, +923XX, 00923XX, 923XX)
+  // Pakistani phone normalization & validation (supports 03XX, +923XX, +9203XX, 00923XX, 923XX)
   const cleanPhone = String(contact.phone).replace(/[\s\-\(\)]/g, '');
-  const pakPhoneRegex = /^(?:\+92|0092|92|0)?3[0-9]{9}$/;
+  const pakPhoneRegex = /^(?:\+92|0092|92)?0?3[0-9]{9}$/;
   if (!pakPhoneRegex.test(cleanPhone)) {
     return res.status(400).json({
       success: false,
