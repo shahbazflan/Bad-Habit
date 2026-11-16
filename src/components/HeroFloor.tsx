@@ -55,6 +55,13 @@ export function HeroFloor({ onViewCollection, activeFloor = 'hero', onNavigateTo
                 <span>BAG ({cartCount})</span>
               </button>
             )}
+
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-mono tracking-widest text-white/90 shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>LEVEL 02</span>
+              <span className="text-white/40">·</span>
+              <span className="text-white/70">RUNWAY</span>
+            </div>
           </div>
         </div>
 
