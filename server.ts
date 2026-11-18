@@ -48,6 +48,12 @@ async function startServer() {
       '/assets',
       express.static(path.join(__dirname, 'public', 'assets'), {
         maxAge: 0,
+        setHeaders: (res, filePath) => {
+          res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+          if (filePath.endsWith('IVORY_BOXY_front_png_8c2431ce')) {
+            res.setHeader('Content-Type', 'image/png');
+          }
+        },
       })
     );
 
@@ -113,6 +119,9 @@ async function startServer() {
           if (!/\.(js|css|woff2)$/i.test(filePath)) {
             res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
           }
+          if (filePath.endsWith('IVORY_BOXY_front_png_8c2431ce')) {
+            res.setHeader('Content-Type', 'image/png');
+          }
         },
       })
     );
@@ -120,8 +129,11 @@ async function startServer() {
       '/assets',
       express.static(path.join(__dirname, 'public', 'assets'), {
         maxAge: 0,
-        setHeaders: (res) => {
+        setHeaders: (res, filePath) => {
           res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+          if (filePath.endsWith('IVORY_BOXY_front_png_8c2431ce')) {
+            res.setHeader('Content-Type', 'image/png');
+          }
         },
       })
     );
