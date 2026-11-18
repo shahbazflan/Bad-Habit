@@ -47,8 +47,7 @@ async function startServer() {
     app.use(
       '/assets',
       express.static(path.join(__dirname, 'public', 'assets'), {
-        maxAge: '30d',
-        immutable: true,
+        maxAge: 0,
       })
     );
 
@@ -104,19 +103,26 @@ async function startServer() {
     const distPath = path.join(__dirname, 'dist');
     const indexPath = path.join(distPath, 'index.html');
 
-    // Hashed Vite bundles & public assets with long-term immutable caching
+    // Hashed Vite bundles get long-term immutable caching; unhashed public/assets revalidate cleanly
     app.use(
       '/assets',
       express.static(path.join(distPath, 'assets'), {
         maxAge: '1y',
         immutable: true,
+        setHeaders: (res, filePath) => {
+          if (!/\.(js|css|woff2)$/i.test(filePath)) {
+            res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+          }
+        },
       })
     );
     app.use(
       '/assets',
       express.static(path.join(__dirname, 'public', 'assets'), {
-        maxAge: '30d',
-        immutable: true,
+        maxAge: 0,
+        setHeaders: (res) => {
+          res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+        },
       })
     );
 

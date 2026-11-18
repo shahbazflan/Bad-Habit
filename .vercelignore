@@ -1,7 +1,8 @@
-# Exclude unused AI Studio chat screenshot attachments (keeps active hero cutout)
+# Exclude unused AI Studio chat screenshot/reference attachments (keeps active assets)
 public/assets/aistudio/Screenshot_*
 public/assets/aistudio/IMG_*
 public/assets/aistudio/BAD-HABIT-*
+public/assets/aistudio/Shop_by_category__*
 dist/
 node_modules/
 .aistudio/

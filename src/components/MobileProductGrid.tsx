@@ -105,15 +105,13 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
         {/* Full Garment Image Centered: clean uniform fit across all articles */}
         <div
           className={`w-full h-72 sm:h-76 flex items-center justify-center relative overflow-hidden ${
-            product.category === 'Shirts' ? 'p-3.5 sm:p-4' : 'p-1'
+            product.category === 'Shirts' ? 'p-4 sm:p-5' : 'p-1'
           }`}
         >
           <img
             src={product.image}
             alt={product.name}
             className={`w-full h-full object-contain object-center select-none transition-transform duration-150 group-hover:scale-[1.02] ${
-              product.category === 'Shirts' ? 'scale-[0.95]' : ''
-            } ${
               product.soldOut ? 'opacity-85' : ''
             }`}
             loading={index < 4 ? 'eager' : 'lazy'}

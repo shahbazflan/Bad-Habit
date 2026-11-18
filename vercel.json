@@ -14,11 +14,20 @@
   ],
   "headers": [
     {
-      "source": "/assets/(.*)",
+      "source": "/assets/(.*)\\.(js|css|woff2)",
       "headers": [
         {
           "key": "Cache-Control",
           "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(aistudio|shirts|trousers_v2|hoodies|categories|email-thumbs)/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
         }
       ]
     },
