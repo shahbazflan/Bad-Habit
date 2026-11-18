@@ -12,10 +12,7 @@ export const MemberAuthModal: React.FC = () => {
     clearJustRegistered,
     pendingWishlistProduct,
     clearPendingWishlistProduct,
-    pendingGoogleEmail,
-    pendingGoogleName,
     loginOrRegister,
-    startGoogleSignIn,
     logoutMember,
   } = useMember();
 
@@ -24,15 +21,6 @@ export const MemberAuthModal: React.FC = () => {
   const [displayName, setDisplayName] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
-
-  useEffect(() => {
-    if (pendingGoogleEmail) {
-      setEmail(pendingGoogleEmail);
-    }
-    if (pendingGoogleName) {
-      setDisplayName(pendingGoogleName);
-    }
-  }, [pendingGoogleEmail, pendingGoogleName]);
 
   useEffect(() => {
     if (!isMemberModalOpen) return;
@@ -72,14 +60,6 @@ export const MemberAuthModal: React.FC = () => {
     const result = await loginOrRegister({ email, phone, displayName });
     if (!result.ok) {
       setErrorMsg(result.error || 'Could not complete sign in.');
-    }
-  };
-
-  const handleGoogle = async () => {
-    setErrorMsg(null);
-    const result = await startGoogleSignIn();
-    if (!result.ok && result.error) {
-      setErrorMsg(result.error);
     }
   };
 
@@ -223,12 +203,6 @@ export const MemberAuthModal: React.FC = () => {
                 </p>
               </div>
 
-              {pendingGoogleEmail && (
-                <div className="p-3 rounded-xl bg-cyan-500/20 border border-cyan-200/40 text-xs font-display text-cyan-100">
-                  Google email verified ({pendingGoogleEmail}). Add your mobile number below to complete membership.
-                </div>
-              )}
-
               {errorMsg && (
                 <div className="p-3 rounded-xl bg-red-950/75 border border-red-400/45 text-red-200 text-xs font-display">
                   {errorMsg}
@@ -288,27 +262,6 @@ export const MemberAuthModal: React.FC = () => {
                   {isLoading ? 'Activating Membership…' : 'JOIN AND GET A CODE'}
                 </button>
               </form>
-
-              <div className="flex items-center gap-3 text-[11px] font-mono text-white/50">
-                <div className="flex-1 h-px bg-white/15" />
-                <span>OR</span>
-                <div className="flex-1 h-px bg-white/15" />
-              </div>
-
-              <button
-                type="button"
-                onClick={handleGoogle}
-                disabled={isLoading}
-                className="w-full py-3 px-5 rounded-full bg-white/12 hover:bg-white/20 border border-white/30 text-white font-display text-xs font-semibold tracking-wide flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-98 disabled:opacity-50"
-              >
-                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
-                  <path
-                    fill="#ffffff"
-                    d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10 5.35 0 9.25-3.67 9.25-9.09 0-1.15-.15-1.81-.15-1.81z"
-                  />
-                </svg>
-                <span>Continue with Google</span>
-              </button>
             </div>
           )}
         </div>

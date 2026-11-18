@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { onAuthStateChanged, signInWithPopup, signOut, User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
 import { Product } from '../data/products';
 import {
   auth,
-  googleProvider,
   syncFirebaseMemberProfile,
   syncFirebaseWishlistItem,
 } from '../firebase';
@@ -43,17 +42,16 @@ interface MemberContextType {
   clearJustRegistered: () => void;
   pendingWishlistProduct: Product | null;
   clearPendingWishlistProduct: () => void;
-  pendingGoogleEmail: string | null;
-  pendingGoogleName: string | null;
   loginOrRegister: (params: {
     email: string;
     phone: string;
     displayName?: string;
   }) => Promise<{ ok: boolean; isNewMember?: boolean; error?: string }>;
-  startGoogleSignIn: () => Promise<{ ok: boolean; needsPhone?: boolean; error?: string }>;
   logoutMember: () => Promise<void>;
   refreshMember: () => Promise<void>;
   syncMemberSnapshot: (updated: MemberProfile | null | undefined) => void;
+  hasOrderedIdentity: (params: { email?: string; phone?: string; memberId?: string }) => boolean;
+  recordOrderedIdentity: (params: { email?: string; phone?: string; memberId?: string }) => void;
   isInWishlist: (productId: string) => boolean;
   toggleWishlist: (product: Product) => Promise<void>;
   removeWishlistItem: (productId: string) => Promise<void>;
@@ -65,6 +63,41 @@ interface MemberContextType {
 const MemberContext = createContext<MemberContextType | null>(null);
 
 const MEMBER_STORAGE_KEY = 'bad_habit_member_v1';
+const ORDERED_IDENTITIES_KEY = 'bad_habit_ordered_identities_v1';
+
+const normEmail = (raw?: string) => String(raw || '').trim().toLowerCase();
+const normPhone = (raw?: string) => {
+  const digits = String(raw || '').replace(/[\s\-\(\)]/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('+92')) return `0${digits.slice(3).replace(/^0+/, '')}`;
+  if (digits.startsWith('0092')) return `0${digits.slice(4).replace(/^0+/, '')}`;
+  if (digits.startsWith('92') && digits.length >= 12) return `0${digits.slice(2).replace(/^0+/, '')}`;
+  if (digits.startsWith('3') && digits.length === 10) return `0${digits}`;
+  return digits;
+};
+
+interface OrderedIdentityLedger {
+  emails: string[];
+  phones: string[];
+  memberIds: string[];
+}
+
+function readOrderedLedger(): OrderedIdentityLedger {
+  try {
+    const raw = localStorage.getItem(ORDERED_IDENTITIES_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        emails: Array.isArray(parsed?.emails) ? parsed.emails : [],
+        phones: Array.isArray(parsed?.phones) ? parsed.phones : [],
+        memberIds: Array.isArray(parsed?.memberIds) ? parsed.memberIds : [],
+      };
+    }
+  } catch {
+    // ignore storage errors
+  }
+  return { emails: [], phones: [], memberIds: [] };
+}
 
 export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [member, setMember] = useState<MemberProfile | null>(() => {
@@ -88,23 +121,83 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [justRegistered, setJustRegistered] = useState(false);
   const [pendingWishlistProduct, setPendingWishlistProduct] = useState<Product | null>(null);
-  const [pendingGoogleEmail, setPendingGoogleEmail] = useState<string | null>(null);
-  const [pendingGoogleName, setPendingGoogleName] = useState<string | null>(null);
   const [wishlistLoadingId, setWishlistLoadingId] = useState<string | null>(null);
   const [wishlistNotice, setWishlistNotice] = useState<string | null>(null);
 
-  const persistMember = useCallback((next: MemberProfile | null) => {
-    setMember(next);
-    try {
-      if (next) {
-        localStorage.setItem(MEMBER_STORAGE_KEY, JSON.stringify(next));
-      } else {
-        localStorage.removeItem(MEMBER_STORAGE_KEY);
+  const hasOrderedIdentity = useCallback(
+    ({ email, phone, memberId }: { email?: string; phone?: string; memberId?: string }) => {
+      const ledger = readOrderedLedger();
+      const e = normEmail(email);
+      const p = normPhone(phone);
+      const id = String(memberId || '').trim();
+      return Boolean(
+        (e && ledger.emails.includes(e)) ||
+          (p && ledger.phones.includes(p)) ||
+          (id && ledger.memberIds.includes(id))
+      );
+    },
+    []
+  );
+
+  const persistMember = useCallback(
+    (next: MemberProfile | null) => {
+      if (next && hasOrderedIdentity({ email: next.email, phone: next.phone, memberId: next.id })) {
+        next = {
+          ...next,
+          firstOrderDiscountUsed: true,
+          orderCount: Math.max(1, Number(next.orderCount || 0)),
+        };
       }
-    } catch {
-      // ignore
-    }
-  }, []);
+      setMember(next);
+      try {
+        if (next) {
+          localStorage.setItem(MEMBER_STORAGE_KEY, JSON.stringify(next));
+        } else {
+          localStorage.removeItem(MEMBER_STORAGE_KEY);
+        }
+      } catch {
+        // ignore
+      }
+    },
+    [hasOrderedIdentity]
+  );
+
+  const recordOrderedIdentity = useCallback(
+    ({ email, phone, memberId }: { email?: string; phone?: string; memberId?: string }) => {
+      const ledger = readOrderedLedger();
+      const e = normEmail(email);
+      const p = normPhone(phone);
+      const id = String(memberId || '').trim();
+      if (e && !ledger.emails.includes(e)) ledger.emails.push(e);
+      if (p && !ledger.phones.includes(p)) ledger.phones.push(p);
+      if (id && !ledger.memberIds.includes(id)) ledger.memberIds.push(id);
+      try {
+        localStorage.setItem(ORDERED_IDENTITIES_KEY, JSON.stringify(ledger));
+      } catch {
+        // ignore
+      }
+      setMember((prev) => {
+        if (!prev) return prev;
+        const matchesPrev =
+          (e && normEmail(prev.email) === e) ||
+          (p && normPhone(prev.phone) === p) ||
+          (id && prev.id === id);
+        if (!matchesPrev) return prev;
+        const updated: MemberProfile = {
+          ...prev,
+          firstOrderDiscountUsed: true,
+          orderCount: Math.max(1, Number(prev.orderCount || 0)),
+        };
+        try {
+          localStorage.setItem(MEMBER_STORAGE_KEY, JSON.stringify(updated));
+        } catch {
+          // ignore
+        }
+        return updated;
+      });
+    },
+    []
+  );
 
   // Track Firebase Auth user state
   useEffect(() => {
@@ -125,6 +218,11 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           memberId: member.id,
           email: member.email,
           phone: member.phone,
+          clientPriorOrderUsed: hasOrderedIdentity({
+            memberId: member.id,
+            email: member.email,
+            phone: member.phone,
+          }),
         }),
       });
       if (res.ok) {
@@ -136,7 +234,7 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch {
       // keep existing cached profile on offline
     }
-  }, [member?.id, member?.email, member?.phone, persistMember]);
+  }, [member?.id, member?.email, member?.phone, hasOrderedIdentity, persistMember]);
 
   useEffect(() => {
     if (member?.id) {
@@ -213,6 +311,7 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             email: email.trim(),
             phone: phone.trim(),
             displayName: displayName?.trim() || undefined,
+            clientPriorOrderUsed: hasOrderedIdentity({ email, phone }),
           }),
         });
         const data = await res.json().catch(() => null);
@@ -226,8 +325,6 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const savedMember: MemberProfile = data.member;
         persistMember(savedMember);
         setJustRegistered(Boolean(data.isNewMember));
-        setPendingGoogleEmail(null);
-        setPendingGoogleName(null);
 
         if (auth.currentUser) {
           void syncFirebaseMemberProfile({
@@ -253,78 +350,13 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsLoading(false);
       }
     },
-    [persistMember, pendingWishlistProduct, addWishlistInternal]
+    [persistMember, hasOrderedIdentity, pendingWishlistProduct, addWishlistInternal]
   );
-
-  const startGoogleSignIn = useCallback(async (): Promise<{
-    ok: boolean;
-    needsPhone?: boolean;
-    error?: string;
-  }> => {
-    setIsLoading(true);
-    try {
-      const cred = await signInWithPopup(auth, googleProvider);
-      const user = cred.user;
-      const gEmail = (user.email || '').trim().toLowerCase();
-      const gName = (user.displayName || '').trim();
-
-      if (!gEmail) {
-        return { ok: false, error: 'Google account did not return an email address.' };
-      }
-
-      // Check if an account already exists for this email
-      const checkRes = await fetch('/api/members/me', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: gEmail }),
-      });
-
-      if (checkRes.ok) {
-        const data = await checkRes.json().catch(() => null);
-        if (data?.success && data.member) {
-          persistMember(data.member);
-          setJustRegistered(false);
-          setPendingGoogleEmail(null);
-          setPendingGoogleName(null);
-          void syncFirebaseMemberProfile({
-            uid: user.uid,
-            email: data.member.email,
-            phone: data.member.phone,
-            displayName: data.member.displayName || gName,
-            orderCount: data.member.orderCount,
-            firstOrderDiscountUsed: data.member.firstOrderDiscountUsed,
-          }).catch(() => {});
-          if (pendingWishlistProduct) {
-            const itemToSave = pendingWishlistProduct;
-            setPendingWishlistProduct(null);
-            await addWishlistInternal(data.member, itemToSave);
-          }
-          return { ok: true, needsPhone: false };
-        }
-      }
-
-      // New Google user: request phone number to complete membership & unlock BH-DETECTED
-      setPendingGoogleEmail(gEmail);
-      setPendingGoogleName(gName || null);
-      return { ok: true, needsPhone: true };
-    } catch (err: any) {
-      return {
-        ok: false,
-        error: err?.message?.includes('popup-closed')
-          ? 'Google sign-in popup was closed before completion.'
-          : 'Google sign-in could not be completed. You can sign up with Phone & Email below.',
-      };
-    } finally {
-      setIsLoading(false);
-    }
-  }, [persistMember, pendingWishlistProduct, addWishlistInternal]);
 
   const logoutMember = useCallback(async () => {
     persistMember(null);
     setJustRegistered(false);
     setPendingWishlistProduct(null);
-    setPendingGoogleEmail(null);
-    setPendingGoogleName(null);
     try {
       if (auth.currentUser) {
         await signOut(auth);
@@ -411,13 +443,12 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         clearJustRegistered: () => setJustRegistered(false),
         pendingWishlistProduct,
         clearPendingWishlistProduct: () => setPendingWishlistProduct(null),
-        pendingGoogleEmail,
-        pendingGoogleName,
         loginOrRegister,
-        startGoogleSignIn,
         logoutMember,
         refreshMember,
         syncMemberSnapshot,
+        hasOrderedIdentity,
+        recordOrderedIdentity,
         isInWishlist,
         toggleWishlist,
         removeWishlistItem,

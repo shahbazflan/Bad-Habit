@@ -24,6 +24,8 @@ export const CheckoutView: React.FC = () => {
     setIsMemberModalOpen,
     syncMemberSnapshot,
     refreshMember,
+    hasOrderedIdentity,
+    recordOrderedIdentity,
   } = useMember();
 
   // Contact State
@@ -100,12 +102,31 @@ export const CheckoutView: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCheckoutOpen, member]);
 
+  const effectiveEmail = (email || member?.email || '').trim();
+  const effectivePhone = (phone || member?.phone || '').trim();
+  const hasUsedFirstOrder = Boolean(
+    (member && (member.firstOrderDiscountUsed || member.orderCount > 0)) ||
+      hasOrderedIdentity({
+        email: effectiveEmail,
+        phone: effectivePhone,
+        memberId: member?.id,
+      })
+  );
+  const isFirstOrderEligible = Boolean(member && !hasUsedFirstOrder);
+
   const validatePromoWithServer = useCallback(
     async (rawCode: string) => {
       const cleaned = rawCode.trim().toUpperCase();
       if (!cleaned) {
         setPromoError('Please enter a promo code.');
         setPromoStatus(null);
+        return;
+      }
+      if (hasUsedFirstOrder) {
+        setAppliedPromoCode('');
+        setPromoDiscount(0);
+        setPromoStatus(null);
+        setPromoError('Code BH-DETECTED applies to your first order only and has already been used for this account.');
         return;
       }
       setIsValidatingPromo(true);
@@ -118,9 +139,10 @@ export const CheckoutView: React.FC = () => {
           body: JSON.stringify({
             code: cleaned,
             memberId: member?.id,
-            email: (email || member?.email || '').trim(),
-            phone: (phone || member?.phone || '').trim(),
+            email: effectiveEmail,
+            phone: effectivePhone,
             items,
+            clientPriorOrderUsed: hasUsedFirstOrder,
           }),
         });
         const data = await res.json().catch(() => null);
@@ -130,6 +152,13 @@ export const CheckoutView: React.FC = () => {
           setPromoError(data?.error || 'This code cannot be applied to your order.');
           if (data?.requiresMembership && !member) {
             setPromoError('Become a member and get a flat 10% off on your first order. Join to unlock your code.');
+          }
+          if (data?.alreadyUsed) {
+            recordOrderedIdentity({
+              email: effectiveEmail,
+              phone: effectivePhone,
+              memberId: member?.id,
+            });
           }
           return;
         }
@@ -143,15 +172,29 @@ export const CheckoutView: React.FC = () => {
         setIsValidatingPromo(false);
       }
     },
-    [member, email, phone, items]
+    [member, effectiveEmail, effectivePhone, hasUsedFirstOrder, items, recordOrderedIdentity]
   );
 
-  // Re-sync discount automatically if cart subtotal or member changes while a promo code is active
+  // Immediately revoke any active promo discount if first-order eligibility expires
   useEffect(() => {
-    if (!appliedPromoCode || !isCheckoutOpen || items.length === 0) return;
-    void validatePromoWithServer(appliedPromoCode);
+    if (!isCheckoutOpen) return;
+    if (hasUsedFirstOrder && (appliedPromoCode || promoDiscount > 0)) {
+      setAppliedPromoCode('');
+      setPromoDiscount(0);
+      setPromoStatus(null);
+      setPromoError('Code BH-DETECTED applies to your first order only and has already been used for this account.');
+    }
+  }, [hasUsedFirstOrder, appliedPromoCode, promoDiscount, isCheckoutOpen]);
+
+  // Re-sync discount automatically if cart subtotal, member, or contact identity changes while a promo code is active
+  useEffect(() => {
+    if (!appliedPromoCode || !isCheckoutOpen || items.length === 0 || hasUsedFirstOrder) return;
+    const timer = window.setTimeout(() => {
+      void validatePromoWithServer(appliedPromoCode);
+    }, 200);
+    return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subtotal, member?.id, member?.orderCount]);
+  }, [subtotal, member?.id, member?.orderCount, member?.firstOrderDiscountUsed, effectiveEmail, effectivePhone]);
 
   if (!isCheckoutOpen) return null;
 
@@ -180,7 +223,6 @@ export const CheckoutView: React.FC = () => {
   const discountedSubtotal = Math.max(0, subtotal - promoDiscount);
   const shippingCharge = items.length > 0 ? (isBankTransfer ? 0 : selectedShipping.charge) : 0;
   const grandTotal = discountedSubtotal + shippingCharge;
-  const isFirstOrderEligible = member ? !member.firstOrderDiscountUsed && member.orderCount === 0 : false;
 
   // Validation
   const validateForm = () => {
@@ -259,6 +301,7 @@ export const CheckoutView: React.FC = () => {
         sendOrderSummaryToEmail,
         promoCode: appliedPromoCode || promoInput.trim().toUpperCase() || undefined,
         memberId: member?.id || undefined,
+        clientPriorOrderUsed: hasUsedFirstOrder,
         customer: {
           email: email.trim(),
           phone: phone.trim(),
@@ -323,6 +366,22 @@ export const CheckoutView: React.FC = () => {
       }
 
       if (!res.ok || !data?.success) {
+        if (data?.field === 'promoCode') {
+          setAppliedPromoCode('');
+          setPromoDiscount(0);
+          setPromoStatus(null);
+          setPromoError(data?.error || 'Code BH-DETECTED applies to your first order only.');
+          if (data?.alreadyUsed) {
+            recordOrderedIdentity({
+              email: email.trim(),
+              phone: phone.trim(),
+              memberId: member?.id,
+            });
+          }
+          if (member) {
+            void refreshMember();
+          }
+        }
         throw new Error(
           data?.error ||
             (res.status === 404
@@ -330,6 +389,12 @@ export const CheckoutView: React.FC = () => {
               : `Server could not complete the order (HTTP ${res.status}). Please try again.`)
         );
       }
+
+      recordOrderedIdentity({
+        email: email.trim(),
+        phone: phone.trim(),
+        memberId: data?.member?.id || member?.id,
+      });
 
       if (data.member) {
         syncMemberSnapshot(data.member);
@@ -551,17 +616,32 @@ export const CheckoutView: React.FC = () => {
 
               {/* Promo Code Input Bar (Mobile Summary) */}
               <div className="pt-3 border-t border-white/15 space-y-2">
-                <label htmlFor="checkout-promo-mobile" className="block text-[10px] font-mono uppercase tracking-wider text-cyan-200 font-semibold">
-                  Member Promo Code (10% Off 1st Order)
-                </label>
+                <div className="flex items-center justify-between gap-2">
+                  <label htmlFor="checkout-promo-mobile" className="block text-[10px] font-mono uppercase tracking-wider text-cyan-200 font-semibold">
+                    Member Promo Code (10% Off 1st Order)
+                  </label>
+                  {isFirstOrderEligible && !appliedPromoCode && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPromoInput('BH-DETECTED');
+                        void validatePromoWithServer('BH-DETECTED');
+                      }}
+                      className="text-[10px] font-mono font-bold text-white bg-cyan-400/25 hover:bg-cyan-400/35 border border-cyan-200/50 px-2 py-0.5 rounded-full cursor-pointer transition-colors"
+                    >
+                      Use BH-DETECTED
+                    </button>
+                  )}
+                </div>
                 <div className="flex items-center gap-2">
                   <input
                     id="checkout-promo-mobile"
                     type="text"
                     value={promoInput}
+                    disabled={hasUsedFirstOrder && !appliedPromoCode}
                     onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
-                    placeholder="Enter promo code"
-                    className="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl bg-black/35 text-white placeholder:text-white/50 border border-white/25 focus:border-white/60 focus:outline-none text-xs font-mono uppercase tracking-wider"
+                    placeholder={hasUsedFirstOrder ? 'First-order code already used' : 'Enter promo code'}
+                    className="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl bg-black/35 text-white placeholder:text-white/50 border border-white/25 focus:border-white/60 focus:outline-none text-xs font-mono uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   {appliedPromoCode ? (
                     <button
@@ -579,9 +659,9 @@ export const CheckoutView: React.FC = () => {
                   ) : (
                     <button
                       type="button"
-                      disabled={isValidatingPromo}
+                      disabled={isValidatingPromo || hasUsedFirstOrder}
                       onClick={() => void validatePromoWithServer(promoInput)}
-                      className="px-4 py-2.5 rounded-xl bg-white text-slate-900 text-xs font-display font-bold uppercase cursor-pointer hover:bg-white/90 disabled:opacity-50"
+                      className="px-4 py-2.5 rounded-xl bg-white text-slate-900 text-xs font-display font-bold uppercase cursor-pointer hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isValidatingPromo ? '...' : 'Apply'}
                     </button>
@@ -589,6 +669,11 @@ export const CheckoutView: React.FC = () => {
                 </div>
                 {promoStatus && <p className="text-[11px] font-display text-emerald-200">{promoStatus}</p>}
                 {promoError && <p className="text-[11px] font-display text-red-300">{promoError}</p>}
+                {member && hasUsedFirstOrder && !promoError && (
+                  <p className="text-[11px] font-display text-white/75">
+                    First-order member discount already used — applies to your first order only.
+                  </p>
+                )}
                 {!member && !promoError && (
                   <p className="text-[11px] font-display text-white/75">
                     Become a member and get a flat 10% off on your first order.{' '}
@@ -1278,9 +1363,10 @@ export const CheckoutView: React.FC = () => {
                     id="checkout-promo-desktop"
                     type="text"
                     value={promoInput}
+                    disabled={hasUsedFirstOrder && !appliedPromoCode}
                     onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
-                    placeholder="Enter promo code"
-                    className="flex-1 min-w-0 px-4 py-3 rounded-2xl bg-black/35 hover:bg-black/45 focus:bg-black/55 text-white placeholder:text-white/50 border border-white/25 focus:border-white/60 focus:outline-none text-xs font-mono uppercase tracking-wider"
+                    placeholder={hasUsedFirstOrder ? 'First-order code already used' : 'Enter promo code'}
+                    className="flex-1 min-w-0 px-4 py-3 rounded-2xl bg-black/35 hover:bg-black/45 focus:bg-black/55 text-white placeholder:text-white/50 border border-white/25 focus:border-white/60 focus:outline-none text-xs font-mono uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   {appliedPromoCode ? (
                     <button
@@ -1298,9 +1384,9 @@ export const CheckoutView: React.FC = () => {
                   ) : (
                     <button
                       type="button"
-                      disabled={isValidatingPromo}
+                      disabled={isValidatingPromo || hasUsedFirstOrder}
                       onClick={() => void validatePromoWithServer(promoInput)}
-                      className="px-5 py-3 rounded-2xl bg-white text-slate-900 hover:bg-white/90 text-xs font-display font-bold uppercase tracking-wider cursor-pointer transition-colors disabled:opacity-50"
+                      className="px-5 py-3 rounded-2xl bg-white text-slate-900 hover:bg-white/90 text-xs font-display font-bold uppercase tracking-wider cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isValidatingPromo ? 'Checking…' : 'Apply'}
                     </button>
@@ -1312,6 +1398,11 @@ export const CheckoutView: React.FC = () => {
                 )}
                 {promoError && (
                   <p className="text-xs font-display text-red-300">{promoError}</p>
+                )}
+                {member && hasUsedFirstOrder && !promoError && (
+                  <p className="text-[11px] font-display text-white/75">
+                    First-order member discount already used — applies to your first order only.
+                  </p>
                 )}
                 {!member && !promoError && (
                   <p className="text-[11px] font-display text-white/75">

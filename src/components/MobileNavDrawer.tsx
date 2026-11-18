@@ -221,7 +221,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
               >
                 <div>
                   <span className="font-display text-sm font-black tracking-wide text-white block">
-                    {member ? 'Member Pass · BH-DETECTED' : 'Become a Member · 10% Off'}
+                    {member ? 'Member' : 'Become a Member · 10% Off'}
                   </span>
                   <span className="text-[11px] font-display text-cyan-100 mt-0.5 block">
                     {member

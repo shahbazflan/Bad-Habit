@@ -77,14 +77,17 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
           <button
             type="button"
             onClick={() => setIsMemberModalOpen(true)}
-            className={`h-8 px-2.5 rounded-full border backdrop-blur-md text-[10px] font-display font-bold tracking-wide flex items-center gap-1 transition-all active:scale-95 cursor-pointer ${
+            className={`h-8 px-2.5 rounded-full border backdrop-blur-md text-[10px] font-display font-bold tracking-wide flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer ${
               member
                 ? 'bg-white/25 border-white/45 text-white'
                 : 'bg-white/15 border-white/35 text-white'
             }`}
-            aria-label={member ? 'Member pass' : 'Join for 10% off first order'}
+            aria-label={member ? 'Member pass' : 'Member login'}
           >
-            <span>{member ? 'Member' : '10% Off'}</span>
+            <svg className="w-3.5 h-3.5 text-cyan-200 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+            </svg>
+            <span>Member</span>
           </button>
 
           <button

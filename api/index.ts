@@ -192,7 +192,7 @@ const PRODUCT_IMAGE_MAP: Record<string, { image: string; category: string }> = {
   'BH-H07': { image: '/assets/hoodies/slate_grey_sweatshirt_front.webp', category: 'Hoodies' },
   'BH-H08': { image: '/assets/hoodies/washed_umber_hoodie_front.webp', category: 'Hoodies' },
   'BH-H09': { image: '/assets/hoodies/oatmeal_hoodie_front.webp', category: 'Hoodies' },
-  'BH-S05': { image: '/assets/shirts/black_boxy_front.webp', category: 'Shirts' },
+  'BH-S05': { image: '/assets/aistudio/MAGNUM_BOXY_FRONT__36e853c5.png', category: 'Shirts' },
   'BH-S06': { image: '/assets/shirts/rough_boxy_front.webp', category: 'Shirts' },
   'BH-S04': { image: '/assets/shirts/maroon_boxy_front.webp', category: 'Shirts' },
   'BH-S03': { image: '/assets/shirts/espresso_boxy_front.webp', category: 'Shirts' },
@@ -233,7 +233,7 @@ const upsertMemberRecord = (member: any) => {
   writeMembers(filtered);
 };
 
-const findMemberByIdentity = ({
+const findAllMatchingMembers = ({
   memberId,
   email,
   phone,
@@ -246,22 +246,46 @@ const findMemberByIdentity = ({
   const normEmail = normalizeEmail(email);
   const normPhone = normalizePakPhone(phone);
 
-  if (memberId) {
-    const byId = members.find((m: any) => m.id === memberId);
-    if (byId) return byId;
-  }
-  if (normEmail) {
-    const byEmail = members.find((m: any) => normalizeEmail(m.email) === normEmail);
-    if (byEmail) return byEmail;
-  }
-  if (normPhone) {
-    const byPhone = members.find((m: any) => normalizePakPhone(m.phone) === normPhone);
-    if (byPhone) return byPhone;
-  }
-  return null;
+  return members.filter((m: any) => {
+    if (memberId && m.id === memberId) return true;
+    if (normEmail && normalizeEmail(m.email) === normEmail) return true;
+    if (normPhone && normalizePakPhone(m.phone) === normPhone) return true;
+    return false;
+  });
 };
 
-const hasPriorOrderByIdentity = ({ email, phone }: { email?: string; phone?: string }): boolean => {
+const findMemberByIdentity = ({
+  memberId,
+  email,
+  phone,
+}: {
+  memberId?: string;
+  email?: string;
+  phone?: string;
+}) => {
+  const matches = findAllMatchingMembers({ memberId, email, phone });
+  if (matches.length === 0) return null;
+  if (memberId) {
+    const byId = matches.find((m: any) => m.id === memberId);
+    if (byId) return byId;
+  }
+  const normEmail = normalizeEmail(email);
+  if (normEmail) {
+    const byEmail = matches.find((m: any) => normalizeEmail(m.email) === normEmail);
+    if (byEmail) return byEmail;
+  }
+  return matches[0];
+};
+
+const hasPriorOrderByIdentity = ({
+  memberId,
+  email,
+  phone,
+}: {
+  memberId?: string;
+  email?: string;
+  phone?: string;
+}): boolean => {
   const normEmail = normalizeEmail(email);
   const normPhone = normalizePakPhone(phone);
   const orders = readOrders();
@@ -270,7 +294,12 @@ const hasPriorOrderByIdentity = ({ email, phone }: { email?: string; phone?: str
   const orderedInHistory = orders.some((o: any) => {
     const oEmail = normalizeEmail(o?.customer?.email);
     const oPhone = normalizePakPhone(o?.customer?.phone);
-    return (normEmail && oEmail === normEmail) || (normPhone && oPhone === normPhone);
+    const oMemberId = o?.memberId ? String(o.memberId) : '';
+    return (
+      (memberId && oMemberId === memberId) ||
+      (normEmail && oEmail === normEmail) ||
+      (normPhone && oPhone === normPhone)
+    );
   });
   if (orderedInHistory) return true;
 
@@ -278,7 +307,11 @@ const hasPriorOrderByIdentity = ({ email, phone }: { email?: string; phone?: str
     if ((m.orderCount || 0) <= 0 && !m.firstOrderDiscountUsed) return false;
     const mEmail = normalizeEmail(m.email);
     const mPhone = normalizePakPhone(m.phone);
-    return (normEmail && mEmail === normEmail) || (normPhone && mPhone === normPhone);
+    return (
+      (memberId && m.id === memberId) ||
+      (normEmail && mEmail === normEmail) ||
+      (normPhone && mPhone === normPhone)
+    );
   });
 };
 
@@ -288,12 +321,14 @@ const validateFirstOrderPromo = ({
   email,
   phone,
   subtotalAfterPair,
+  clientPriorOrderUsed,
 }: {
   code?: string;
   memberId?: string;
   email?: string;
   phone?: string;
   subtotalAfterPair: number;
+  clientPriorOrderUsed?: boolean;
 }) => {
   const normalizedCode = String(code || '').trim().toUpperCase();
   if (!normalizedCode) {
@@ -308,8 +343,9 @@ const validateFirstOrderPromo = ({
     };
   }
 
-  const member = findMemberByIdentity({ memberId, email, phone });
-  if (!member) {
+  const matchedMembers = findAllMatchingMembers({ memberId, email, phone });
+  const primaryMember = findMemberByIdentity({ memberId, email, phone });
+  if (!primaryMember || matchedMembers.length === 0) {
     return {
       valid: false,
       applied: false,
@@ -320,12 +356,24 @@ const validateFirstOrderPromo = ({
   }
 
   const alreadyUsed =
-    Boolean(member.firstOrderDiscountUsed) ||
-    Number(member.orderCount || 0) > 0 ||
-    hasPriorOrderByIdentity({ email: member.email, phone: member.phone }) ||
-    hasPriorOrderByIdentity({ email, phone });
+    Boolean(clientPriorOrderUsed) ||
+    matchedMembers.some(
+      (m: any) =>
+        Boolean(m.firstOrderDiscountUsed) ||
+        Number(m.orderCount || 0) > 0 ||
+        hasPriorOrderByIdentity({ memberId: m.id, email: m.email, phone: m.phone })
+    ) ||
+    hasPriorOrderByIdentity({ memberId, email, phone });
 
   if (alreadyUsed) {
+    for (const m of matchedMembers) {
+      if (!m.firstOrderDiscountUsed || Number(m.orderCount || 0) === 0) {
+        m.firstOrderDiscountUsed = true;
+        m.orderCount = Math.max(1, Number(m.orderCount || 0));
+        m.updatedAt = new Date().toISOString();
+        upsertMemberRecord(m);
+      }
+    }
     return {
       valid: false,
       applied: false,
@@ -342,7 +390,7 @@ const validateFirstOrderPromo = ({
     code: MEMBER_PROMO_CODE,
     discountRate: MEMBER_FIRST_ORDER_RATE,
     discountAmount,
-    memberId: member.id,
+    memberId: primaryMember.id,
   };
 };
 
@@ -1550,7 +1598,7 @@ apiRouter.post('/cart/validate', (req, res) => {
 
 // 3. Member Signup / Login (Phone + Email) & Wishlist & First-Order Promo Validation
 apiRouter.post('/members/session', async (req, res) => {
-  const { email, phone, displayName, dryRun } = req.body || {};
+  const { email, phone, displayName, dryRun, clientPriorOrderUsed } = req.body || {};
   const normEmail = normalizeEmail(email);
   const normPhone = normalizePakPhone(phone);
 
@@ -1565,13 +1613,21 @@ apiRouter.post('/members/session', async (req, res) => {
     });
   }
 
-  let existing = findMemberByIdentity({ email: normEmail, phone: normPhone });
+  const matched = findAllMatchingMembers({ email: normEmail, phone: normPhone });
+  const existing = findMemberByIdentity({ email: normEmail, phone: normPhone });
   const now = new Date().toISOString();
 
   if (existing) {
-    const priorOrdered = hasPriorOrderByIdentity({ email: normEmail, phone: normPhone }) ||
-      hasPriorOrderByIdentity({ email: existing.email, phone: existing.phone });
-    if (priorOrdered && !existing.firstOrderDiscountUsed) {
+    const priorOrdered =
+      Boolean(clientPriorOrderUsed) ||
+      matched.some(
+        (m: any) =>
+          Boolean(m.firstOrderDiscountUsed) ||
+          Number(m.orderCount || 0) > 0 ||
+          hasPriorOrderByIdentity({ memberId: m.id, email: m.email, phone: m.phone })
+      ) ||
+      hasPriorOrderByIdentity({ email: normEmail, phone: normPhone });
+    if (priorOrdered && (!existing.firstOrderDiscountUsed || Number(existing.orderCount || 0) === 0)) {
       existing.firstOrderDiscountUsed = true;
       existing.orderCount = Math.max(1, Number(existing.orderCount || 0));
     }
@@ -1587,7 +1643,8 @@ apiRouter.post('/members/session', async (req, res) => {
     });
   }
 
-  const priorOrdered = hasPriorOrderByIdentity({ email: normEmail, phone: normPhone });
+  const priorOrdered =
+    Boolean(clientPriorOrderUsed) || hasPriorOrderByIdentity({ email: normEmail, phone: normPhone });
   const rand = Math.floor(10000 + Math.random() * 90000);
   const newMember = {
     id: `mem_${Date.now()}_${rand}`,
@@ -1623,15 +1680,22 @@ apiRouter.post('/members/session', async (req, res) => {
 });
 
 apiRouter.post('/members/me', (req, res) => {
-  const { memberId, email, phone } = req.body || {};
+  const { memberId, email, phone, clientPriorOrderUsed } = req.body || {};
+  const matched = findAllMatchingMembers({ memberId, email, phone });
   const member = findMemberByIdentity({ memberId, email, phone });
   if (!member) {
     return res.status(404).json({ success: false, error: 'Member not found.' });
   }
   const priorOrdered =
-    hasPriorOrderByIdentity({ email: member.email, phone: member.phone }) ||
-    hasPriorOrderByIdentity({ email, phone });
-  if (priorOrdered && !member.firstOrderDiscountUsed) {
+    Boolean(clientPriorOrderUsed) ||
+    matched.some(
+      (m: any) =>
+        Boolean(m.firstOrderDiscountUsed) ||
+        Number(m.orderCount || 0) > 0 ||
+        hasPriorOrderByIdentity({ memberId: m.id, email: m.email, phone: m.phone })
+    ) ||
+    hasPriorOrderByIdentity({ memberId, email, phone });
+  if (priorOrdered && (!member.firstOrderDiscountUsed || Number(member.orderCount || 0) === 0)) {
     member.firstOrderDiscountUsed = true;
     member.orderCount = Math.max(1, Number(member.orderCount || 0));
     member.updatedAt = new Date().toISOString();
@@ -1713,7 +1777,7 @@ apiRouter.post('/wishlist/remove', (req, res) => {
 });
 
 apiRouter.post('/promo/validate', (req, res) => {
-  const { code, memberId, email, phone, items } = req.body || {};
+  const { code, memberId, email, phone, items, clientPriorOrderUsed } = req.body || {};
   let subtotalAfterPair = 0;
 
   if (Array.isArray(items) && items.length > 0) {
@@ -1734,6 +1798,7 @@ apiRouter.post('/promo/validate', (req, res) => {
     email,
     phone,
     subtotalAfterPair,
+    clientPriorOrderUsed: Boolean(clientPriorOrderUsed),
   });
 
   if (!result.valid) {
@@ -1773,6 +1838,7 @@ apiRouter.post(['/orders', '/orders/create'], async (req, res) => {
     sendOrderSummaryToEmail = true,
     promoCode = '',
     memberId = '',
+    clientPriorOrderUsed = false,
   } = body;
 
   // Check idempotency cache first to prevent duplicate orders
@@ -1897,11 +1963,13 @@ apiRouter.post(['/orders', '/orders/create'], async (req, res) => {
       email: contact.email,
       phone: cleanPhone,
       subtotalAfterPair: pairPricing.subtotal,
+      clientPriorOrderUsed: Boolean(clientPriorOrderUsed),
     });
     if (!promoCheck.valid) {
       return res.status(400).json({
         success: false,
         field: 'promoCode',
+        alreadyUsed: Boolean(promoCheck.alreadyUsed),
         error: promoCheck.error,
       });
     }
@@ -1922,10 +1990,16 @@ apiRouter.post(['/orders', '/orders/create'], async (req, res) => {
   const randomSuffix = Math.floor(10000 + Math.random() * 90000);
   const orderNumber = `BH-26-${randomSuffix}`;
   const orderId = `ord_${Date.now()}_${randomSuffix}`;
+  const primaryMatchedMember = findMemberByIdentity({
+    memberId,
+    email: contact.email,
+    phone: cleanPhone,
+  });
 
   const newOrder = {
     id: orderId,
     orderNumber,
+    memberId: memberId || primaryMatchedMember?.id || undefined,
     createdAt: new Date().toISOString(),
     customer: {
       email: String(contact.email).trim(),
@@ -2022,19 +2096,28 @@ apiRouter.post(['/orders', '/orders/create'], async (req, res) => {
   // Store enriched order safely
   saveOrder(enrichedOrder);
 
-  // Mark member order completion so 10% first-order discount cannot be reused
-  const matchedMember = findMemberByIdentity({
+  // Mark ALL matching member profiles with order completion so 10% first-order discount cannot be reused
+  const matchedMembers = findAllMatchingMembers({
     memberId,
     email: newOrder.customer.email,
     phone: newOrder.customer.phone,
   });
-  if (matchedMember) {
-    matchedMember.orderCount = Number(matchedMember.orderCount || 0) + 1;
-    matchedMember.firstOrderDiscountUsed = true;
-    matchedMember.firstOrderNumber = matchedMember.firstOrderNumber || orderNumber;
-    matchedMember.updatedAt = new Date().toISOString();
-    upsertMemberRecord(matchedMember);
+  const nowIso = new Date().toISOString();
+  for (const matched of matchedMembers) {
+    matched.orderCount = Number(matched.orderCount || 0) + 1;
+    matched.firstOrderDiscountUsed = true;
+    matched.firstOrderNumber = matched.firstOrderNumber || orderNumber;
+    matched.updatedAt = nowIso;
+    upsertMemberRecord(matched);
   }
+  const returnedMember =
+    findMemberByIdentity({
+      memberId,
+      email: newOrder.customer.email,
+      phone: newOrder.customer.phone,
+    }) ||
+    matchedMembers[0] ||
+    null;
 
   // Save in idempotency cache
   if (idempotencyKey) {
@@ -2044,7 +2127,7 @@ apiRouter.post(['/orders', '/orders/create'], async (req, res) => {
   res.status(201).json({
     success: true,
     order: enrichedOrder,
-    member: matchedMember || null,
+    member: returnedMember,
     emailNotification: storeNotification,
     customerEmailNotification: customerNotification,
     automationNotification,

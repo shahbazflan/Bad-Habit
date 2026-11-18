@@ -313,13 +313,13 @@ export const PRODUCTS: Product[] = [
   // ==========================================
   {
     id: 'BH-S05',
-    backImage: '/assets/shirts/deep_espresso_shirt_back.webp',
+    backImage: '/assets/aistudio/MAGNUM_BOXY_BACK__1cb29815.png',
     name: 'Magnum BOXY',
     category: 'Shirts',
     color: 'Black',
     colorHex: '#222020',
     colorGroup: 'shirts',
-    image: '/assets/shirts/black_boxy_front.webp',
+    image: '/assets/aistudio/MAGNUM_BOXY_FRONT__36e853c5.png',
     price: 'PKR 4,999',
     fabric: 'Deep black heavyweight matte poplin with structured collar stand, tonal buttons, and architectural straight boxy hem',
   },
