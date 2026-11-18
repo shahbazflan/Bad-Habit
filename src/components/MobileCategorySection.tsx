@@ -31,21 +31,21 @@ export const CATEGORY_ITEMS: CategoryItem[] = [
   {
     id: 'trousers',
     name: 'TROUSERS',
-    image: '/assets/categories/category_trousers_cutout.webp',
+    image: '/assets/categories/category_trousers_hd.webp',
     alt: 'BAD HABIT Trousers Collection',
     count: `${MAIN_COLLECTION.length} Articles`,
   },
   {
     id: 'shirts',
     name: 'SHIRTS',
-    image: '/assets/categories/category_shirts_cutout.webp',
+    image: '/assets/categories/category_shirts_v3.webp',
     alt: 'BAD HABIT Shirts Category',
     count: `${SHIRT_PRODUCTS.length} Articles`,
   },
   {
     id: 'hoodies',
     name: 'HOODIES & SWEATSHIRTS',
-    image: '/assets/categories/category_hoodies_cutout.webp',
+    image: '/assets/categories/category_hoodies_desktop.webp',
     alt: 'BAD HABIT Hoodies & Sweatshirts Category',
     count: `${HOODIE_PRODUCTS.length} Articles`,
   },
@@ -126,13 +126,13 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
                 </div>
               )}
 
-              {/* Shirts Model Cutout: Flush-left arm framing cleanly inside sky portal */}
+              {/* Shirts Model Cutout: Centered cleanly inside sky portal */}
               {isShirts && (
-                <div className="absolute inset-0 flex items-end justify-start pointer-events-none">
+                <div className="absolute inset-0 flex items-end justify-center pointer-events-none">
                   <img
                     src={cat.image}
                     alt={cat.alt}
-                    className="h-[97%] w-auto object-contain object-left-bottom select-none transition-transform duration-300 group-hover:scale-105 origin-bottom-left"
+                    className="h-[96%] w-auto object-contain object-bottom select-none transition-transform duration-300 group-hover:scale-105 origin-bottom"
                     loading="eager"
                     decoding="async"
                   />

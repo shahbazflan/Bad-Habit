@@ -1,4 +1,6 @@
 import React from 'react';
+import { BrandLogo } from './BrandLogo';
+import { useMember } from '../context/MemberContext';
 
 interface MobileHeaderProps {
   onOpenMenu: () => void;
@@ -15,11 +17,8 @@ interface MobileHeaderProps {
  * MobileHeader
  * 
  * Precision-matched mobile header:
- * - Left: Menu icon (3 thin lines) or Back arrow if showBack is enabled
- * - Center: Genuinely centered "BAD HABIT" wordmark (independent of side buttons)
- * - Right: Minimalist shopping-bag icon with unobtrusive item count badge
- * - Accessible touch targets (>= 44x44px)
- * - Safe area inset compliance
+ * - Left: Menu/Back icon + Constant clickable "BAD HABIT / YOU KNOW YOU WANT IT" logo
+ * - Right: Wishlist button, Member sign-in/pass button, and Shopping Bag icon
  */
 export const MobileHeader: React.FC<MobileHeaderProps> = ({
   onOpenMenu,
@@ -31,34 +30,37 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   backLabel = 'Back',
   transparent = false,
 }) => {
+  const { member, setIsMemberModalOpen, setIsWishlistOpen } = useMember();
+  const wishlistCount = member?.wishlist?.length || 0;
+
   return (
-    <header
-      className={`sticky top-0 left-0 right-0 z-40 w-full transition-colors duration-200 select-none ${
-        transparent
-          ? 'bg-gradient-to-b from-black/30 via-black/10 to-transparent'
-          : 'bg-[#557c9e]/80 backdrop-blur-md border-b border-white/15'
-      } px-4 py-2.5 pt-[calc(10px+env(safe-area-inset-top))]`}
-    >
-      <div className="relative w-full h-11 flex items-center justify-between">
-        {/* LEFT ACTION: Menu (or Back) */}
-        <div className="flex items-center z-10">
+    <>
+      <header
+        className={`${transparent ? 'sticky' : 'fixed'} top-0 left-0 right-0 z-40 w-full transition-colors duration-200 select-none ${
+          transparent
+            ? 'bg-gradient-to-b from-black/30 via-black/10 to-transparent'
+            : 'bg-[#557c9e]/85 backdrop-blur-md border-b border-white/15'
+        } px-3.5 py-2.5 pt-[calc(10px+env(safe-area-inset-top))]`}
+      >
+      <div className="relative w-full h-11 flex items-center justify-between gap-2">
+        {/* LEFT ACTION: Menu (or Back) + Persistent Clickable BAD HABIT Logo */}
+        <div className="flex items-center gap-1.5 z-10 min-w-0">
           {showBack && onBack ? (
             <button
               type="button"
               onClick={onBack}
-              className="min-w-[44px] h-[44px] flex items-center gap-1.5 text-white/90 hover:text-white transition-opacity active:scale-95 cursor-pointer outline-none -ml-2 px-2"
+              className="min-w-[40px] h-[40px] flex items-center gap-1 text-white/90 hover:text-white transition-opacity active:scale-95 cursor-pointer outline-none -ml-1 px-1"
               aria-label={backLabel}
             >
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <svg className="w-5 h-5 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
               </svg>
-              <span className="text-xs font-mono text-white/80 hidden xs:inline">{backLabel}</span>
             </button>
           ) : (
             <button
               type="button"
               onClick={onOpenMenu}
-              className="w-11 h-11 flex items-center justify-center text-white/90 hover:text-white transition-opacity active:scale-95 cursor-pointer outline-none -ml-2"
+              className="w-10 h-10 flex items-center justify-center text-white/90 hover:text-white transition-opacity active:scale-95 cursor-pointer outline-none -ml-1 shrink-0"
               aria-label="Open navigation menu"
             >
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -66,17 +68,55 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
               </svg>
             </button>
           )}
+
+          <BrandLogo compact onClick={onGoHome} />
         </div>
 
-        {/* CENTER: Wordmark removed as requested */}
-        <div className="flex-1" />
+        {/* RIGHT ACTIONS: Member, Wishlist & Shopping Bag */}
+        <div className="flex items-center gap-1 z-10 shrink-0">
+          <button
+            type="button"
+            onClick={() => setIsMemberModalOpen(true)}
+            className={`h-8 px-2.5 rounded-full border backdrop-blur-md text-[10px] font-display font-bold tracking-wide flex items-center gap-1 transition-all active:scale-95 cursor-pointer ${
+              member
+                ? 'bg-white/25 border-white/45 text-white'
+                : 'bg-white/15 border-white/35 text-white'
+            }`}
+            aria-label={member ? 'Member pass' : 'Join for 10% off first order'}
+          >
+            <span>{member ? 'Member' : '10% Off'}</span>
+          </button>
 
-        {/* RIGHT ACTION: Shopping Bag Icon + Tagline below */}
-        <div className="flex flex-col items-end justify-center z-10">
+          <button
+            type="button"
+            onClick={() => (member ? setIsWishlistOpen(true) : setIsMemberModalOpen(true))}
+            className="relative w-10 h-10 flex items-center justify-center text-white/90 hover:text-white transition-opacity active:scale-95 cursor-pointer outline-none"
+            aria-label={`Wishlist containing ${wishlistCount} items`}
+          >
+            <svg
+              className={`w-5 h-5 ${wishlistCount > 0 ? 'text-rose-300 fill-rose-400' : 'text-white'}`}
+              fill={wishlistCount > 0 ? 'currentColor' : 'none'}
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="1.9"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+              />
+            </svg>
+            {wishlistCount > 0 && (
+              <span className="absolute top-1.5 right-1 min-w-[14px] h-[14px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-mono font-bold flex items-center justify-center shadow-sm">
+                {wishlistCount}
+              </span>
+            )}
+          </button>
+
           <button
             type="button"
             onClick={onOpenBag}
-            className="relative w-11 h-11 flex items-center justify-center text-white/90 hover:text-white transition-opacity active:scale-95 cursor-pointer outline-none -mr-2"
+            className="relative w-10 h-10 flex items-center justify-center text-white/90 hover:text-white transition-opacity active:scale-95 cursor-pointer outline-none -mr-1"
             aria-label={`Shopping bag containing ${cartCount} items`}
           >
             <svg
@@ -93,13 +133,20 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
               />
             </svg>
             {cartCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 min-w-[15px] h-[15px] px-1 rounded-full bg-white text-black text-[9px] font-mono font-bold flex items-center justify-center shadow-sm">
+              <span className="absolute top-1.5 right-1 min-w-[15px] h-[15px] px-1 rounded-full bg-white text-black text-[9px] font-mono font-bold flex items-center justify-center shadow-sm">
                 {cartCount}
               </span>
             )}
           </button>
         </div>
       </div>
-    </header>
+      </header>
+      {!transparent && (
+        <div
+          className="w-full h-[calc(65px+env(safe-area-inset-top))] shrink-0"
+          aria-hidden="true"
+        />
+      )}
+    </>
   );
 };

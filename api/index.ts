@@ -101,8 +101,10 @@ const DATA_DIR = isServerlessRuntime
   ? path.join('/tmp', 'bad-habit-data')
   : path.join(process.cwd(), 'data');
 const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
+const MEMBERS_FILE = path.join(DATA_DIR, 'members.json');
 
 const memoryOrders: any[] = [];
+const memoryMembers: any[] = [];
 const idempotencyCache = new Map<string, any>();
 
 const ensureOrderStore = () => {
@@ -112,6 +114,9 @@ const ensureOrderStore = () => {
     }
     if (!fs.existsSync(ORDERS_FILE)) {
       fs.writeFileSync(ORDERS_FILE, JSON.stringify([], null, 2));
+    }
+    if (!fs.existsSync(MEMBERS_FILE)) {
+      fs.writeFileSync(MEMBERS_FILE, JSON.stringify([], null, 2));
     }
     return true;
   } catch {
@@ -146,6 +151,199 @@ const saveOrder = (order: any) => {
   } catch (err: any) {
     console.warn('[BAD HABIT] File order persistence skipped:', err?.message || err);
   }
+};
+
+const normalizeEmail = (raw: unknown): string => String(raw ?? '').trim().toLowerCase();
+
+const normalizePakPhone = (raw: unknown): string => {
+  const digits = String(raw ?? '').replace(/[\s\-\(\)]/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('+92')) return `0${digits.slice(3).replace(/^0+/, '')}`;
+  if (digits.startsWith('0092')) return `0${digits.slice(4).replace(/^0+/, '')}`;
+  if (digits.startsWith('92') && digits.length >= 12) return `0${digits.slice(2).replace(/^0+/, '')}`;
+  if (digits.startsWith('3') && digits.length === 10) return `0${digits}`;
+  return digits;
+};
+
+const isValidEmail = (email: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const isValidPakPhone = (raw: string): boolean => {
+  const cleaned = String(raw ?? '').replace(/[\s\-\(\)]/g, '');
+  return /^(?:\+92|0092|92)?0?3[0-9]{9}$/.test(cleaned);
+};
+
+const MEMBER_PROMO_CODE = 'BH-DETECTED';
+const MEMBER_FIRST_ORDER_RATE = 0.10;
+
+const PRODUCT_IMAGE_MAP: Record<string, { image: string; category: string }> = {
+  'BH-T01': { image: '/assets/trousers_v2/midnight_blue_front_only.webp', category: 'Trousers' },
+  'BH-T06': { image: '/assets/trousers_v2/ivory_trousers_front_only.webp', category: 'Trousers' },
+  'BH-T07': { image: '/assets/trousers_v2/sage_trousers_front_only.webp', category: 'Trousers' },
+  'BH-T08': { image: '/assets/trousers_v2/stone_trousers_front_only.webp', category: 'Trousers' },
+  'BH-T10': { image: '/assets/trousers_v2/classic_brown_front_only.webp', category: 'Trousers' },
+  'BH-T09': { image: '/assets/trousers_v2/deep_charcoal_front_only.webp', category: 'Trousers' },
+  'BH-T05': { image: '/assets/trousers_v2/ash_baggy_front_only.webp', category: 'Trousers' },
+  'BH-T11': { image: '/assets/trousers_v2/chocolate_balloon_front_only.webp', category: 'Trousers' },
+  'BH-H01': { image: '/assets/hoodies/storm_blue_front_only.webp', category: 'Hoodies' },
+  'BH-H02': { image: '/assets/hoodies/onyx_hoodie_front_only.webp', category: 'Hoodies' },
+  'BH-H03': { image: '/assets/hoodies/ivory_sweatshirt_front_only.webp', category: 'Hoodies' },
+  'BH-H04': { image: '/assets/hoodies/dusty_rose_hoodie_front_only.webp', category: 'Hoodies' },
+  'BH-H05': { image: '/assets/hoodies/off_white_hoodie_front_only.webp', category: 'Hoodies' },
+  'BH-H06': { image: '/assets/hoodies/charcoal_raglan_hoodie_front.webp', category: 'Hoodies' },
+  'BH-H07': { image: '/assets/hoodies/slate_grey_sweatshirt_front.webp', category: 'Hoodies' },
+  'BH-H08': { image: '/assets/hoodies/washed_umber_hoodie_front.webp', category: 'Hoodies' },
+  'BH-H09': { image: '/assets/hoodies/oatmeal_hoodie_front.webp', category: 'Hoodies' },
+  'BH-S05': { image: '/assets/shirts/black_boxy_front.webp', category: 'Shirts' },
+  'BH-S06': { image: '/assets/shirts/rough_boxy_front.webp', category: 'Shirts' },
+  'BH-S04': { image: '/assets/shirts/maroon_boxy_front.webp', category: 'Shirts' },
+  'BH-S03': { image: '/assets/shirts/espresso_boxy_front.webp', category: 'Shirts' },
+  'BH-S02': { image: '/assets/shirts/cream_boxy_front.webp', category: 'Shirts' },
+  'BH-S01': { image: '/assets/shirts/foam_boxy_front.webp', category: 'Shirts' },
+};
+
+const readMembers = (): any[] => {
+  try {
+    if (fs.existsSync(MEMBERS_FILE)) {
+      const data = fs.readFileSync(MEMBERS_FILE, 'utf-8');
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {
+    // Fallback to memoryMembers
+  }
+  return memoryMembers;
+};
+
+const writeMembers = (members: any[]) => {
+  memoryMembers.length = 0;
+  memoryMembers.push(...members.slice(0, 500));
+
+  try {
+    if (ensureOrderStore()) {
+      fs.writeFileSync(MEMBERS_FILE, JSON.stringify(members, null, 2));
+    }
+  } catch (err: any) {
+    console.warn('[BAD HABIT] File member persistence skipped:', err?.message || err);
+  }
+};
+
+const upsertMemberRecord = (member: any) => {
+  const members = readMembers();
+  const filtered = members.filter((m: any) => m.id !== member.id);
+  filtered.unshift(member);
+  writeMembers(filtered);
+};
+
+const findMemberByIdentity = ({
+  memberId,
+  email,
+  phone,
+}: {
+  memberId?: string;
+  email?: string;
+  phone?: string;
+}) => {
+  const members = readMembers();
+  const normEmail = normalizeEmail(email);
+  const normPhone = normalizePakPhone(phone);
+
+  if (memberId) {
+    const byId = members.find((m: any) => m.id === memberId);
+    if (byId) return byId;
+  }
+  if (normEmail) {
+    const byEmail = members.find((m: any) => normalizeEmail(m.email) === normEmail);
+    if (byEmail) return byEmail;
+  }
+  if (normPhone) {
+    const byPhone = members.find((m: any) => normalizePakPhone(m.phone) === normPhone);
+    if (byPhone) return byPhone;
+  }
+  return null;
+};
+
+const hasPriorOrderByIdentity = ({ email, phone }: { email?: string; phone?: string }): boolean => {
+  const normEmail = normalizeEmail(email);
+  const normPhone = normalizePakPhone(phone);
+  const orders = readOrders();
+  const members = readMembers();
+
+  const orderedInHistory = orders.some((o: any) => {
+    const oEmail = normalizeEmail(o?.customer?.email);
+    const oPhone = normalizePakPhone(o?.customer?.phone);
+    return (normEmail && oEmail === normEmail) || (normPhone && oPhone === normPhone);
+  });
+  if (orderedInHistory) return true;
+
+  return members.some((m: any) => {
+    if ((m.orderCount || 0) <= 0 && !m.firstOrderDiscountUsed) return false;
+    const mEmail = normalizeEmail(m.email);
+    const mPhone = normalizePakPhone(m.phone);
+    return (normEmail && mEmail === normEmail) || (normPhone && mPhone === normPhone);
+  });
+};
+
+const validateFirstOrderPromo = ({
+  code,
+  memberId,
+  email,
+  phone,
+  subtotalAfterPair,
+}: {
+  code?: string;
+  memberId?: string;
+  email?: string;
+  phone?: string;
+  subtotalAfterPair: number;
+}) => {
+  const normalizedCode = String(code || '').trim().toUpperCase();
+  if (!normalizedCode) {
+    return { valid: false, applied: false, discountAmount: 0, error: '' };
+  }
+  if (normalizedCode !== MEMBER_PROMO_CODE) {
+    return {
+      valid: false,
+      applied: false,
+      discountAmount: 0,
+      error: `Invalid promo code "${normalizedCode}".`,
+    };
+  }
+
+  const member = findMemberByIdentity({ memberId, email, phone });
+  if (!member) {
+    return {
+      valid: false,
+      applied: false,
+      requiresMembership: true,
+      discountAmount: 0,
+      error: 'Become a member and get a flat 10% off on your first order. Join to unlock your code.',
+    };
+  }
+
+  const alreadyUsed =
+    Boolean(member.firstOrderDiscountUsed) ||
+    Number(member.orderCount || 0) > 0 ||
+    hasPriorOrderByIdentity({ email: member.email, phone: member.phone }) ||
+    hasPriorOrderByIdentity({ email, phone });
+
+  if (alreadyUsed) {
+    return {
+      valid: false,
+      applied: false,
+      alreadyUsed: true,
+      discountAmount: 0,
+      error: `Code ${MEMBER_PROMO_CODE} applies to your first order only and has already been used for this account.`,
+    };
+  }
+
+  const discountAmount = Math.round(Math.max(0, subtotalAfterPair) * MEMBER_FIRST_ORDER_RATE);
+  return {
+    valid: true,
+    applied: true,
+    code: MEMBER_PROMO_CODE,
+    discountRate: MEMBER_FIRST_ORDER_RATE,
+    discountAmount,
+    memberId: member.id,
+  };
 };
 
 const ORDER_NOTIFICATION_EMAIL =
@@ -316,6 +514,9 @@ const buildOrderSummaryContent = (
     order.pricing.pairDiscount > 0
       ? `Pair Discount (15% Off · ${order.pricing.pairCount} ${order.pricing.pairCount === 1 ? 'pair' : 'pairs'}): -${order.pricing.formattedPairDiscount}`
       : '',
+    order.pricing.promoDiscount > 0
+      ? `First-Order Member Code (${order.pricing.promoCode || MEMBER_PROMO_CODE} · 10% Off): -${order.pricing.formattedPromoDiscount}`
+      : '',
     `Delivery Charge: ${order.pricing.shippingCharge === 0 ? 'FREE (PKR 0)' : order.pricing.formattedShippingCharge}`,
     `Order total: ${order.pricing.formattedTotal}`,
     ``,
@@ -454,7 +655,7 @@ const buildOrderSummaryContent = (
               </table>
 
               ${
-                order.pricing.pairDiscount > 0 || order.pricing.shippingCharge > 0 || isBankTransfer
+                order.pricing.pairDiscount > 0 || order.pricing.promoDiscount > 0 || order.pricing.shippingCharge > 0 || isBankTransfer
                   ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:14px;font-size:13px;color:#2b4c65;">
                       ${
                         order.pricing.pairDiscount > 0
@@ -465,6 +666,14 @@ const buildOrderSummaryContent = (
                             <tr>
                               <td style="padding:3px 0;color:#0f766e;font-weight:600;">Pair Discount (15% Off · ${order.pricing.pairCount} ${order.pricing.pairCount === 1 ? 'pair' : 'pairs'})</td>
                               <td align="right" style="padding:3px 0;text-align:right;color:#0f766e;font-weight:600;">-${escapeHtml(order.pricing.formattedPairDiscount)}</td>
+                            </tr>`
+                          : ''
+                      }
+                      ${
+                        order.pricing.promoDiscount > 0
+                          ? `<tr>
+                              <td style="padding:3px 0;color:#0f766e;font-weight:600;">First-Order Member Code (${escapeHtml(order.pricing.promoCode || MEMBER_PROMO_CODE)} · 10% Off)</td>
+                              <td align="right" style="padding:3px 0;text-align:right;color:#0f766e;font-weight:600;">-${escapeHtml(order.pricing.formattedPromoDiscount)}</td>
                             </tr>`
                           : ''
                       }
@@ -855,6 +1064,330 @@ const sendOrderNotifications = async (
   };
 };
 
+// Shared notification sender for non-order events (new member registration, wishlist updates)
+const dispatchStoreEventEmail = async ({
+  toEmail,
+  replyTo,
+  subject,
+  textBody,
+  htmlBody,
+  attachments,
+  relayFields,
+  allowRelayFallback = true,
+}: {
+  toEmail: string;
+  replyTo?: string;
+  subject: string;
+  textBody: string;
+  htmlBody: string;
+  attachments?: EmailInlineAttachment[];
+  relayFields?: Record<string, string>;
+  allowRelayFallback?: boolean;
+}) => {
+  const cfg = getEmailTransportConfig();
+  const rawEmailFrom = (process.env.EMAIL_FROM || '').trim();
+  let lastError = '';
+
+  if (cfg.resendKey) {
+    try {
+      const resendBody: Record<string, any> = {
+        from: rawEmailFrom || 'BAD HABIT <onboarding@resend.dev>',
+        to: [toEmail],
+        ...(replyTo ? { reply_to: replyTo } : {}),
+        subject,
+        text: textBody,
+        html: htmlBody,
+      };
+      if (attachments && attachments.length > 0) {
+        resendBody.attachments = attachments.map((att) => ({
+          filename: att.filename,
+          content: att.content.toString('base64'),
+          content_id: att.cid,
+        }));
+      }
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${cfg.resendKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(resendBody),
+        signal: AbortSignal.timeout(8000),
+      });
+      if (res.ok) return { sent: true, provider: 'resend', recipient: toEmail };
+      lastError = await res.text();
+    } catch (err: any) {
+      lastError = err?.message || String(err);
+    }
+  }
+
+  if (cfg.useCustomSmtp) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host: cfg.smtpHost,
+        port: cfg.smtpPort,
+        secure: cfg.smtpPort === 465,
+        connectionTimeout: 8000,
+        greetingTimeout: 8000,
+        socketTimeout: 8000,
+        tls: { minVersion: 'TLSv1.2' },
+        auth: { user: cfg.smtpUser, pass: cfg.smtpPass },
+      });
+      const safeCustomFrom =
+        rawEmailFrom && !rawEmailFrom.toLowerCase().includes('resend.dev')
+          ? rawEmailFrom
+          : cfg.smtpUser;
+      await transporter.sendMail({
+        from: formatFromHeader(safeCustomFrom),
+        to: toEmail,
+        replyTo,
+        subject,
+        text: textBody,
+        html: htmlBody,
+        attachments: attachments && attachments.length > 0 ? attachments : undefined,
+      });
+      return { sent: true, provider: 'custom_smtp', recipient: toEmail };
+    } catch (err: any) {
+      lastError = err?.message || String(err);
+    }
+  }
+
+  if (cfg.useGmailSmtp) {
+    try {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        connectionTimeout: 8000,
+        greetingTimeout: 8000,
+        socketTimeout: 8000,
+        auth: { user: cfg.gmailUser, pass: cfg.gmailPass },
+      });
+      const safeGmailFrom =
+        rawEmailFrom && !rawEmailFrom.toLowerCase().includes('resend.dev')
+          ? rawEmailFrom
+          : cfg.gmailUser;
+      await transporter.sendMail({
+        from: formatFromHeader(safeGmailFrom),
+        to: toEmail,
+        replyTo,
+        subject,
+        text: textBody,
+        html: htmlBody,
+        attachments: attachments && attachments.length > 0 ? attachments : undefined,
+      });
+      return { sent: true, provider: 'gmail_smtp', recipient: toEmail };
+    } catch (err: any) {
+      lastError = err?.message || String(err);
+    }
+  }
+
+  if (!allowRelayFallback) {
+    return { sent: false, provider: 'none', recipient: toEmail, reason: lastError || 'Direct SMTP not configured' };
+  }
+
+  try {
+    const originHeader = process.env.APP_URL || 'https://www.storebadhabit.com';
+    const relayRes = await fetch(
+      `https://formsubmit.co/ajax/${encodeURIComponent(toEmail)}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Origin: originHeader,
+          Referer: `${originHeader}/`,
+        },
+        body: JSON.stringify({
+          _subject: subject,
+          _replyto: replyTo || toEmail,
+          _template: 'table',
+          _captcha: 'false',
+          ...(relayFields || { Message: textBody }),
+        }),
+        signal: AbortSignal.timeout(8000),
+      }
+    );
+    const relayJson: any = await relayRes.json().catch(() => null);
+    const relayOk = relayRes.ok && (relayJson?.success === 'true' || relayJson?.success === true);
+    return {
+      sent: relayOk,
+      provider: 'formsubmit_relay',
+      recipient: toEmail,
+      reason: relayOk ? undefined : relayJson?.message || `HTTP ${relayRes.status}`,
+    };
+  } catch (err: any) {
+    return { sent: false, provider: 'none', recipient: toEmail, reason: err?.message || 'Relay unavailable' };
+  }
+};
+
+const sendMemberSignupNotification = async (member: any, baseOrigin?: string) => {
+  const subject = `[BAD HABIT New Member] ${member.email} · ${member.phone}`;
+  const textBody = [
+    `BAD HABIT · NEW MEMBER REGISTRATION`,
+    `Member ID: ${member.id}`,
+    member.displayName ? `Name: ${member.displayName}` : '',
+    `Email: ${member.email}`,
+    `Phone: ${member.phone}`,
+    `Promo Code Issued: ${MEMBER_PROMO_CODE} (Flat 10% Off First Order Only)`,
+    `Registered At: ${member.createdAt}`,
+    `storebadhabit.com`,
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  const htmlBody = `<!DOCTYPE html>
+<html lang="en"><body style="margin:0;padding:16px;background:#eef4f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#133853;">
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;margin:0 auto;background:#ffffff;border-collapse:collapse;">
+    <tr><td style="background:#133853;padding:16px 28px;color:#ffffff;font-weight:800;font-size:15px;letter-spacing:0.06em;">BAD HABIT · NEW MEMBER SIGNUP</td></tr>
+    <tr><td style="background:#a5d1ef;padding:28px;color:#0e2c42;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">MEMBER #${escapeHtml(member.id)}</div>
+      <div style="font-size:32px;font-weight:900;line-height:1.05;margin:10px 0;">NEW MEMBER<br/>JOINED.</div>
+      <div style="font-size:14px;font-weight:600;">First-Order Code Issued: ${MEMBER_PROMO_CODE} (10% Off First Order Only)</div>
+    </td></tr>
+    <tr><td style="padding:24px 28px;font-size:14px;line-height:1.6;">
+      ${member.displayName ? `<div><strong>Name:</strong> ${escapeHtml(member.displayName)}</div>` : ''}
+      <div><strong>Email:</strong> ${escapeHtml(member.email)}</div>
+      <div><strong>Phone:</strong> ${escapeHtml(member.phone)}</div>
+      <div><strong>Promo Code:</strong> ${MEMBER_PROMO_CODE} (10% off first order only)</div>
+      <div><strong>Joined At:</strong> ${escapeHtml(member.createdAt)}</div>
+    </td></tr>
+    <tr><td style="border-top:1px solid #cbd9e6;padding:14px 28px;font-size:12px;color:#133853;">storebadhabit.com</td></tr>
+  </table>
+</body></html>`;
+
+  const storePromise = dispatchStoreEventEmail({
+    toEmail: ORDER_NOTIFICATION_EMAIL,
+    replyTo: member.email,
+    subject,
+    textBody,
+    htmlBody,
+    relayFields: {
+      Event: 'New Member Account Created',
+      Member_ID: member.id,
+      Member_Name: member.displayName || 'Customer',
+      Member_Email: member.email,
+      Member_Phone: member.phone,
+      First_Order_Code: `${MEMBER_PROMO_CODE} (10% Off First Order Only)`,
+      Joined_At: member.createdAt,
+    },
+    allowRelayFallback: true,
+  });
+
+  const customerWelcomeHtml = `<!DOCTYPE html>
+<html lang="en"><body style="margin:0;padding:16px;background:#eef4f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#133853;">
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;margin:0 auto;background:#ffffff;border-collapse:collapse;">
+    <tr><td style="background:#133853;padding:16px 28px;color:#ffffff;font-weight:800;font-size:15px;letter-spacing:0.06em;">BAD HABIT · MEMBERSHIP</td></tr>
+    <tr><td style="background:#a5d1ef;padding:30px 28px;color:#0e2c42;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">YOU KNOW YOU WANT IT</div>
+      <div style="font-size:36px;font-weight:900;line-height:1.02;margin:12px 0;">WELCOME TO<br/>BAD HABIT.</div>
+      <div style="font-size:15px;font-weight:600;">Enjoy a flat 10% off your first order with your exclusive member code:</div>
+    </td></tr>
+    <tr><td style="padding:26px 28px;text-align:center;">
+      <div style="display:inline-block;padding:14px 28px;background:#133853;color:#ffffff;font-size:22px;font-weight:900;letter-spacing:0.12em;">${MEMBER_PROMO_CODE}</div>
+      <p style="font-size:13px;color:#2b4c65;margin-top:14px;">Enter <strong>${MEMBER_PROMO_CODE}</strong> at checkout to unlock 10% off your first order. Valid for first-time member orders only.</p>
+    </td></tr>
+    <tr><td style="border-top:1px solid #cbd9e6;padding:14px 28px;font-size:12px;color:#133853;"><a href="${escapeHtml(resolvePublicAssetUrl('/', baseOrigin))}" style="color:#133853;text-decoration:none;font-weight:600;">storebadhabit.com</a></td></tr>
+  </table>
+</body></html>`;
+
+  const customerPromise = dispatchStoreEventEmail({
+    toEmail: member.email,
+    replyTo: ORDER_NOTIFICATION_EMAIL,
+    subject: `Welcome to BAD HABIT · Your 10% Off First-Order Code (${MEMBER_PROMO_CODE})`,
+    textBody: `Welcome to BAD HABIT! Enter promo code ${MEMBER_PROMO_CODE} at checkout to get a flat 10% off your first order only.\n\nstorebadhabit.com`,
+    htmlBody: customerWelcomeHtml,
+    allowRelayFallback: false,
+  });
+
+  const [storeNotification, customerNotification] = await Promise.all([storePromise, customerPromise]);
+  return { storeNotification, customerNotification };
+};
+
+const sendWishlistNotification = async ({
+  member,
+  item,
+  baseOrigin,
+}: {
+  member: any;
+  item: { productId: string; name: string; price: string; image: string; category: string; addedAt: string };
+  baseOrigin?: string;
+}) => {
+  const { srcByItemIndex, attachments } = await prepareOrderEmailThumbnails(
+    { items: [{ productId: item.productId, image: item.image }] },
+    baseOrigin
+  );
+  const imgSrc =
+    srcByItemIndex[0] ||
+    resolvePublicAssetUrl(`/assets/email-thumbs/${item.productId}.png`, baseOrigin) ||
+    resolvePublicAssetUrl(item.image, baseOrigin);
+
+  const subject = `[BAD HABIT Wishlist] ${member.email} saved ${item.name}`;
+  const textBody = [
+    `BAD HABIT · WISHLIST ACTIVITY`,
+    `Article Added: ${item.name} (${item.productId})`,
+    `Category: ${item.category}`,
+    `Price: ${item.price}`,
+    `Member Email: ${member.email}`,
+    `Member Phone: ${member.phone}`,
+    member.displayName ? `Member Name: ${member.displayName}` : '',
+    `Total Wishlist Items: ${(member.wishlist || []).length}`,
+    `Added At: ${item.addedAt}`,
+    `storebadhabit.com`,
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  const htmlBody = `<!DOCTYPE html>
+<html lang="en"><body style="margin:0;padding:16px;background:#eef4f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#133853;">
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;margin:0 auto;background:#ffffff;border-collapse:collapse;">
+    <tr><td style="background:#133853;padding:16px 28px;color:#ffffff;font-weight:800;font-size:15px;letter-spacing:0.06em;">BAD HABIT · WISHLIST ALERT</td></tr>
+    <tr><td style="background:#a5d1ef;padding:28px;color:#0e2c42;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">WISHLIST UPDATE</div>
+      <div style="font-size:30px;font-weight:900;line-height:1.05;margin:10px 0;">ARTICLE ADDED<br/>TO WISHLIST.</div>
+      <div style="font-size:14px;font-weight:600;">${escapeHtml(member.email)} (${escapeHtml(member.phone)})</div>
+    </td></tr>
+    <tr><td style="padding:24px 28px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
+        <tr>
+          <td width="64" height="64" style="background:#dbeaf7;text-align:center;">
+            ${imgSrc ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(item.name)}" width="64" height="64" style="display:block;width:64px;height:64px;border:0;" />` : ''}
+          </td>
+          <td style="padding-left:16px;">
+            <div style="font-size:17px;font-weight:800;color:#133853;">${escapeHtml(item.name)}</div>
+            <div style="font-size:13px;color:#2b4c65;margin-top:4px;">${escapeHtml(item.category)} &middot; ${escapeHtml(item.productId)}</div>
+            <div style="font-size:15px;font-weight:700;color:#133853;margin-top:4px;">${escapeHtml(item.price)}</div>
+          </td>
+        </tr>
+      </table>
+      <div style="margin-top:20px;font-size:13px;line-height:1.6;color:#1f3f58;border-top:1px solid #cbd9e6;padding-top:14px;">
+        <div><strong>Member Email:</strong> ${escapeHtml(member.email)}</div>
+        <div><strong>Member Phone:</strong> ${escapeHtml(member.phone)}</div>
+        <div><strong>Added At:</strong> ${escapeHtml(item.addedAt)}</div>
+      </div>
+    </td></tr>
+    <tr><td style="border-top:1px solid #cbd9e6;padding:14px 28px;font-size:12px;color:#133853;">storebadhabit.com</td></tr>
+  </table>
+</body></html>`;
+
+  return dispatchStoreEventEmail({
+    toEmail: ORDER_NOTIFICATION_EMAIL,
+    replyTo: member.email,
+    subject,
+    textBody,
+    htmlBody,
+    attachments,
+    relayFields: {
+      Event: 'Member Added Article To Wishlist',
+      Article_Name: `${item.name} (${item.productId})`,
+      Article_Price: item.price,
+      Article_Category: item.category,
+      Member_Email: member.email,
+      Member_Phone: member.phone,
+      Added_At: item.addedAt,
+    },
+    allowRelayFallback: true,
+  });
+};
+
 const apiRouter = express.Router();
 
 apiRouter.get('/health', (_req, res) => {
@@ -1015,7 +1548,218 @@ apiRouter.post('/cart/validate', (req, res) => {
   });
 });
 
-// 3. POST /api/orders & /api/orders/create: Create real order with server-authoritative verification
+// 3. Member Signup / Login (Phone + Email) & Wishlist & First-Order Promo Validation
+apiRouter.post('/members/session', async (req, res) => {
+  const { email, phone, displayName, dryRun } = req.body || {};
+  const normEmail = normalizeEmail(email);
+  const normPhone = normalizePakPhone(phone);
+
+  if (!normEmail || !isValidEmail(normEmail)) {
+    return res.status(400).json({ success: false, field: 'email', error: 'Please enter a valid email address.' });
+  }
+  if (!phone || !isValidPakPhone(String(phone))) {
+    return res.status(400).json({
+      success: false,
+      field: 'phone',
+      error: 'Please enter a valid Pakistani mobile number (e.g. 03001234567 or +923001234567).',
+    });
+  }
+
+  let existing = findMemberByIdentity({ email: normEmail, phone: normPhone });
+  const now = new Date().toISOString();
+
+  if (existing) {
+    const priorOrdered = hasPriorOrderByIdentity({ email: normEmail, phone: normPhone }) ||
+      hasPriorOrderByIdentity({ email: existing.email, phone: existing.phone });
+    if (priorOrdered && !existing.firstOrderDiscountUsed) {
+      existing.firstOrderDiscountUsed = true;
+      existing.orderCount = Math.max(1, Number(existing.orderCount || 0));
+    }
+    if (displayName && !existing.displayName) {
+      existing.displayName = String(displayName).trim().slice(0, 100);
+    }
+    existing.updatedAt = now;
+    upsertMemberRecord(existing);
+    return res.json({
+      success: true,
+      isNewMember: false,
+      member: existing,
+    });
+  }
+
+  const priorOrdered = hasPriorOrderByIdentity({ email: normEmail, phone: normPhone });
+  const rand = Math.floor(10000 + Math.random() * 90000);
+  const newMember = {
+    id: `mem_${Date.now()}_${rand}`,
+    email: normEmail,
+    phone: normPhone,
+    displayName: displayName ? String(displayName).trim().slice(0, 100) : '',
+    promoCode: MEMBER_PROMO_CODE,
+    orderCount: priorOrdered ? 1 : 0,
+    firstOrderDiscountUsed: priorOrdered,
+    firstOrderNumber: null,
+    wishlist: [],
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  upsertMemberRecord(newMember);
+
+  const host = req.get('x-forwarded-host') || req.get('host');
+  const proto = req.get('x-forwarded-proto') || req.protocol || 'https';
+  const reqOrigin = host ? `${proto}://${host}` : '';
+
+  let notification: any = null;
+  if (!dryRun) {
+    notification = await sendMemberSignupNotification(newMember, reqOrigin);
+  }
+
+  return res.status(201).json({
+    success: true,
+    isNewMember: true,
+    member: newMember,
+    emailNotification: notification?.storeNotification || null,
+  });
+});
+
+apiRouter.post('/members/me', (req, res) => {
+  const { memberId, email, phone } = req.body || {};
+  const member = findMemberByIdentity({ memberId, email, phone });
+  if (!member) {
+    return res.status(404).json({ success: false, error: 'Member not found.' });
+  }
+  const priorOrdered =
+    hasPriorOrderByIdentity({ email: member.email, phone: member.phone }) ||
+    hasPriorOrderByIdentity({ email, phone });
+  if (priorOrdered && !member.firstOrderDiscountUsed) {
+    member.firstOrderDiscountUsed = true;
+    member.orderCount = Math.max(1, Number(member.orderCount || 0));
+    member.updatedAt = new Date().toISOString();
+    upsertMemberRecord(member);
+  }
+  return res.json({ success: true, member });
+});
+
+apiRouter.post('/wishlist/add', async (req, res) => {
+  const { memberId, email, phone, productId, dryRun } = req.body || {};
+  const member = findMemberByIdentity({ memberId, email, phone });
+  if (!member) {
+    return res.status(401).json({
+      success: false,
+      requiresMembership: true,
+      error: 'Please become a member or sign in first to add articles to your wishlist.',
+    });
+  }
+
+  const product = CATALOG_ITEMS.find((p) => p.id === productId);
+  if (!product) {
+    return res.status(404).json({ success: false, error: 'Article not found.' });
+  }
+
+  const meta = PRODUCT_IMAGE_MAP[product.id] || {
+    image: `/assets/email-thumbs/${product.id}.png`,
+    category: 'Collection',
+  };
+  const now = new Date().toISOString();
+  const wishlistEntry = {
+    productId: product.id,
+    name: product.name,
+    price: `PKR ${product.price.toLocaleString()}`,
+    image: meta.image,
+    category: meta.category,
+    addedAt: now,
+  };
+
+  const currentWishlist = Array.isArray(member.wishlist) ? member.wishlist : [];
+  member.wishlist = [
+    wishlistEntry,
+    ...currentWishlist.filter((w: any) => w.productId !== product.id),
+  ];
+  member.updatedAt = now;
+  upsertMemberRecord(member);
+
+  const host = req.get('x-forwarded-host') || req.get('host');
+  const proto = req.get('x-forwarded-proto') || req.protocol || 'https';
+  const reqOrigin = host ? `${proto}://${host}` : '';
+
+  let emailNotification: any = null;
+  if (!dryRun) {
+    emailNotification = await sendWishlistNotification({
+      member,
+      item: wishlistEntry,
+      baseOrigin: reqOrigin,
+    });
+  }
+
+  return res.json({
+    success: true,
+    member,
+    item: wishlistEntry,
+    emailNotification,
+  });
+});
+
+apiRouter.post('/wishlist/remove', (req, res) => {
+  const { memberId, email, phone, productId } = req.body || {};
+  const member = findMemberByIdentity({ memberId, email, phone });
+  if (!member) {
+    return res.status(401).json({ success: false, error: 'Member session not found.' });
+  }
+  const currentWishlist = Array.isArray(member.wishlist) ? member.wishlist : [];
+  member.wishlist = currentWishlist.filter((w: any) => w.productId !== productId);
+  member.updatedAt = new Date().toISOString();
+  upsertMemberRecord(member);
+  return res.json({ success: true, member });
+});
+
+apiRouter.post('/promo/validate', (req, res) => {
+  const { code, memberId, email, phone, items } = req.body || {};
+  let subtotalAfterPair = 0;
+
+  if (Array.isArray(items) && items.length > 0) {
+    const validatedItems = [];
+    for (const item of items) {
+      const product = CATALOG_ITEMS.find((p) => p.id === item.productId);
+      if (product) {
+        const qty = Math.max(1, Math.min(Number(item.quantity) || 1, product.stock || 5));
+        validatedItems.push({ productId: product.id, unitPrice: product.price, quantity: qty });
+      }
+    }
+    subtotalAfterPair = calculateServerPairPricing(validatedItems).subtotal;
+  }
+
+  const result = validateFirstOrderPromo({
+    code,
+    memberId,
+    email,
+    phone,
+    subtotalAfterPair,
+  });
+
+  if (!result.valid) {
+    return res.status(400).json({
+      valid: false,
+      requiresMembership: Boolean(result.requiresMembership),
+      alreadyUsed: Boolean(result.alreadyUsed),
+      discountAmount: 0,
+      error: result.error,
+    });
+  }
+
+  const finalSubtotal = Math.max(0, subtotalAfterPair - result.discountAmount);
+  return res.json({
+    valid: true,
+    code: result.code,
+    discountRate: result.discountRate,
+    discountAmount: result.discountAmount,
+    formattedDiscountAmount: `PKR ${result.discountAmount.toLocaleString()}`,
+    finalSubtotal,
+    formattedFinalSubtotal: `PKR ${finalSubtotal.toLocaleString()}`,
+    message: `Code ${MEMBER_PROMO_CODE} applied — 10% off your first order!`,
+  });
+});
+
+// 4. POST /api/orders & /api/orders/create: Create real order with server-authoritative verification
 apiRouter.post(['/orders', '/orders/create'], async (req, res) => {
   const body = req.body || {};
   const {
@@ -1027,6 +1771,8 @@ apiRouter.post(['/orders', '/orders/create'], async (req, res) => {
     paymentMethod = 'cod',
     marketingConsent = false,
     sendOrderSummaryToEmail = true,
+    promoCode = '',
+    memberId = '',
   } = body;
 
   // Check idempotency cache first to prevent duplicate orders
@@ -1141,12 +1887,36 @@ apiRouter.post(['/orders', '/orders/create'], async (req, res) => {
   const isBankTransfer = paymentMethod === 'bank_transfer';
   const pairPricing = calculateServerPairPricing(validatedItems);
 
+  // Server-authoritative First-Order Member Promo Code validation (BH-DETECTED -> 10% off 1st order only)
+  let appliedPromoCode = '';
+  let promoDiscount = 0;
+  if (String(promoCode || '').trim()) {
+    const promoCheck = validateFirstOrderPromo({
+      code: promoCode,
+      memberId,
+      email: contact.email,
+      phone: cleanPhone,
+      subtotalAfterPair: pairPricing.subtotal,
+    });
+    if (!promoCheck.valid) {
+      return res.status(400).json({
+        success: false,
+        field: 'promoCode',
+        error: promoCheck.error,
+      });
+    }
+    appliedPromoCode = promoCheck.code || MEMBER_PROMO_CODE;
+    promoDiscount = promoCheck.discountAmount;
+  }
+
+  const discountedSubtotalAfterPromo = Math.max(0, pairPricing.subtotal - promoDiscount);
+
   // Validate shipping method & charge (Free Delivery when transferring to Bank Account)
   const selectedShipping = SHIPPING_METHODS[shippingMethodId] || SHIPPING_METHODS.standard;
   const shippingCharge = isBankTransfer ? 0 : selectedShipping.charge;
   const codFee = 0;
 
-  const grandTotal = pairPricing.subtotal + shippingCharge;
+  const grandTotal = discountedSubtotalAfterPromo + shippingCharge;
 
   // Generate unique branded order number (e.g. BH-26-84920)
   const randomSuffix = Math.floor(10000 + Math.random() * 90000);
@@ -1206,13 +1976,17 @@ apiRouter.post(['/orders', '/orders/create'], async (req, res) => {
       rawSubtotal: pairPricing.rawSubtotal,
       pairCount: pairPricing.pairCount,
       pairDiscount: pairPricing.pairDiscount,
-      subtotal: pairPricing.subtotal,
+      promoCode: appliedPromoCode || undefined,
+      promoDiscount,
+      subtotalAfterPair: pairPricing.subtotal,
+      subtotal: discountedSubtotalAfterPromo,
       shippingCharge,
       codFee,
       total: grandTotal,
       formattedRawSubtotal: `PKR ${pairPricing.rawSubtotal.toLocaleString()}`,
       formattedPairDiscount: `PKR ${pairPricing.pairDiscount.toLocaleString()}`,
-      formattedSubtotal: `PKR ${pairPricing.subtotal.toLocaleString()}`,
+      formattedPromoDiscount: `PKR ${promoDiscount.toLocaleString()}`,
+      formattedSubtotal: `PKR ${discountedSubtotalAfterPromo.toLocaleString()}`,
       formattedShippingCharge: `PKR ${shippingCharge.toLocaleString()}`,
       formattedCodFee: `PKR ${codFee.toLocaleString()}`,
       formattedTotal: `PKR ${grandTotal.toLocaleString()}`,
@@ -1248,6 +2022,20 @@ apiRouter.post(['/orders', '/orders/create'], async (req, res) => {
   // Store enriched order safely
   saveOrder(enrichedOrder);
 
+  // Mark member order completion so 10% first-order discount cannot be reused
+  const matchedMember = findMemberByIdentity({
+    memberId,
+    email: newOrder.customer.email,
+    phone: newOrder.customer.phone,
+  });
+  if (matchedMember) {
+    matchedMember.orderCount = Number(matchedMember.orderCount || 0) + 1;
+    matchedMember.firstOrderDiscountUsed = true;
+    matchedMember.firstOrderNumber = matchedMember.firstOrderNumber || orderNumber;
+    matchedMember.updatedAt = new Date().toISOString();
+    upsertMemberRecord(matchedMember);
+  }
+
   // Save in idempotency cache
   if (idempotencyKey) {
     idempotencyCache.set(idempotencyKey, enrichedOrder);
@@ -1256,6 +2044,7 @@ apiRouter.post(['/orders', '/orders/create'], async (req, res) => {
   res.status(201).json({
     success: true,
     order: enrichedOrder,
+    member: matchedMember || null,
     emailNotification: storeNotification,
     customerEmailNotification: customerNotification,
     automationNotification,

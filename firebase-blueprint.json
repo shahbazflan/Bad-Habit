@@ -1,0 +1,130 @@
+{
+  "entities": {
+    "UserPrivateProfile": {
+      "title": "UserPrivateProfile",
+      "description": "Authenticated customer membership profile including PII (email, phone) and first-order BH-DETECTED promo state.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID owning this profile."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 200,
+          "description": "Member email address."
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 32,
+          "description": "Member Pakistani mobile phone number."
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Optional customer display name."
+        },
+        "promoCode": {
+          "type": "string",
+          "maxLength": 32,
+          "enum": ["BH-DETECTED"],
+          "description": "First-order 10% off member promo code."
+        },
+        "firstOrderDiscountUsed": {
+          "type": "boolean",
+          "description": "True once the member completes their first order or redeems BH-DETECTED."
+        },
+        "orderCount": {
+          "type": "number",
+          "description": "Total completed orders by this member."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of account creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last profile update."
+        }
+      },
+      "required": [
+        "uid",
+        "email",
+        "phone",
+        "promoCode",
+        "firstOrderDiscountUsed",
+        "orderCount",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "WishlistItem": {
+      "title": "WishlistItem",
+      "description": "Article saved to an authenticated member's wishlist.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "productId": {
+          "type": "string",
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Catalog product ID."
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Article name."
+        },
+        "price": {
+          "type": "string",
+          "maxLength": 40,
+          "description": "Formatted PKR price string."
+        },
+        "image": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Garment thumbnail image path."
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 40,
+          "description": "Article category."
+        },
+        "addedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when added to wishlist."
+        }
+      },
+      "required": [
+        "uid",
+        "productId",
+        "name",
+        "price",
+        "image",
+        "category",
+        "addedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/private/{docId}": {
+      "schema": { "$ref": "#/entities/UserPrivateProfile" },
+      "description": "Isolated private PII and membership state document (docId: info) owned by userId."
+    },
+    "/users/{userId}/wishlist/{productId}": {
+      "schema": { "$ref": "#/entities/WishlistItem" },
+      "description": "Member wishlist items subcollection scoped under the parent member."
+    }
+  }
+}

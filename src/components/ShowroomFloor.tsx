@@ -24,6 +24,8 @@ import {
 import { CATEGORY_ITEMS, CategoryItem } from './MobileCategorySection';
 import { ColorSwatchRail } from './ColorSwatchRail';
 import { useCart } from '../context/CartContext';
+import { useMember } from '../context/MemberContext';
+import { BrandLogo } from './BrandLogo';
 import { preloadCategoryImages, preloadProductDetailImages } from '../utils/preloadImages';
 
 const PairStudio = lazy(() =>
@@ -43,10 +45,17 @@ interface ShowroomFloorProps {
 export function ShowroomFloor({
   onReturnToHero,
   isFullyInView,
-  activeFloor = 'showroom',
-  onNavigateToFloor,
 }: ShowroomFloorProps) {
   const { cartCount, addToCart, isAdding, setIsBagOpen } = useCart();
+  const {
+    member,
+    isInWishlist,
+    toggleWishlist,
+    setIsMemberModalOpen,
+    setIsWishlistOpen,
+  } = useMember();
+  const wishlistCount = member?.wishlist?.length || 0;
+  const isFirstOrderAvailable = member ? !member.firstOrderDiscountUsed && member.orderCount === 0 : false;
 
   // Navigation state within showroom floor: 'categories' | 'trousers' | 'hoodies' | 'shirts' | 'pair'
   const [activeSection, setActiveSection] = useState<'categories' | 'trousers' | 'hoodies' | 'shirts' | 'pair'>('categories');
@@ -339,7 +348,7 @@ export function ShowroomFloor({
 
   return (
     <section
-      className="relative w-full h-[100vh] h-[100dvh] overflow-hidden select-none"
+      className="relative w-full h-[100vh] h-[100dvh] overflow-clip select-none"
       aria-label="BAD HABIT Lower Architectural Showroom"
     >
       {/* 1. ARCHITECTURAL SHOWROOM BACKGROUND (Keyblue Runway Sky & White Floor) */}
@@ -359,98 +368,65 @@ export function ShowroomFloor({
       <div className="absolute top-0 left-0 w-full h-[52px] bg-gradient-to-b from-black/20 via-sky-950/10 to-transparent pointer-events-none z-10" />
 
       {/* ======================================================== */}
-      {/* HEADER BAR (Desktop & Mobile)                            */}
+      {/* HEADER BAR (Constant Top-Left Logo + Extreme-Left Nav)   */}
       {/* ======================================================== */}
-      <header className="absolute top-0 left-0 w-full z-40 flex items-start justify-between px-5 sm:px-12 pt-[calc(20px+env(safe-area-inset-top))] sm:pt-[calc(36px+env(safe-area-inset-top))] pointer-events-none">
-        {/* Left: Spacer (BAD HABIT removed as requested) */}
-        <div className="pointer-events-auto select-none" />
+      <header className="absolute top-0 left-0 w-full z-40 flex flex-col pointer-events-none">
+        {/* Top Header Row */}
+        <div className="w-full flex items-start justify-between px-5 sm:px-8 lg:px-10 pt-[calc(18px+env(safe-area-inset-top))] sm:pt-[calc(26px+env(safe-area-inset-top))]">
+          {/* Top-Left Constant BAD HABIT Logo -> Always Returns Home */}
+          <div className="pointer-events-auto select-none">
+            <BrandLogo
+              onClick={() => {
+                setSelectedProduct(null);
+                setActiveSection('categories');
+                onReturnToHero();
+              }}
+            />
+          </div>
 
-        {/* Right: Desktop Controls and Tagline below */}
-        <div className="hidden md:flex pointer-events-auto flex-col items-end gap-1.5">
-          <div className="flex items-center gap-2.5">
-            {/* CATEGORY SELECTOR PILLS ON TOP RIGHT */}
-            {!isRevealed && (
-              <div className="glass-capsule p-1 rounded-full flex items-center gap-1 select-none shadow-[0_8px_24px_rgba(4,24,43,0.18)]">
-                <button
-                  type="button"
-                  onClick={() => handleSelectCategory('categories')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium tracking-tight transition-all cursor-pointer flex items-center gap-1.5 ${
-                    activeSection === 'categories'
-                      ? 'bg-white text-slate-900 font-bold shadow-sm'
-                      : 'text-white/75 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-                  </svg>
-                  <span>Categories</span>
-                </button>
+          {/* Top-Right Desktop Actions: Member, Wishlist, Bag (Runway L1/L2 Removed) */}
+          <div className="hidden md:flex pointer-events-auto items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setIsMemberModalOpen(true)}
+              className="glass-capsule glass-capsule-hover px-4 py-2 rounded-full flex items-center gap-2 text-xs font-display font-semibold text-white cursor-pointer transition-all shadow-sm"
+              aria-label={member ? 'View member pass' : 'Become a member for 10% off first order'}
+            >
+              <svg className="w-3.5 h-3.5 text-cyan-200 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+              <span>
+                {member
+                  ? isFirstOrderAvailable
+                    ? 'Member · BH-DETECTED'
+                    : member.displayName || member.email.split('@')[0]
+                  : 'Become a Member · 10% Off'}
+              </span>
+            </button>
 
-                <button
-                  type="button"
-                  onClick={() => handleSelectCategory('pair')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium tracking-tight transition-all cursor-pointer flex items-center gap-1.5 ${
-                    activeSection === 'pair'
-                      ? 'bg-white text-slate-900 font-bold shadow-sm'
-                      : 'text-cyan-100 hover:text-white hover:bg-white/15'
-                  }`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full ${activeSection === 'pair' ? 'bg-sky-500' : 'bg-cyan-300'}`} />
-                  <span>Make a pair</span>
-                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-cyan-400/25 border border-cyan-200/40">
-                    15% OFF
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleSelectCategory('trousers')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium tracking-tight transition-all cursor-pointer flex items-center gap-1.5 ${
-                    activeSection === 'trousers'
-                      ? 'bg-white text-slate-900 font-bold shadow-sm'
-                      : 'text-white/75 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full ${activeSection === 'trousers' ? 'bg-cyan-500' : 'bg-cyan-300'}`} />
-                  <span>Trousers</span>
-                  <span className="text-[10px] font-mono opacity-60">({MAIN_COLLECTION.length})</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleSelectCategory('shirts')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium tracking-tight transition-all cursor-pointer flex items-center gap-1.5 ${
-                    activeSection === 'shirts'
-                      ? 'bg-white text-slate-900 font-bold shadow-sm'
-                      : 'text-white/75 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full ${activeSection === 'shirts' ? 'bg-emerald-400' : 'bg-emerald-300'}`} />
-                  <span>Shirts</span>
-                  <span className="text-[10px] font-mono opacity-60">({SHIRT_PRODUCTS.length})</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleSelectCategory('hoodies')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium tracking-tight transition-all cursor-pointer flex items-center gap-1.5 ${
-                    activeSection === 'hoodies'
-                      ? 'bg-white text-slate-900 font-bold shadow-sm'
-                      : 'text-white/75 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full ${activeSection === 'hoodies' ? 'bg-indigo-400' : 'bg-indigo-300'}`} />
-                  <span>Hoodies & Sweatshirts</span>
-                  <span className="text-[10px] font-mono opacity-60">({HOODIE_PRODUCTS.length})</span>
-                </button>
-              </div>
-            )}
+            <button
+              type="button"
+              onClick={() => (member ? setIsWishlistOpen(true) : setIsMemberModalOpen(true))}
+              className="glass-capsule glass-capsule-hover px-3.5 py-2 rounded-full flex items-center gap-1.5 text-xs font-mono text-white cursor-pointer transition-all shadow-sm"
+              aria-label={`Wishlist (${wishlistCount} items)`}
+            >
+              <svg
+                className={`w-3.5 h-3.5 ${wishlistCount > 0 ? 'text-rose-400 fill-rose-400' : 'text-white'}`}
+                fill={wishlistCount > 0 ? 'currentColor' : 'none'}
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+              </svg>
+              <span>Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ''}</span>
+            </button>
 
             {cartCount > 0 && (
               <button
                 type="button"
                 onClick={() => setIsBagOpen(true)}
-                className="glass-capsule px-3.5 py-1.5 rounded-full flex items-center gap-2 text-xs font-mono text-cyan-300 border border-cyan-400/30 animate-in fade-in cursor-pointer hover:bg-white/20 transition-all shadow-sm"
+                className="glass-capsule px-3.5 py-2 rounded-full flex items-center gap-2 text-xs font-mono text-cyan-300 border border-cyan-400/30 animate-in fade-in cursor-pointer hover:bg-white/20 transition-all shadow-sm"
                 aria-label={`Open shopping bag (${cartCount} items)`}
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -459,64 +435,135 @@ export function ShowroomFloor({
                 <span>BAG ({cartCount})</span>
               </button>
             )}
+          </div>
+
+          {/* Right: Mobile Controls (Member, Wishlist, Bag — L1/L2 Removed) */}
+          <div className="flex md:hidden pointer-events-auto items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsMemberModalOpen(true)}
+              className="glass-capsule px-2.5 py-1 rounded-full flex items-center gap-1 text-[11px] font-display font-semibold text-white cursor-pointer shadow-sm"
+              aria-label="Member login"
+            >
+              <span>{member ? 'Member' : 'Join 10%'}</span>
+            </button>
 
             <button
               type="button"
-              onClick={onReturnToHero}
-              className="glass-capsule glass-capsule-hover px-4 py-2 rounded-full text-xs font-mono tracking-wider text-white/90 hover:text-white transition-all flex items-center gap-2 cursor-pointer outline-none shadow-sm shrink-0"
-              aria-label="Ascend elevator to Level 02: Runway"
+              onClick={() => (member ? setIsWishlistOpen(true) : setIsMemberModalOpen(true))}
+              className="glass-capsule px-2.5 py-1 rounded-full flex items-center gap-1 text-[11px] font-mono text-white cursor-pointer shadow-sm"
+              aria-label="Wishlist"
             >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+              <svg
+                className={`w-3 h-3 ${wishlistCount > 0 ? 'text-rose-400 fill-rose-400' : 'text-white'}`}
+                fill={wishlistCount > 0 ? 'currentColor' : 'none'}
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
               </svg>
-              <span>LEVEL 02 · RUNWAY</span>
+              <span>{wishlistCount}</span>
             </button>
+
+            {cartCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setIsBagOpen(true)}
+                className="glass-capsule px-2.5 py-1 rounded-full flex items-center gap-1.5 text-[11px] font-mono text-cyan-300 border border-cyan-400/30 cursor-pointer shadow-sm"
+                aria-label={`Open shopping bag (${cartCount} items)`}
+              >
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                <span>({cartCount})</span>
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Right: Mobile Controls */}
-        <div className="flex md:hidden pointer-events-auto items-center gap-2">
-          {cartCount > 0 && (
-            <button
-              type="button"
-              onClick={() => setIsBagOpen(true)}
-              className="glass-capsule px-2.5 py-1 rounded-full flex items-center gap-1.5 text-[11px] font-mono text-cyan-300 border border-cyan-400/30 cursor-pointer shadow-sm"
-              aria-label={`Open shopping bag (${cartCount} items)`}
+        {/* Extreme-Left Enlarged Category Navigation Bar (Desktop Only) */}
+        {!isRevealed && (
+          <div className="hidden md:flex w-full justify-start px-5 sm:px-8 lg:px-10 mt-3 pointer-events-none">
+            <nav
+              aria-label="Showroom categories"
+              className="pointer-events-auto glass-capsule p-1.5 rounded-full flex items-center gap-1.5 select-none shadow-[0_12px_34px_rgba(4,24,43,0.28)] border border-white/35 bg-slate-950/25 backdrop-blur-xl"
             >
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-              <span>({cartCount})</span>
-            </button>
-          )}
+              <button
+                type="button"
+                onClick={() => handleSelectCategory('categories')}
+                className={`px-4 lg:px-5 py-2 lg:py-2.5 rounded-full text-[13px] lg:text-[15px] font-semibold tracking-tight transition-all cursor-pointer flex items-center gap-2 ${
+                  activeSection === 'categories'
+                    ? 'bg-white text-slate-900 font-bold shadow-md'
+                    : 'text-white/90 hover:text-white hover:bg-white/15'
+                }`}
+              >
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.1">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                </svg>
+                <span>Categories</span>
+              </button>
 
-          <div className="flex items-center p-0.5 rounded-full bg-black/25 backdrop-blur-md border border-white/25 text-xs font-mono shadow-md">
-            <button
-              type="button"
-              onClick={() => onNavigateToFloor?.('hero')}
-              className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
-                activeFloor === 'hero'
-                  ? 'bg-white text-black font-bold shadow-sm'
-                  : 'text-white/70 hover:text-white'
-              }`}
-              aria-label="Level 1: Runway"
-            >
-              L1
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigateToFloor?.('showroom')}
-              className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
-                activeFloor === 'showroom'
-                  ? 'bg-white text-black font-bold shadow-sm'
-                  : 'text-white/70 hover:text-white'
-              }`}
-              aria-label="Level 2: Showroom"
-            >
-              L2
-            </button>
+              <button
+                type="button"
+                onClick={() => handleSelectCategory('pair')}
+                className={`px-4 lg:px-5 py-2 lg:py-2.5 rounded-full text-[13px] lg:text-[15px] font-semibold tracking-tight transition-all cursor-pointer flex items-center gap-2 ${
+                  activeSection === 'pair'
+                    ? 'bg-white text-slate-900 font-bold shadow-md'
+                    : 'text-cyan-50 hover:text-white hover:bg-white/15'
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-full ${activeSection === 'pair' ? 'bg-sky-500' : 'bg-cyan-300'}`} />
+                <span>Make a pair</span>
+                <span className="text-[10px] lg:text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-400/35 border border-cyan-200/60">
+                  15% OFF
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSelectCategory('trousers')}
+                className={`px-4 lg:px-5 py-2 lg:py-2.5 rounded-full text-[13px] lg:text-[15px] font-semibold tracking-tight transition-all cursor-pointer flex items-center gap-2 ${
+                  activeSection === 'trousers'
+                    ? 'bg-white text-slate-900 font-bold shadow-md'
+                    : 'text-white/90 hover:text-white hover:bg-white/15'
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-full ${activeSection === 'trousers' ? 'bg-cyan-500' : 'bg-cyan-300'}`} />
+                <span>Trousers</span>
+                <span className="text-xs font-mono opacity-75">({MAIN_COLLECTION.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSelectCategory('shirts')}
+                className={`px-4 lg:px-5 py-2 lg:py-2.5 rounded-full text-[13px] lg:text-[15px] font-semibold tracking-tight transition-all cursor-pointer flex items-center gap-2 ${
+                  activeSection === 'shirts'
+                    ? 'bg-white text-slate-900 font-bold shadow-md'
+                    : 'text-white/90 hover:text-white hover:bg-white/15'
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-full ${activeSection === 'shirts' ? 'bg-emerald-500' : 'bg-emerald-300'}`} />
+                <span>Shirts</span>
+                <span className="text-xs font-mono opacity-75">({SHIRT_PRODUCTS.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSelectCategory('hoodies')}
+                className={`px-4 lg:px-5 py-2 lg:py-2.5 rounded-full text-[13px] lg:text-[15px] font-semibold tracking-tight transition-all cursor-pointer flex items-center gap-2 ${
+                  activeSection === 'hoodies'
+                    ? 'bg-white text-slate-900 font-bold shadow-md'
+                    : 'text-white/90 hover:text-white hover:bg-white/15'
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-full ${activeSection === 'hoodies' ? 'bg-indigo-500' : 'bg-indigo-300'}`} />
+                <span>Hoodies & Sweatshirts</span>
+                <span className="text-xs font-mono opacity-75">({HOODIE_PRODUCTS.length})</span>
+              </button>
+            </nav>
           </div>
-        </div>
+        )}
       </header>
 
       {/* ======================================================== */}
@@ -526,19 +573,19 @@ export function ShowroomFloor({
 
         {/* 2A. DESKTOP CATEGORIES VIEW (When activeSection === 'categories') */}
         {activeSection === 'categories' && !isRevealed && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-start pt-[76px] lg:pt-[84px] pb-5 px-4 sm:px-8 w-full max-w-[1720px] mx-auto select-none pointer-events-auto">
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-start pt-[144px] lg:pt-[152px] pb-5 px-4 sm:px-8 w-full max-w-[1720px] mx-auto select-none pointer-events-auto">
             {/* Header: Tightened directly below top bar */}
-            <div className="text-center mb-3 lg:mb-4">
+            <div className="text-center mb-2.5 lg:mb-3.5">
               <span className="text-[10px] sm:text-[11px] font-mono tracking-[0.28em] text-cyan-200 uppercase font-semibold">
-                ARCHITECTURAL RUNWAY
+                CURATED COLLECTION
               </span>
-              <h2 className="font-display text-2xl sm:text-3xl lg:text-[34px] font-black tracking-tight text-white uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)] mt-0.5 leading-tight">
+              <h2 className="font-display text-2xl sm:text-3xl lg:text-[32px] font-black tracking-tight text-white uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)] mt-0.5 leading-tight">
                 SHOP BY CATEGORY
               </h2>
             </div>
 
             {/* Continuous 4-Panel Split Strip (Make a pair, Trousers, Shirts, Hoodies & Sweatshirts) */}
-            <div className="w-[94%] max-w-[1640px] h-[min(calc(100vh-172px),40vw)] min-h-[420px] max-h-[650px] rounded-2xl overflow-hidden border border-white/25 shadow-[0_20px_60px_rgba(4,24,43,0.35)] grid grid-cols-4 divide-x divide-white/20 bg-gradient-to-b from-[#6ea8dc]/75 via-[#a6d2f3]/60 to-[#e6f1fa]/80 backdrop-blur-[3px]">
+            <div className="w-[94%] max-w-[1640px] h-[min(calc(100vh-238px),37vw)] min-h-[370px] max-h-[600px] rounded-2xl overflow-hidden border border-white/25 shadow-[0_20px_60px_rgba(4,24,43,0.35)] grid grid-cols-4 divide-x divide-white/20 bg-gradient-to-b from-[#6ea8dc]/75 via-[#a6d2f3]/60 to-[#e6f1fa]/80 backdrop-blur-[3px]">
               {/* PANEL 1: MAKE A PAIR (15% OFF) */}
               <button
                 type="button"
@@ -598,7 +645,7 @@ export function ShowroomFloor({
                 </div>
               </button>
 
-              {/* PANEL 2: TROUSERS (Full-height Trousers Editorial Cutout with zero sky void above) */}
+              {/* PANEL 2: TROUSERS (Ultra-HD Full-height Cutout) */}
               <button
                 type="button"
                 onClick={() => handleCategoryTileClick(CATEGORY_ITEMS[1])}
@@ -607,9 +654,9 @@ export function ShowroomFloor({
               >
                 <div className="absolute inset-0 pointer-events-none">
                   <img
-                    src="/assets/categories/category_trousers_cutout.webp"
+                    src="/assets/categories/category_trousers_hd.webp"
                     alt="BAD HABIT Trousers"
-                    className="w-full h-full object-cover object-[94%_top] select-none transition-transform duration-350 ease-out group-hover:scale-[1.03] origin-bottom motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                    className="w-full h-full object-cover object-[center_top] select-none transition-transform duration-350 ease-out group-hover:scale-[1.03] origin-bottom motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                     decoding="async"
                   />
                 </div>
@@ -628,18 +675,18 @@ export function ShowroomFloor({
                 </div>
               </button>
 
-              {/* PANEL 3: SHIRTS (Full-height Portrait Framing focusing on model & shirt torso) */}
+              {/* PANEL 3: SHIRTS (Ultra-HD Full-height Model Cutout) */}
               <button
                 type="button"
                 onClick={() => handleCategoryTileClick(CATEGORY_ITEMS[2])}
                 className="group relative w-full h-full overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset text-left"
                 aria-label="Shop Shirts Category"
               >
-                <div className="absolute inset-0 pt-2.5 pointer-events-none">
+                <div className="absolute inset-0 pt-3 px-1 flex items-end justify-center pointer-events-none">
                   <img
-                    src="/assets/categories/category_shirts_cutout.webp"
+                    src="/assets/categories/category_shirts_v3.webp"
                     alt="BAD HABIT Shirts"
-                    className="w-full h-full object-cover object-[84%_top] select-none transition-transform duration-350 ease-out group-hover:scale-[1.03] origin-bottom motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                    className="h-full w-full object-contain object-bottom select-none transition-transform duration-350 ease-out group-hover:scale-[1.03] origin-bottom motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                     decoding="async"
                   />
                 </div>
@@ -657,7 +704,7 @@ export function ShowroomFloor({
                 </div>
               </button>
 
-              {/* PANEL 4: HOODIES & SWEATSHIRTS (Full-height Editorial Portrait Framing) */}
+              {/* PANEL 4: HOODIES & SWEATSHIRTS (Ultra-HD Editorial Portrait Framing) */}
               <button
                 type="button"
                 onClick={() => handleCategoryTileClick(CATEGORY_ITEMS[3])}
@@ -666,7 +713,7 @@ export function ShowroomFloor({
               >
                 <div className="absolute inset-0 pt-2.5 pointer-events-none">
                   <img
-                    src="/assets/categories/category_hoodies_cutout.webp"
+                    src="/assets/categories/category_hoodies_desktop.webp"
                     alt="BAD HABIT Hoodies & Sweatshirts"
                     className="w-full h-full object-cover object-top select-none transition-transform duration-350 ease-out group-hover:scale-[1.03] origin-bottom motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                     decoding="async"
@@ -735,7 +782,7 @@ export function ShowroomFloor({
           >
             <div
               ref={containerRef}
-              className="relative w-full h-[68vh] sm:h-[72vh] md:h-[76vh] max-h-[720px] flex items-center overflow-hidden"
+              className="relative w-full h-[68vh] sm:h-[72vh] md:h-[76vh] max-h-[720px] flex items-center overflow-clip"
             >
               <div
                 className="flex transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] w-full h-full"
@@ -743,44 +790,81 @@ export function ShowroomFloor({
                   transform: `translateX(-${currentPage * 100}%)`,
                 }}
               >
-                {pages.map((pageProducts, pageIdx) => (
-                  <div
-                    key={pageIdx}
-                    className="w-full shrink-0 h-full flex items-center justify-center px-14 md:px-18 lg:px-24"
-                  >
-                    <div className="w-full max-w-[1380px] mx-auto flex items-center justify-center gap-4 md:gap-6 lg:gap-8 xl:gap-12 flex-nowrap">
-                      {pageProducts.map((product) => {
-                        return (
-                          <div
-                            key={product.id}
-                            className="w-[190px] md:w-[215px] lg:w-[240px] xl:w-[275px] shrink-0 flex flex-col items-center justify-start group cursor-pointer transition-transform duration-300 ease-out hover:-translate-y-2 relative"
-                            onClick={() => setSelectedProduct(product)}
-                            onPointerEnter={() => preloadProductDetailImages(product)}
-                          >
-                            {product.soldOut && (
-                              <div className="absolute top-1 right-2 z-30">
-                                <span className="px-3 py-1 rounded-full bg-red-600/95 border border-white/50 text-white font-display font-black text-[10px] tracking-[0.16em] uppercase shadow-[0_4px_16px_rgba(220,38,38,0.45)]">
-                                  SOLD OUT
-                                </span>
-                              </div>
-                            )}
-
-                            {/* Transparent Garment-Only Cutout floating in skyline runway */}
+                {pages.map((pageProducts, pageIdx) => {
+                  const isCurrentPage = pageIdx === currentPage;
+                  return (
+                    <div
+                      key={pageIdx}
+                      className="w-full shrink-0 h-full flex items-center justify-center px-16 md:px-20 lg:px-24"
+                    >
+                      <div className="w-full max-w-[1380px] mx-auto flex items-center justify-center gap-[clamp(12px,2.8vw,48px)] flex-nowrap">
+                        {pageProducts.map((product) => {
+                          const saved = isInWishlist(product.id);
+                          return (
                             <div
-                              className={`relative w-full h-[36vh] sm:h-[40vh] md:h-[44vh] min-h-[250px] max-h-[340px] flex items-center justify-center ${
-                                product.category === 'Shirts' ? 'p-3' : 'p-1'
-                              }`}
+                              key={product.id}
+                              className="w-[215px] lg:w-[clamp(176px,18.4vw,275px)] shrink-0 flex flex-col items-center justify-start group cursor-pointer transition-transform duration-300 ease-out hover:-translate-y-2 relative"
+                              onClick={() => setSelectedProduct(product)}
+                              onPointerEnter={() => preloadProductDetailImages(product)}
                             >
-                              <img
-                                src={product.image}
-                                alt={product.name}
-                                className={`w-full h-full object-contain select-none transition-transform duration-300 group-hover:scale-[1.03] ${
-                                  product.soldOut ? 'opacity-85' : ''
+                              {/* Wishlist Heart Toggle */}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  void toggleWishlist(product);
+                                }}
+                                className={`absolute top-1 left-2 z-30 w-9 h-9 rounded-full backdrop-blur-md border flex items-center justify-center transition-all cursor-pointer active:scale-90 shadow-md ${
+                                  saved
+                                    ? 'bg-white/95 border-white text-rose-500'
+                                    : 'bg-slate-900/45 border-white/30 text-white/90 hover:bg-slate-900/65 hover:text-white'
                                 }`}
-                                loading="eager"
-                                decoding="async"
-                              />
-                            </div>
+                                aria-label={
+                                  saved
+                                    ? `Remove ${product.name} from wishlist`
+                                    : `Add ${product.name} to wishlist`
+                                }
+                              >
+                                <svg
+                                  className="w-4 h-4"
+                                  fill={saved ? 'currentColor' : 'none'}
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+                                  />
+                                </svg>
+                              </button>
+
+                              {product.soldOut && (
+                                <div className="absolute top-1 right-2 z-30">
+                                  <span className="px-3 py-1 rounded-full bg-red-600/95 border border-white/50 text-white font-display font-black text-[10px] tracking-[0.16em] uppercase shadow-[0_4px_16px_rgba(220,38,38,0.45)]">
+                                    SOLD OUT
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Transparent Garment-Only Cutout floating in skyline runway */}
+                              <div
+                                className={`relative w-full h-[36vh] sm:h-[40vh] md:h-[44vh] min-h-[220px] max-h-[340px] flex items-center justify-center ${
+                                  product.category === 'Shirts' ? 'p-3' : 'p-1'
+                                }`}
+                              >
+                                <img
+                                  src={product.image}
+                                  alt={product.name}
+                                  className={`w-full h-full object-contain select-none transition-transform duration-300 group-hover:scale-[1.03] ${
+                                    product.soldOut ? 'opacity-85' : ''
+                                  }`}
+                                  loading={isCurrentPage ? 'eager' : 'lazy'}
+                                  decoding={isCurrentPage ? 'sync' : 'async'}
+                                  fetchPriority={isCurrentPage ? 'high' : 'low'}
+                                />
+                              </div>
 
                             <div
                               className={`mt-2.5 flex flex-col items-center text-center transition-opacity duration-300 ${
@@ -808,9 +892,10 @@ export function ShowroomFloor({
                           </div>
                         );
                       })}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -894,12 +979,12 @@ export function ShowroomFloor({
                 <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight leading-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.35)]">
                   {selectedProduct.name}
                 </h2>
-                <span className="text-xs font-display text-white/85 mt-1 block">
+                <span className="text-xs font-display text-white/95 mt-1 block drop-shadow-[0_1px_4px_rgba(4,24,43,0.55)]">
                   {selectedProduct.color}
                 </span>
               </div>
 
-              <p className="text-xs sm:text-sm text-white/80 font-display font-normal leading-relaxed drop-shadow-[0_1px_3px_rgba(0,0,0,0.3)]">
+              <p className="text-xs sm:text-sm text-white/95 font-display font-normal leading-relaxed drop-shadow-[0_1px_6px_rgba(4,24,43,0.55)]">
                 {selectedProduct.fabric}
               </p>
 
@@ -923,7 +1008,7 @@ export function ShowroomFloor({
               {/* Angle / Detail Selection Tabs */}
               {activeGallery.length > 1 && (
                 <div className="flex flex-col gap-1.5 w-full mt-1">
-                  <span className="text-[10px] font-mono tracking-widest uppercase text-cyan-200/90 font-medium">
+                  <span className="text-[10px] font-mono tracking-widest uppercase text-white/95 drop-shadow-[0_1px_4px_rgba(4,24,43,0.65)] font-semibold">
                     Garment Views & Construction
                   </span>
                   <div className="flex flex-wrap gap-1.5">
@@ -935,7 +1020,7 @@ export function ShowroomFloor({
                         className={`px-3 py-1.5 rounded-full text-xs font-mono transition-all cursor-pointer ${
                           selectedImageIndex === idx
                             ? 'bg-white text-slate-900 font-bold shadow-sm'
-                            : 'bg-white/10 hover:bg-white/20 text-white/80 border border-white/20'
+                            : 'bg-slate-900/45 hover:bg-slate-900/65 text-white border border-white/30 backdrop-blur-md shadow-sm'
                         }`}
                       >
                         {img.label}
@@ -1100,6 +1185,30 @@ export function ShowroomFloor({
                     </span>
                   </button>
                 )}
+
+                {/* Wishlist Save Button */}
+                <button
+                  type="button"
+                  onClick={() => void toggleWishlist(selectedProduct)}
+                  className={`min-w-[200px] sm:min-w-[220px] mt-1 px-5 py-2.5 rounded-full border backdrop-blur-md font-display text-xs font-bold tracking-wide flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-all cursor-pointer outline-none ${
+                    isInWishlist(selectedProduct.id)
+                      ? 'bg-white/90 border-white text-rose-600'
+                      : 'bg-slate-900/45 hover:bg-slate-900/65 border-white/30 text-white'
+                  }`}
+                >
+                  <svg
+                    className="w-4 h-4 shrink-0"
+                    fill={isInWishlist(selectedProduct.id) ? 'currentColor' : 'none'}
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                  </svg>
+                  <span>
+                    {isInWishlist(selectedProduct.id) ? 'Saved in Wishlist' : 'Save to Wishlist'}
+                  </span>
+                </button>
               </div>
 
               {/* Thumbnail Previews for quick clicking */}

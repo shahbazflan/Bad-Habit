@@ -9,6 +9,8 @@
  */
 
 import { useCart } from '../context/CartContext';
+import { useMember } from '../context/MemberContext';
+import { BrandLogo } from './BrandLogo';
 import { HeroCloudOffer } from './HeroCloudOffer';
 
 interface HeroFloorProps {
@@ -17,11 +19,15 @@ interface HeroFloorProps {
   onNavigateToFloor?: (floor: 'hero' | 'showroom') => void;
 }
 
-export function HeroFloor({ onViewCollection, activeFloor = 'hero', onNavigateToFloor }: HeroFloorProps) {
+export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProps) {
   const { cartCount, setIsBagOpen } = useCart();
+  const { member, setIsMemberModalOpen, setIsWishlistOpen } = useMember();
+  const wishlistCount = member?.wishlist?.length || 0;
+  const isFirstOrderAvailable = member ? !member.firstOrderDiscountUsed && member.orderCount === 0 : false;
+
   return (
     <section
-      className="relative w-full h-[100vh] h-[100dvh] overflow-hidden select-none border-b-2 border-white/90 bg-[#1f486d]"
+      className="relative w-full h-[100vh] h-[100dvh] overflow-clip select-none border-b-2 border-white/90 bg-[#1f486d]"
       aria-label="BAD HABIT Hero Runway"
     >
       {/* 1. LAYER: Architecture & Sky at the back (Z-Index 1) */}
@@ -35,38 +41,81 @@ export function HeroFloor({ onViewCollection, activeFloor = 'hero', onNavigateTo
       />
 
       {/* Header Bar (Z-Index 30) */}
-      <header className="absolute top-0 left-0 w-full z-30 flex items-start justify-between px-5 sm:px-12 pt-[calc(20px+env(safe-area-inset-top))] sm:pt-[calc(40px+env(safe-area-inset-top))] pointer-events-none">
-        {/* Left: Spacer (BAD HABIT removed as requested) */}
-        <div className="pointer-events-auto select-none" />
-
-        {/* Desktop Controls (Level Indicator & Bag button) with Tagline below */}
-        <div className="hidden md:flex pointer-events-auto flex-col items-end gap-1.5">
-          <div className="flex items-center gap-3">
-            {cartCount > 0 && (
-              <button
-                type="button"
-                onClick={() => setIsBagOpen(true)}
-                className="glass-capsule px-3.5 py-1.5 rounded-full flex items-center gap-2 text-xs font-mono text-cyan-300 border border-cyan-400/30 cursor-pointer hover:bg-white/20 transition-all shadow-sm"
-                aria-label={`Shopping bag containing ${cartCount} items`}
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-                <span>BAG ({cartCount})</span>
-              </button>
-            )}
-
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-mono tracking-widest text-white/90 shadow-sm">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>LEVEL 02</span>
-              <span className="text-white/40">·</span>
-              <span className="text-white/70">RUNWAY</span>
-            </div>
-          </div>
+      <header className="absolute top-0 left-0 w-full z-30 flex items-start justify-between px-5 sm:px-8 lg:px-10 pt-[calc(20px+env(safe-area-inset-top))] sm:pt-[calc(28px+env(safe-area-inset-top))] pointer-events-none">
+        {/* Top-Left Constant BAD HABIT Logo */}
+        <div className="pointer-events-auto select-none">
+          <BrandLogo
+            onClick={() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              onNavigateToFloor?.('hero');
+            }}
+          />
         </div>
 
-        {/* Mobile Controls (Bag button & Floor Control L1 / L2) */}
-        <div className="flex md:hidden items-center gap-2">
+        {/* Desktop Controls (Member, Wishlist, Bag) */}
+        <div className="hidden md:flex pointer-events-auto items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => setIsMemberModalOpen(true)}
+            className="glass-capsule glass-capsule-hover px-4 py-2 rounded-full flex items-center gap-2 text-xs font-display font-semibold text-white cursor-pointer transition-all shadow-sm"
+            aria-label={member ? 'View member pass' : 'Become a member for 10% off first order'}
+          >
+            <svg className="w-3.5 h-3.5 text-cyan-200 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+            </svg>
+            <span>
+              {member
+                ? isFirstOrderAvailable
+                  ? 'Member · BH-DETECTED'
+                  : member.displayName || member.email.split('@')[0]
+                : 'Become a Member · 10% Off'}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => (member ? setIsWishlistOpen(true) : setIsMemberModalOpen(true))}
+            className="glass-capsule glass-capsule-hover px-3.5 py-2 rounded-full flex items-center gap-1.5 text-xs font-mono text-white cursor-pointer transition-all shadow-sm"
+            aria-label={`Wishlist (${wishlistCount} items)`}
+          >
+            <svg
+              className={`w-3.5 h-3.5 ${wishlistCount > 0 ? 'text-rose-400 fill-rose-400' : 'text-white'}`}
+              fill={wishlistCount > 0 ? 'currentColor' : 'none'}
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+            </svg>
+            <span>Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ''}</span>
+          </button>
+
+          {cartCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setIsBagOpen(true)}
+              className="glass-capsule px-3.5 py-2 rounded-full flex items-center gap-2 text-xs font-mono text-cyan-300 border border-cyan-400/30 cursor-pointer hover:bg-white/20 transition-all shadow-sm"
+              aria-label={`Shopping bag containing ${cartCount} items`}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+              <span>BAG ({cartCount})</span>
+            </button>
+          )}
+        </div>
+
+        {/* Mobile Controls (Member, Wishlist, Bag — L1/L2 removed) */}
+        <div className="flex md:hidden pointer-events-auto items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsMemberModalOpen(true)}
+            className="glass-capsule px-2.5 py-1 rounded-full flex items-center gap-1 text-[11px] font-display font-semibold text-white cursor-pointer shadow-sm"
+            aria-label="Member login"
+          >
+            <span>{member ? 'Member' : 'Join 10%'}</span>
+          </button>
+
           {cartCount > 0 && (
             <button
               type="button"
@@ -80,33 +129,6 @@ export function HeroFloor({ onViewCollection, activeFloor = 'hero', onNavigateTo
               <span>({cartCount})</span>
             </button>
           )}
-
-          <div className="flex items-center p-0.5 rounded-full bg-black/25 backdrop-blur-md border border-white/25 text-xs font-mono shadow-md">
-            <button
-              type="button"
-              onClick={() => onNavigateToFloor?.('hero')}
-              className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
-                activeFloor === 'hero'
-                  ? 'bg-white text-black font-bold shadow-sm'
-                  : 'text-white/70 hover:text-white'
-              }`}
-              aria-label="Level 1: Runway"
-            >
-              L1
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigateToFloor?.('showroom')}
-              className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
-                activeFloor === 'showroom'
-                  ? 'bg-white text-black font-bold shadow-sm'
-                  : 'text-white/70 hover:text-white'
-              }`}
-              aria-label="Level 2: Showroom"
-            >
-              L2
-            </button>
-          </div>
         </div>
       </header>
 

@@ -31,6 +31,16 @@ async function startServer() {
   const PORT = cliPort || (isProd ? (Number(process.env.PORT) || 3000) : 3000);
   const HOST = cliHost || '0.0.0.0';
 
+  // Bind HTTP listener immediately so container startup probes on port 3000 succeed cleanly
+  const server = app.listen(PORT, HOST, () => {
+    console.log(`BAD HABIT Server listening on http://${HOST}:${PORT}`);
+  });
+
+  server.on('error', (err: any) => {
+    console.error(`BAD HABIT Server listen error on ${HOST}:${PORT}:`, err);
+    process.exit(1);
+  });
+
   // Frontend Integration (Vite in development, static build in production)
   if (!isProd) {
     // Fast cache headers for public assets in dev
@@ -42,21 +52,37 @@ async function startServer() {
       })
     );
 
-    const { createServer: createViteServer } = await import('vite');
-    const vite = await createViteServer({
-      server: {
-        middlewareMode: true,
-        hmr: false,
-      },
-      appType: 'spa',
+    const viteReady = import('vite')
+      .then(({ createServer: createViteServer }) =>
+        createViteServer({
+          server: {
+            middlewareMode: true,
+            hmr: false,
+          },
+          appType: 'spa',
+        })
+      )
+      .catch((err) => {
+        console.error('Failed to initialize Vite dev server:', err);
+        process.exit(1);
+      });
+
+    app.use(async (req, res, next) => {
+      try {
+        const vite = await viteReady;
+        vite.middlewares(req, res, next);
+      } catch (e) {
+        next(e);
+      }
     });
-    app.use(vite.middlewares);
+
     app.use(express.static(path.join(__dirname, 'public'), { maxAge: '7d' }));
 
     // Fallback for SPA routing in development
     app.use('*', async (req, res, next) => {
       const url = req.originalUrl;
       try {
+        const vite = await viteReady;
         const rootIndex = path.resolve(__dirname, 'index.html');
         if (fs.existsSync(rootIndex)) {
           let template = fs.readFileSync(rootIndex, 'utf-8');
@@ -65,7 +91,12 @@ async function startServer() {
         }
         next();
       } catch (e) {
-        vite.ssrFixStacktrace(e as Error);
+        try {
+          const vite = await viteReady;
+          vite.ssrFixStacktrace(e as Error);
+        } catch {
+          // ignore stack trace helper failure
+        }
         next(e);
       }
     });
@@ -110,14 +141,6 @@ async function startServer() {
       }
     });
   }
-
-  const server = app.listen(PORT, HOST, () => {
-    console.log(`BAD HABIT Server listening on http://${HOST}:${PORT}`);
-  });
-
-  server.on('error', (err: any) => {
-    console.error(`BAD HABIT Server listen error on ${HOST}:${PORT}:`, err);
-  });
 }
 
 startServer().catch((err) => {

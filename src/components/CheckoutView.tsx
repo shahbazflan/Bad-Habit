@@ -1,5 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useCart } from '../context/CartContext';
+import { useMember } from '../context/MemberContext';
+import { BrandLogo } from './BrandLogo';
 import { PolicyModal, PolicyType } from './PolicyModal';
 
 export const CheckoutView: React.FC = () => {
@@ -17,11 +19,26 @@ export const CheckoutView: React.FC = () => {
     removeFromCart,
   } = useCart();
 
+  const {
+    member,
+    setIsMemberModalOpen,
+    syncMemberSnapshot,
+    refreshMember,
+  } = useMember();
+
   // Contact State
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [sendOrderSummaryToEmail, setSendOrderSummaryToEmail] = useState(true);
   const [marketingConsent, setMarketingConsent] = useState(false);
+
+  // Member First-Order Promo State ('BH-DETECTED')
+  const [promoInput, setPromoInput] = useState('');
+  const [appliedPromoCode, setAppliedPromoCode] = useState('');
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoStatus, setPromoStatus] = useState<string | null>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [isValidatingPromo, setIsValidatingPromo] = useState(false);
 
   // Delivery State
   const [country, setCountry] = useState('Pakistan');
@@ -65,13 +82,76 @@ export const CheckoutView: React.FC = () => {
   const cityRef = useRef<HTMLInputElement>(null);
   const termsRef = useRef<HTMLInputElement>(null);
 
-  // Scroll to top & assign fresh idempotency key whenever checkout opens
+  // Scroll to top & assign fresh idempotency key whenever checkout opens; pre-fill member info
   useEffect(() => {
     if (isCheckoutOpen) {
       idempotencyKeyRef.current = generateIdempotencyKey();
       window.scrollTo(0, 0);
+      if (member) {
+        setEmail((prev) => prev || member.email);
+        setPhone((prev) => prev || member.phone);
+        if (member.displayName && !firstName) {
+          const parts = member.displayName.trim().split(/\s+/);
+          if (parts[0]) setFirstName(parts[0]);
+          if (parts.length > 1 && !lastName) setLastName(parts.slice(1).join(' '));
+        }
+      }
     }
-  }, [isCheckoutOpen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCheckoutOpen, member]);
+
+  const validatePromoWithServer = useCallback(
+    async (rawCode: string) => {
+      const cleaned = rawCode.trim().toUpperCase();
+      if (!cleaned) {
+        setPromoError('Please enter a promo code.');
+        setPromoStatus(null);
+        return;
+      }
+      setIsValidatingPromo(true);
+      setPromoError(null);
+      setPromoStatus(null);
+      try {
+        const res = await fetch('/api/promo/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code: cleaned,
+            memberId: member?.id,
+            email: (email || member?.email || '').trim(),
+            phone: (phone || member?.phone || '').trim(),
+            items,
+          }),
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data?.valid) {
+          setAppliedPromoCode('');
+          setPromoDiscount(0);
+          setPromoError(data?.error || 'This code cannot be applied to your order.');
+          if (data?.requiresMembership && !member) {
+            setPromoError('Become a member and get a flat 10% off on your first order. Join to unlock your code.');
+          }
+          return;
+        }
+        setAppliedPromoCode(data.code || 'BH-DETECTED');
+        setPromoInput(data.code || 'BH-DETECTED');
+        setPromoDiscount(Number(data.discountAmount) || 0);
+        setPromoStatus(data.message || '10% first-order discount applied!');
+      } catch {
+        setPromoError('Could not verify promo code right now. Please try again.');
+      } finally {
+        setIsValidatingPromo(false);
+      }
+    },
+    [member, email, phone, items]
+  );
+
+  // Re-sync discount automatically if cart subtotal or member changes while a promo code is active
+  useEffect(() => {
+    if (!appliedPromoCode || !isCheckoutOpen || items.length === 0) return;
+    void validatePromoWithServer(appliedPromoCode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subtotal, member?.id, member?.orderCount]);
 
   if (!isCheckoutOpen) return null;
 
@@ -97,8 +177,10 @@ export const CheckoutView: React.FC = () => {
   const totalArticles = items.reduce((sum, item) => sum + item.quantity, 0);
   const isBankTransfer = paymentMethod === 'bank_transfer';
   const codFee = 0;
+  const discountedSubtotal = Math.max(0, subtotal - promoDiscount);
   const shippingCharge = items.length > 0 ? (isBankTransfer ? 0 : selectedShipping.charge) : 0;
-  const grandTotal = subtotal + shippingCharge;
+  const grandTotal = discountedSubtotal + shippingCharge;
+  const isFirstOrderEligible = member ? !member.firstOrderDiscountUsed && member.orderCount === 0 : false;
 
   // Validation
   const validateForm = () => {
@@ -175,6 +257,8 @@ export const CheckoutView: React.FC = () => {
         paymentMethod,
         marketingConsent,
         sendOrderSummaryToEmail,
+        promoCode: appliedPromoCode || promoInput.trim().toUpperCase() || undefined,
+        memberId: member?.id || undefined,
         customer: {
           email: email.trim(),
           phone: phone.trim(),
@@ -213,7 +297,9 @@ export const CheckoutView: React.FC = () => {
           image: it.image,
         })),
         pricing: {
-          subtotal,
+          subtotal: discountedSubtotal,
+          promoCode: appliedPromoCode || undefined,
+          promoDiscount,
           shippingCharge,
           codFee,
           grandTotal,
@@ -243,6 +329,12 @@ export const CheckoutView: React.FC = () => {
               ? 'Order service endpoint was not found on this deployment. Please redeploy with the updated backend API configuration.'
               : `Server could not complete the order (HTTP ${res.status}). Please try again.`)
         );
+      }
+
+      if (data.member) {
+        syncMemberSnapshot(data.member);
+      } else if (member) {
+        void refreshMember();
       }
 
       // Success! Set confirmed order & transition
@@ -307,13 +399,17 @@ export const CheckoutView: React.FC = () => {
             rawSubtotal,
             pairCount,
             pairDiscount,
-            subtotal,
+            promoCode: appliedPromoCode || undefined,
+            promoDiscount,
+            subtotalAfterPair: subtotal,
+            subtotal: discountedSubtotal,
             shippingCharge,
             codFee,
             total: grandTotal,
             formattedRawSubtotal: `PKR ${rawSubtotal.toLocaleString()}`,
             formattedPairDiscount: `PKR ${pairDiscount.toLocaleString()}`,
-            formattedSubtotal: `PKR ${subtotal.toLocaleString()}`,
+            formattedPromoDiscount: `PKR ${promoDiscount.toLocaleString()}`,
+            formattedSubtotal: `PKR ${discountedSubtotal.toLocaleString()}`,
             formattedShippingCharge: `PKR ${shippingCharge.toLocaleString()}`,
             formattedCodFee: `PKR ${codFee.toLocaleString()}`,
             formattedTotal: `PKR ${grandTotal.toLocaleString()}`,
@@ -322,6 +418,11 @@ export const CheckoutView: React.FC = () => {
       }
 
       idempotencyKeyRef.current = generateIdempotencyKey();
+      setAppliedPromoCode('');
+      setPromoDiscount(0);
+      setPromoInput('');
+      setPromoStatus(null);
+      setPromoError(null);
       clearCart();
       setIsCheckoutOpen(false);
     } catch (err: unknown) {
@@ -334,6 +435,11 @@ export const CheckoutView: React.FC = () => {
 
   const handleReturnToBag = () => {
     setIsCheckoutOpen(false);
+  };
+
+  const handleGoHome = () => {
+    setIsCheckoutOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -354,14 +460,7 @@ export const CheckoutView: React.FC = () => {
 
       {/* Top Header Bar */}
       <header className="sticky top-0 z-30 w-full bg-white/[0.12] border-b border-white/20 backdrop-blur-xl px-5 sm:px-12 py-4 flex items-center justify-between select-none shadow-[0_4px_20px_rgba(4,24,43,0.15)]">
-        <div className="flex flex-col">
-          <span className="font-display text-xl sm:text-2xl font-black tracking-[0.08em] text-white uppercase leading-none drop-shadow-sm">
-            BAD HABIT
-          </span>
-          <span className="font-display text-[9px] sm:text-[10px] font-medium tracking-[0.26em] text-white/80 uppercase mt-1">
-            YOU KNOW YOU WANT IT
-          </span>
-        </div>
+        <BrandLogo onClick={handleGoHome} />
 
         <button
           type="button"
@@ -450,6 +549,60 @@ export const CheckoutView: React.FC = () => {
                 )}
               </div>
 
+              {/* Promo Code Input Bar (Mobile Summary) */}
+              <div className="pt-3 border-t border-white/15 space-y-2">
+                <label htmlFor="checkout-promo-mobile" className="block text-[10px] font-mono uppercase tracking-wider text-cyan-200 font-semibold">
+                  Member Promo Code (10% Off 1st Order)
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="checkout-promo-mobile"
+                    type="text"
+                    value={promoInput}
+                    onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                    placeholder="Enter promo code"
+                    className="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl bg-black/35 text-white placeholder:text-white/50 border border-white/25 focus:border-white/60 focus:outline-none text-xs font-mono uppercase tracking-wider"
+                  />
+                  {appliedPromoCode ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAppliedPromoCode('');
+                        setPromoDiscount(0);
+                        setPromoStatus(null);
+                        setPromoError(null);
+                      }}
+                      className="px-3.5 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-display font-bold uppercase cursor-pointer"
+                    >
+                      Remove
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={isValidatingPromo}
+                      onClick={() => void validatePromoWithServer(promoInput)}
+                      className="px-4 py-2.5 rounded-xl bg-white text-slate-900 text-xs font-display font-bold uppercase cursor-pointer hover:bg-white/90 disabled:opacity-50"
+                    >
+                      {isValidatingPromo ? '...' : 'Apply'}
+                    </button>
+                  )}
+                </div>
+                {promoStatus && <p className="text-[11px] font-display text-emerald-200">{promoStatus}</p>}
+                {promoError && <p className="text-[11px] font-display text-red-300">{promoError}</p>}
+                {!member && !promoError && (
+                  <p className="text-[11px] font-display text-white/75">
+                    Become a member and get a flat 10% off on your first order.{' '}
+                    <button
+                      type="button"
+                      onClick={() => setIsMemberModalOpen(true)}
+                      className="underline font-bold text-cyan-200 hover:text-white cursor-pointer"
+                    >
+                      JOIN AND GET A CODE
+                    </button>
+                  </p>
+                )}
+              </div>
+
               <div className="pt-3 border-t border-white/15 space-y-1.5 text-xs font-display">
                 {pairDiscount > 0 && (
                   <>
@@ -463,9 +616,15 @@ export const CheckoutView: React.FC = () => {
                     </div>
                   </>
                 )}
+                {promoDiscount > 0 && (
+                  <div className="flex justify-between text-cyan-200 font-semibold">
+                    <span>Member Code ({appliedPromoCode || 'BH-DETECTED'} · 10% Off 1st Order)</span>
+                    <span>-PKR {promoDiscount.toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-white/80">
                   <span>Subtotal</span>
-                  <span>PKR {subtotal.toLocaleString()}</span>
+                  <span>PKR {discountedSubtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-white/80">
                   <span>Delivery ({isBankTransfer ? 'Free Delivery · Bank Transfer' : selectedShipping.name})</span>
@@ -500,14 +659,26 @@ export const CheckoutView: React.FC = () => {
             <form onSubmit={handleSubmitOrder} noValidate className="space-y-6">
               {/* SECTION 1: CUSTOMER CONTACT */}
               <div className="rounded-3xl p-6 sm:p-8 bg-slate-950/40 border border-white/20 backdrop-blur-xl shadow-[0_8px_32px_rgba(4,24,43,0.3)]">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between gap-2 mb-6 flex-wrap">
                   <div className="flex items-center gap-2.5">
                     <div className="w-2 h-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.7)]" />
                     <h2 className="font-display text-sm sm:text-base uppercase tracking-[0.15em] text-white font-bold drop-shadow-sm">
                       1. Customer Contact
                     </h2>
                   </div>
-                  <span className="text-[11px] font-display font-semibold tracking-wider uppercase text-white/70">Guest Checkout</span>
+                  {member ? (
+                    <span className="text-[11px] font-display font-semibold tracking-wider uppercase text-cyan-200">
+                      {isFirstOrderEligible ? 'Member · 1st Order 10% Eligible' : 'Signed-In Member'}
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setIsMemberModalOpen(true)}
+                      className="text-[11px] font-display font-bold tracking-wider uppercase text-cyan-200 hover:text-white underline cursor-pointer"
+                    >
+                      JOIN AND GET A CODE
+                    </button>
+                  )}
                 </div>
 
                 <div className="space-y-5">
@@ -1082,6 +1253,80 @@ export const CheckoutView: React.FC = () => {
                 )}
               </div>
 
+              {/* Promo Code Input Bar (Desktop Order Summary) */}
+              <div className="pt-4 border-t border-white/15 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="checkout-promo-desktop" className="text-[11px] font-mono uppercase tracking-wider text-cyan-200 font-semibold">
+                    Promo Code (10% Off 1st Order)
+                  </label>
+                  {isFirstOrderEligible && !appliedPromoCode && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPromoInput('BH-DETECTED');
+                        void validatePromoWithServer('BH-DETECTED');
+                      }}
+                      className="text-[11px] font-mono font-bold text-white bg-cyan-400/25 hover:bg-cyan-400/35 border border-cyan-200/50 px-2.5 py-0.5 rounded-full cursor-pointer transition-colors"
+                    >
+                      Use BH-DETECTED
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    id="checkout-promo-desktop"
+                    type="text"
+                    value={promoInput}
+                    onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                    placeholder="Enter promo code"
+                    className="flex-1 min-w-0 px-4 py-3 rounded-2xl bg-black/35 hover:bg-black/45 focus:bg-black/55 text-white placeholder:text-white/50 border border-white/25 focus:border-white/60 focus:outline-none text-xs font-mono uppercase tracking-wider"
+                  />
+                  {appliedPromoCode ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAppliedPromoCode('');
+                        setPromoDiscount(0);
+                        setPromoStatus(null);
+                        setPromoError(null);
+                      }}
+                      className="px-4 py-3 rounded-2xl bg-white/20 hover:bg-white/30 text-white text-xs font-display font-bold uppercase cursor-pointer transition-colors"
+                    >
+                      Remove
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={isValidatingPromo}
+                      onClick={() => void validatePromoWithServer(promoInput)}
+                      className="px-5 py-3 rounded-2xl bg-white text-slate-900 hover:bg-white/90 text-xs font-display font-bold uppercase tracking-wider cursor-pointer transition-colors disabled:opacity-50"
+                    >
+                      {isValidatingPromo ? 'Checking…' : 'Apply'}
+                    </button>
+                  )}
+                </div>
+
+                {promoStatus && (
+                  <p className="text-xs font-display text-emerald-200">{promoStatus}</p>
+                )}
+                {promoError && (
+                  <p className="text-xs font-display text-red-300">{promoError}</p>
+                )}
+                {!member && !promoError && (
+                  <p className="text-[11px] font-display text-white/75">
+                    Become a member and get a flat 10% off on your first order.{' '}
+                    <button
+                      type="button"
+                      onClick={() => setIsMemberModalOpen(true)}
+                      className="underline font-bold text-cyan-200 hover:text-white cursor-pointer"
+                    >
+                      JOIN AND GET A CODE
+                    </button>
+                  </p>
+                )}
+              </div>
+
               {/* Pricing Breakdown */}
               <div className="space-y-2.5 pt-4 border-t border-white/15 text-xs font-display">
                 {pairDiscount > 0 && (
@@ -1097,9 +1342,16 @@ export const CheckoutView: React.FC = () => {
                   </>
                 )}
 
+                {promoDiscount > 0 && (
+                  <div className="flex items-center justify-between text-cyan-200 font-semibold">
+                    <span>Member Code ({appliedPromoCode || 'BH-DETECTED'} · 10% Off 1st Order)</span>
+                    <span>-PKR {promoDiscount.toLocaleString()}</span>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between text-white/80">
                   <span>Subtotal</span>
-                  <span>PKR {subtotal.toLocaleString()}</span>
+                  <span>PKR {discountedSubtotal.toLocaleString()}</span>
                 </div>
 
                 <div className="flex items-center justify-between text-white/80">

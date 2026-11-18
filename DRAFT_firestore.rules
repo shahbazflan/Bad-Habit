@@ -1,0 +1,186 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net: Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidProfile(data, userId) {
+      return data.keys().hasAll([
+          'uid',
+          'email',
+          'phone',
+          'promoCode',
+          'firstOrderDiscountUsed',
+          'orderCount',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid',
+          'email',
+          'phone',
+          'displayName',
+          'promoCode',
+          'firstOrderDiscountUsed',
+          'orderCount',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.uid is string
+        && isValidId(data.uid)
+        && data.uid == userId
+        && data.uid == request.auth.uid
+        && data.email is string
+        && data.email.size() >= 3
+        && data.email.size() <= 200
+        && data.phone is string
+        && data.phone.size() >= 7
+        && data.phone.size() <= 32
+        && (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100))
+        && data.promoCode == 'BH-DETECTED'
+        && data.firstOrderDiscountUsed is bool
+        && data.orderCount is number
+        && data.orderCount >= 0
+        && data.orderCount <= 10000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidWishlistItem(data, userId, productId) {
+      return data.keys().hasAll([
+          'uid',
+          'productId',
+          'name',
+          'price',
+          'image',
+          'category',
+          'addedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid',
+          'productId',
+          'name',
+          'price',
+          'image',
+          'category',
+          'addedAt'
+        ])
+        && data.uid is string
+        && isValidId(data.uid)
+        && data.uid == userId
+        && data.uid == request.auth.uid
+        && data.productId is string
+        && isValidId(data.productId)
+        && data.productId == productId
+        && data.name is string
+        && data.name.size() >= 1
+        && data.name.size() <= 120
+        && data.price is string
+        && data.price.size() >= 1
+        && data.price.size() <= 40
+        && data.image is string
+        && data.image.size() >= 1
+        && data.image.size() <= 300
+        && data.category is string
+        && data.category.size() >= 1
+        && data.category.size() <= 40
+        && data.addedAt is timestamp;
+    }
+
+    // Member private PII profile (isolated document under users/{userId}/private/info)
+    match /users/{userId}/private/{docId} {
+      allow get: if isValidId(userId) && isValidId(docId) && docId == 'info' && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isValidId(docId)
+        && docId == 'info'
+        && isVerifiedUser()
+        && isOwner(userId)
+        && isValidProfile(incoming(), userId)
+        && incoming().firstOrderDiscountUsed == false
+        && incoming().orderCount == 0
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isValidId(docId)
+        && docId == 'info'
+        && isVerifiedUser()
+        && isOwner(userId)
+        && isValidProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().promoCode == existing().promoCode
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          // Action: Update contact details
+          (incoming().diff(existing()).affectedKeys().hasOnly(['phone', 'displayName', 'updatedAt'])
+            && incoming().firstOrderDiscountUsed == existing().firstOrderDiscountUsed
+            && incoming().orderCount == existing().orderCount)
+          ||
+          // Action: Record completed order (terminal lock prevents un-marking firstOrderDiscountUsed)
+          (incoming().diff(existing()).affectedKeys().hasOnly(['firstOrderDiscountUsed', 'orderCount', 'updatedAt'])
+            && existing().firstOrderDiscountUsed == false
+            && incoming().firstOrderDiscountUsed == true
+            && incoming().orderCount == existing().orderCount + 1)
+          ||
+          (incoming().diff(existing()).affectedKeys().hasOnly(['orderCount', 'updatedAt'])
+            && existing().firstOrderDiscountUsed == true
+            && incoming().firstOrderDiscountUsed == true
+            && incoming().orderCount == existing().orderCount + 1)
+        );
+      allow delete: if false;
+    }
+
+    // Member wishlist subcollection (Master Gate checks parent profile exists)
+    match /users/{userId}/wishlist/{productId} {
+      allow get: if isValidId(userId) && isValidId(productId) && isOwner(userId);
+      allow list: if isOwner(userId) && resource.data.uid == request.auth.uid;
+      allow create: if isValidId(userId)
+        && isValidId(productId)
+        && isVerifiedUser()
+        && isOwner(userId)
+        && isValidWishlistItem(incoming(), userId, productId)
+        && incoming().addedAt == request.time
+        && exists(/databases/$(database)/documents/users/$(userId)/private/info);
+      allow update: if false;
+      allow delete: if isValidId(userId)
+        && isValidId(productId)
+        && isVerifiedUser()
+        && isOwner(userId);
+    }
+
+    // Connection test probe (read-only single doc, zero writes)
+    match /test/{docId} {
+      allow get: if isValidId(docId) && docId == 'connection';
+      allow list, create, update, delete: if false;
+    }
+  }
+}

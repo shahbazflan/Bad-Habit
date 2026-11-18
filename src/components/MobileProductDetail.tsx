@@ -1,6 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Product, getColorVariants } from '../data/products';
 import { useCart } from '../context/CartContext';
+import { useMember } from '../context/MemberContext';
 import { CategoryId } from './MobileCategorySection';
 import { ColorSwatchRail } from './ColorSwatchRail';
 import { preloadProductDetailImages } from '../utils/preloadImages';
@@ -39,10 +40,12 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
   onPairProduct,
 }) => {
   const { addToCart, isAdding } = useCart();
+  const { isInWishlist, toggleWishlist } = useMember();
   const [selectedSize, setSelectedSize] = useState<SizeType>('M');
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [addedSuccess, setAddedSuccess] = useState(false);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+  const savedInWishlist = isInWishlist(product.id);
 
   const colorVariants = React.useMemo(() => getColorVariants(product), [product]);
 
@@ -354,6 +357,28 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
               </span>
             </button>
           )}
+
+        {/* Save to Wishlist Button */}
+        <button
+          type="button"
+          onClick={() => void toggleWishlist(product)}
+          className={`w-full mt-2.5 py-2.5 px-4 rounded-full border backdrop-blur-md font-display text-xs sm:text-sm font-bold tracking-wide flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer outline-none ${
+            savedInWishlist
+              ? 'bg-white/90 border-white text-rose-600 shadow-sm'
+              : 'bg-white/[0.14] hover:bg-white/[0.22] border-white/30 text-white'
+          }`}
+        >
+          <svg
+            className="w-4 h-4 shrink-0"
+            fill={savedInWishlist ? 'currentColor' : 'none'}
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+          </svg>
+          <span>{savedInWishlist ? 'Saved in Wishlist' : 'Save to Wishlist'}</span>
+        </button>
 
         {/* Fabric & Article Specifications */}
         {product.fabric && (

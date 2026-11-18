@@ -253,7 +253,6 @@ export const PRODUCTS: Product[] = [
     colorHex: '#e2e1e1',
     colorGroup: 'hoodies',
     image: '/assets/hoodies/off_white_hoodie_front_only.webp',
-    frontAndBackImage: '/assets/hoodies/off_white_hoodie_front_and_back_01.webp',
     detailImages: [
       '/assets/hoodies/off_white_hoodie_details_03.webp',
     ],

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useCart } from '../context/CartContext';
+import { BrandLogo } from './BrandLogo';
 
 export const OrderConfirmationView: React.FC = () => {
   const { confirmedOrder, setConfirmedOrder } = useCart();
@@ -8,6 +9,7 @@ export const OrderConfirmationView: React.FC = () => {
 
   const handleContinueShopping = () => {
     setConfirmedOrder(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -28,14 +30,7 @@ export const OrderConfirmationView: React.FC = () => {
 
       {/* Top Header */}
       <header className="sticky top-0 z-30 w-full px-5 sm:px-12 py-4 flex items-center justify-between select-none bg-white/[0.12] border-b border-white/20 backdrop-blur-xl shadow-[0_4px_20px_rgba(4,24,43,0.15)]">
-        <div className="flex flex-col">
-          <span className="font-display text-xl sm:text-2xl font-black tracking-[0.08em] text-white uppercase leading-none drop-shadow-sm">
-            BAD HABIT
-          </span>
-          <span className="font-display text-[9px] sm:text-[10px] font-medium tracking-[0.26em] text-white/80 uppercase mt-1">
-            YOU KNOW YOU WANT IT
-          </span>
-        </div>
+        <BrandLogo onClick={handleContinueShopping} />
 
         <button
           type="button"
@@ -189,6 +184,12 @@ export const OrderConfirmationView: React.FC = () => {
                     <span>-PKR {(confirmedOrder.pricing.pairDiscount ?? 0).toLocaleString()}</span>
                   </div>
                 </>
+              )}
+              {(confirmedOrder.pricing.promoDiscount ?? 0) > 0 && (
+                <div className="flex justify-between text-cyan-200 font-semibold">
+                  <span>Member Code ({confirmedOrder.pricing.promoCode || 'BH-DETECTED'} · 10% Off)</span>
+                  <span>-PKR {(confirmedOrder.pricing.promoDiscount ?? 0).toLocaleString()}</span>
+                </div>
               )}
               <div className="flex justify-between text-white/80">
                 <span>Subtotal</span>

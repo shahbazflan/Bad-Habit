@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { CategoryId } from './MobileCategorySection';
 import { PolicyType } from './PolicyModal';
 import { MAIN_COLLECTION, HOODIE_PRODUCTS, SHIRT_PRODUCTS } from '../data/products';
+import { useMember } from '../context/MemberContext';
 
 interface MobileNavDrawerProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface MobileNavDrawerProps {
   onSelectCategory: (categoryId: CategoryId) => void;
   onOpenBag: () => void;
   onOpenPolicy: (type: PolicyType) => void;
+  onGoHome?: () => void;
   cartCount: number;
 }
 
@@ -18,8 +20,11 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
   onSelectCategory,
   onOpenBag,
   onOpenPolicy,
+  onGoHome,
   cartCount,
 }) => {
+  const { member, setIsMemberModalOpen, setIsWishlistOpen } = useMember();
+  const wishlistCount = member?.wishlist?.length || 0;
   // Lock body scroll and attach Escape key listener when drawer is open
   useEffect(() => {
     if (!isOpen) return;
@@ -72,14 +77,22 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
           <div>
             {/* Header Row with Close Button */}
             <div className="flex items-center justify-between pb-6 border-b border-white/20">
-              <div>
+              <button
+                type="button"
+                onClick={() => {
+                  onGoHome?.();
+                  onClose();
+                }}
+                className="text-left cursor-pointer outline-none active:scale-95 transition-transform"
+                aria-label="BAD HABIT — Return to Home Page"
+              >
                 <span className="font-display text-xl sm:text-2xl font-black tracking-[0.14em] uppercase text-white block">
                   BAD HABIT
                 </span>
                 <span className="text-[9.5px] font-medium tracking-[0.26em] text-white/85 uppercase block mt-0.5">
                   YOU KNOW YOU WANT IT
                 </span>
-              </div>
+              </button>
 
               <button
                 type="button"
@@ -197,6 +210,58 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                 </button>
               </div>
 
+              {/* Member Account & 10% First-Order Code */}
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  setIsMemberModalOpen(true);
+                }}
+                className="w-full mt-4 flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-cyan-400/20 via-sky-300/20 to-cyan-400/20 hover:from-cyan-400/30 hover:to-sky-300/30 active:scale-[0.98] border border-cyan-200/45 backdrop-blur-md transition-all text-left cursor-pointer outline-none shadow-sm"
+              >
+                <div>
+                  <span className="font-display text-sm font-black tracking-wide text-white block">
+                    {member ? 'Member Pass · BH-DETECTED' : 'Become a Member · 10% Off'}
+                  </span>
+                  <span className="text-[11px] font-display text-cyan-100 mt-0.5 block">
+                    {member
+                      ? member.email
+                      : 'Phone + Email signup for 10% off 1st order'}
+                  </span>
+                </div>
+                <span className="px-2.5 py-1 rounded-full bg-white text-slate-950 font-mono text-[10px] font-bold shrink-0">
+                  {member ? 'PASS' : 'JOIN'}
+                </span>
+              </button>
+
+              {/* Wishlist Quick Action */}
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  if (member) {
+                    setIsWishlistOpen(true);
+                  } else {
+                    setIsMemberModalOpen(true);
+                  }
+                }}
+                className="w-full mt-2.5 flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.14] hover:bg-white/[0.22] active:scale-[0.98] border border-white/25 backdrop-blur-md transition-all text-left cursor-pointer outline-none shadow-sm"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center text-rose-300">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                    </svg>
+                  </div>
+                  <span className="font-display text-sm font-bold tracking-wide text-white">
+                    Wishlist
+                  </span>
+                </div>
+                <span className="font-sans text-xs font-bold text-white bg-white/20 border border-white/25 px-2.5 py-1 rounded-full">
+                  ({wishlistCount})
+                </span>
+              </button>
+
               {/* Shopping Bag Quick Action */}
               <button
                 type="button"
@@ -204,7 +269,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                   onOpenBag();
                   onClose();
                 }}
-                className="w-full mt-4 flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.18] hover:bg-white/[0.26] active:scale-[0.98] border border-white/30 backdrop-blur-md transition-all text-left cursor-pointer outline-none shadow-sm"
+                className="w-full mt-2.5 flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.18] hover:bg-white/[0.26] active:scale-[0.98] border border-white/30 backdrop-blur-md transition-all text-left cursor-pointer outline-none shadow-sm"
               >
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center text-white">

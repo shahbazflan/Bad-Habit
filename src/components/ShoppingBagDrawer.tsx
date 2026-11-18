@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
+import { useMember } from '../context/MemberContext';
 
 export const ShoppingBagDrawer: React.FC = () => {
   const {
@@ -15,6 +16,8 @@ export const ShoppingBagDrawer: React.FC = () => {
     formattedPairDiscount,
     formattedSubtotal,
   } = useCart();
+  const { member, setIsMemberModalOpen } = useMember();
+  const isFirstOrderEligible = member ? !member.firstOrderDiscountUsed && member.orderCount === 0 : false;
 
   const [validating, setValidating] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -244,6 +247,27 @@ export const ShoppingBagDrawer: React.FC = () => {
                 {formattedSubtotal}
               </span>
             </div>
+
+            {member ? (
+              isFirstOrderEligible && (
+                <div className="rounded-xl bg-cyan-400/15 border border-cyan-200/35 px-3 py-2 text-[11px] font-display text-cyan-100 flex items-center justify-between gap-2">
+                  <span>1st order 10% off ready at checkout</span>
+                  <span className="font-mono font-bold text-white">BH-DETECTED</span>
+                </div>
+              )
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsBagOpen(false);
+                  setIsMemberModalOpen(true);
+                }}
+                className="w-full rounded-xl bg-white/10 hover:bg-white/15 border border-white/25 px-3 py-2 text-[11px] font-display text-cyan-100 flex items-center justify-between gap-2 cursor-pointer transition-colors"
+              >
+                <span>Become a member · 10% off first order</span>
+                <span className="font-display font-bold text-white underline whitespace-nowrap">JOIN AND GET A CODE</span>
+              </button>
+            )}
 
             {/* Action Buttons */}
             <div className="flex flex-col gap-2.5 mt-2">

@@ -71,18 +71,11 @@ export function preloadGarmentImages() {
   const posterTrouser = MAIN_COLLECTION.find((p) => p.id === 'BH-T10') || MAIN_COLLECTION[4];
 
   const startWarmup = () => {
-    const isDesktopViewport = window.innerWidth >= 768;
-    const categoryCovers = isDesktopViewport
-      ? [
-          '/assets/categories/category_trousers_desktop.webp',
-          '/assets/categories/category_shirts_desktop.webp',
-          '/assets/categories/category_hoodies_desktop.webp',
-        ]
-      : [
-          '/assets/categories/category_trousers_cutout.webp',
-          '/assets/categories/category_shirts_cutout.webp',
-          '/assets/categories/category_hoodies_cutout.webp',
-        ];
+    const categoryCovers = [
+      '/assets/categories/category_trousers_hd.webp',
+      '/assets/categories/category_shirts_v3.webp',
+      '/assets/categories/category_hoodies_desktop.webp',
+    ];
     preloadUrls(
       [
         ...categoryCovers,

@@ -2,6 +2,7 @@ import React from 'react';
 import { Product } from '../data/products';
 import { CategoryId } from './MobileCategorySection';
 import { preloadProductDetailImages } from '../utils/preloadImages';
+import { useMember } from '../context/MemberContext';
 
 interface MobileProductGridProps {
   categoryId: CategoryId;
@@ -23,12 +24,8 @@ const CATEGORY_NAMES: Record<CategoryId, string> = {
  * Category product listing matching Phone 3:
  * - "< Back to categories" breadcrumb control
  * - Left-aligned uppercase category title (e.g. "TROUSERS")
- * - 2 equal-width product columns with ~10-12px gutters
- * - Translucent frosted glass product cards
- * - Full garment image centered with object-contain (no cut-off waistbands or hems)
- * - Product name directly beneath the image
- * - Compact glass price capsule immediately beneath name with pure WHITE text
- * - All 11 authoritative products preserved
+ * - Translucent frosted glass product cards with Wishlist heart toggle
+ * - Full garment image centered with object-contain
  */
 export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
   categoryId,
@@ -36,6 +33,7 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
   onSelectProduct,
   onBackToCategories,
 }) => {
+  const { isInWishlist, toggleWishlist } = useMember();
   const categoryTitle = CATEGORY_NAMES[categoryId] || 'COLLECTION';
 
   const isTrousers = categoryId === 'trousers';
@@ -46,72 +44,111 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
     ? products.filter((p) => p.subCollection === 'Streetwear')
     : [];
 
-  const renderProductCard = (product: Product, index: number) => (
-    <button
-      key={product.id}
-      type="button"
-      onClick={() => onSelectProduct(product)}
-      onPointerEnter={() => preloadProductDetailImages(product)}
-      onTouchStart={() => preloadProductDetailImages(product)}
-      onFocus={() => preloadProductDetailImages(product)}
-      className="group relative w-full rounded-2xl bg-white/[0.12] hover:bg-white/[0.18] active:scale-[0.98] border border-white/20 backdrop-blur-md p-2.5 sm:p-3 flex flex-col items-center justify-between transition-[transform,background-color] duration-150 cursor-pointer outline-none text-center shadow-[0_4px_16px_rgba(4,24,43,0.15)]"
-      aria-label={`${product.name} — ${product.soldOut ? 'Sold Out' : product.price}`}
-    >
-      {/* SOLD OUT Badge */}
-      {product.soldOut && (
-        <div className="absolute top-2.5 right-2.5 z-20">
-          <span className="inline-block px-3 py-1 rounded-full bg-red-600/95 border border-white/50 text-white font-display font-black text-[10px] tracking-[0.16em] uppercase shadow-[0_4px_14px_rgba(220,38,38,0.45)]">
-            SOLD OUT
-          </span>
-        </div>
-      )}
-
-      {/* Full Garment Image Centered: clean uniform fit across all articles */}
+  const renderProductCard = (product: Product, index: number) => {
+    const saved = isInWishlist(product.id);
+    return (
       <div
-        className={`w-full h-72 sm:h-76 flex items-center justify-center relative overflow-hidden ${
-          product.category === 'Shirts' ? 'p-3.5 sm:p-4' : 'p-1'
-        }`}
+        key={product.id}
+        role="button"
+        tabIndex={0}
+        onClick={() => onSelectProduct(product)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onSelectProduct(product);
+          }
+        }}
+        onPointerEnter={() => preloadProductDetailImages(product)}
+        onTouchStart={() => preloadProductDetailImages(product)}
+        onFocus={() => preloadProductDetailImages(product)}
+        className="group relative w-full rounded-2xl bg-white/[0.12] hover:bg-white/[0.18] active:scale-[0.98] border border-white/20 backdrop-blur-md p-2.5 sm:p-3 flex flex-col items-center justify-between transition-[transform,background-color] duration-150 cursor-pointer outline-none text-center shadow-[0_4px_16px_rgba(4,24,43,0.15)]"
+        aria-label={`${product.name} — ${product.soldOut ? 'Sold Out' : product.price}`}
       >
-        <img
-          src={product.image}
-          alt={product.name}
-          className={`w-full h-full object-contain object-center select-none transition-transform duration-150 group-hover:scale-[1.02] ${
-            product.category === 'Shirts' ? 'scale-[0.95]' : ''
-          } ${
-            product.soldOut ? 'opacity-85' : ''
+        {/* Wishlist Heart Toggle */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            void toggleWishlist(product);
+          }}
+          className={`absolute top-2.5 left-2.5 z-20 w-9 h-9 rounded-full backdrop-blur-md border flex items-center justify-center transition-all cursor-pointer active:scale-90 shadow-sm ${
+            saved
+              ? 'bg-white/95 border-white text-rose-500'
+              : 'bg-slate-900/45 border-white/30 text-white/90 hover:bg-slate-900/65'
           }`}
-          loading={index < 4 ? 'eager' : 'lazy'}
-          fetchPriority={index < 2 ? 'high' : 'auto'}
-          decoding="async"
-        />
-      </div>
+          aria-label={saved ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
+        >
+          <svg
+            className="w-4 h-4"
+            fill={saved ? 'currentColor' : 'none'}
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+            />
+          </svg>
+        </button>
 
-      {/* Product Name Directly Beneath Image */}
-      <div className="w-full mt-2 px-1">
-        <h3 className="font-display text-sm sm:text-[15px] font-semibold text-white tracking-tight leading-snug line-clamp-2 flex items-center justify-center">
-          {product.name}
-        </h3>
-
-        {/* Price Capsule & Sold Out State */}
-        <div className="mt-1.5 flex items-center justify-center gap-2 flex-wrap">
-          <div className="inline-flex items-center justify-center px-4 py-1 rounded-full bg-white/[0.18] border border-white/35 shadow-sm">
-            <span
-              className={`text-xs sm:text-[13px] font-mono font-semibold tracking-tight ${
-                product.soldOut ? 'text-white/75 line-through' : 'text-white'
-              }`}
-            >
-              {product.price}
-            </span>
-          </div>
-          {product.soldOut && (
-            <span className="text-[11px] font-display font-black tracking-[0.14em] uppercase text-red-200">
+        {/* SOLD OUT Badge */}
+        {product.soldOut && (
+          <div className="absolute top-2.5 right-2.5 z-20">
+            <span className="inline-block px-3 py-1 rounded-full bg-red-600/95 border border-white/50 text-white font-display font-black text-[10px] tracking-[0.16em] uppercase shadow-[0_4px_14px_rgba(220,38,38,0.45)]">
               SOLD OUT
             </span>
-          )}
+          </div>
+        )}
+
+        {/* Full Garment Image Centered: clean uniform fit across all articles */}
+        <div
+          className={`w-full h-72 sm:h-76 flex items-center justify-center relative overflow-hidden ${
+            product.category === 'Shirts' ? 'p-3.5 sm:p-4' : 'p-1'
+          }`}
+        >
+          <img
+            src={product.image}
+            alt={product.name}
+            className={`w-full h-full object-contain object-center select-none transition-transform duration-150 group-hover:scale-[1.02] ${
+              product.category === 'Shirts' ? 'scale-[0.95]' : ''
+            } ${
+              product.soldOut ? 'opacity-85' : ''
+            }`}
+            loading={index < 4 ? 'eager' : 'lazy'}
+            fetchPriority={index < 2 ? 'high' : 'auto'}
+            decoding="async"
+          />
+        </div>
+
+        {/* Product Name Directly Beneath Image */}
+        <div className="w-full mt-2 px-1">
+          <h3 className="font-display text-sm sm:text-[15px] font-semibold text-white tracking-tight leading-snug line-clamp-2 flex items-center justify-center drop-shadow-[0_1px_4px_rgba(4,24,43,0.45)]">
+            {product.name}
+          </h3>
+
+          {/* Price Capsule & Sold Out State */}
+          <div className="mt-1.5 flex items-center justify-center gap-2 flex-wrap">
+            <div className="inline-flex items-center justify-center px-4 py-1 rounded-full bg-slate-900/25 border border-white/40 shadow-sm">
+              <span
+                className={`text-xs sm:text-[13px] font-mono font-semibold tracking-tight ${
+                  product.soldOut ? 'text-white/75 line-through' : 'text-white'
+                }`}
+              >
+                {product.price}
+              </span>
+            </div>
+            {product.soldOut && (
+              <span className="px-2.5 py-0.5 rounded-full bg-red-600/95 border border-white/40 text-[10px] font-display font-black tracking-[0.14em] uppercase text-white shadow-sm">
+                SOLD OUT
+              </span>
+            )}
+          </div>
         </div>
       </div>
-    </button>
-  );
+    );
+  };
 
   return (
     <div className="w-full text-white px-4 py-3 select-none pb-12">

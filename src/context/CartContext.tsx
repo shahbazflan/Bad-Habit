@@ -61,12 +61,16 @@ export interface ConfirmedOrder {
     rawSubtotal?: number;
     pairCount?: number;
     pairDiscount?: number;
+    promoCode?: string;
+    promoDiscount?: number;
+    subtotalAfterPair?: number;
     subtotal: number;
     shippingCharge: number;
     codFee?: number;
     total: number;
     formattedRawSubtotal?: string;
     formattedPairDiscount?: string;
+    formattedPromoDiscount?: string;
     formattedSubtotal: string;
     formattedShippingCharge: string;
     formattedCodFee?: string;

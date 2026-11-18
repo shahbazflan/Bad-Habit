@@ -206,7 +206,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
     <div
       className={`w-full text-white font-display select-none ${
         isDesktopShowroom
-          ? 'h-full overflow-y-auto overscroll-contain pt-[84px] pb-10 px-4 sm:px-6 flex flex-col items-center justify-start'
+          ? 'h-full overflow-y-auto overscroll-contain pt-[142px] pb-10 px-4 sm:px-6 flex flex-col items-center justify-start'
           : 'px-3.5 sm:px-5 pt-1.5 pb-24 flex flex-col items-center'
       }`}
     >

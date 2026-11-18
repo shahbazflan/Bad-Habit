@@ -232,7 +232,7 @@ export const MobileExperience: React.FC = () => {
   }, [activeView, handleCloseBag, handleBackFromPair, handleBackToCategory, handleBackToCategories]);
 
   return (
-    <div className={`relative w-full text-white min-h-[100dvh] overflow-x-hidden selection:bg-white/20 transition-colors duration-300 ${
+    <div className={`relative w-full text-white min-h-[100dvh] overflow-x-clip selection:bg-white/20 transition-colors duration-300 ${
       activeView === 'home' ? 'bg-[#244b70]' : 'bg-[#1a3a5a]'
     }`}>
       {/* GLOBAL BACKGROUND: Keyblue architectural sky runway matching desktop exactly */}
@@ -363,6 +363,7 @@ export const MobileExperience: React.FC = () => {
             onSelectCategory={handleSelectCategory}
             onOpenBag={handleOpenBag}
             onOpenPolicy={(type) => setActivePolicy(type)}
+            onGoHome={handleGoHome}
             cartCount={cartCount}
           />
         )}
