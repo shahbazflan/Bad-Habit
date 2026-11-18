@@ -92,7 +92,13 @@ async function startServer() {
         if (fs.existsSync(rootIndex)) {
           let template = fs.readFileSync(rootIndex, 'utf-8');
           template = await vite.transformIndexHtml(url, template);
-          return res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+          return res
+            .status(200)
+            .set({
+              'Content-Type': 'text/html',
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+            })
+            .end(template);
         }
         next();
       } catch (e) {
