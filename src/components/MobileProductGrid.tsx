@@ -69,10 +69,14 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
         <button
           type="button"
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             void toggleWishlist(product);
           }}
-          className={`absolute top-2.5 left-2.5 z-20 w-9 h-9 rounded-full backdrop-blur-md border flex items-center justify-center transition-all cursor-pointer active:scale-90 shadow-sm ${
+          onPointerDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+          className={`absolute top-2.5 left-2.5 z-30 pointer-events-auto w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-all cursor-pointer active:scale-90 shadow-sm ${
             saved
               ? 'bg-white/95 border-white text-rose-500'
               : 'bg-slate-900/45 border-white/30 text-white/90 hover:bg-slate-900/65'

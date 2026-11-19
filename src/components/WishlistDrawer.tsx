@@ -8,6 +8,7 @@ const SIZES = ['S', 'M', 'L', 'XL'] as const;
 export const WishlistDrawer: React.FC = () => {
   const {
     member,
+    wishlistItems,
     isWishlistOpen,
     setIsWishlistOpen,
     setIsMemberModalOpen,
@@ -21,7 +22,7 @@ export const WishlistDrawer: React.FC = () => {
 
   if (!isWishlistOpen) return null;
 
-  const wishlist = member?.wishlist || [];
+  const wishlist = wishlistItems;
   const isFirstOrderAvailable = member ? !member.firstOrderDiscountUsed && member.orderCount === 0 : false;
 
   const handleQuickAdd = async (productId: string) => {
@@ -94,28 +95,29 @@ export const WishlistDrawer: React.FC = () => {
           </div>
         )}
 
+        {/* Promo Banner for Guests */}
+        {!member && (
+          <div className="mx-5 mt-4 p-3.5 rounded-2xl bg-cyan-400/20 border border-cyan-200/40 text-xs font-display flex items-center justify-between gap-2.5">
+            <div>
+              <span className="font-bold text-white block">Flat 10% Off First Order</span>
+              <span className="text-[11px] text-cyan-100">Join to sync your wishlist & unlock code</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setIsWishlistOpen(false);
+                setIsMemberModalOpen(true);
+              }}
+              className="px-3 py-1.5 rounded-full bg-white text-slate-900 font-display text-[10px] font-black uppercase tracking-wider shrink-0 hover:bg-white/90 transition-all cursor-pointer shadow-sm"
+            >
+              Join
+            </button>
+          </div>
+        )}
+
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
-          {!member ? (
-            <div className="h-full flex flex-col items-center justify-center text-center py-12 px-4">
-              <p className="font-display text-base font-bold text-white mb-2">
-                Member Account Required
-              </p>
-              <p className="text-xs font-display text-white/75 leading-relaxed mb-5 max-w-xs">
-                Become a member and get a flat 10% off on your first order, plus save articles to your wishlist.
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsWishlistOpen(false);
-                  setIsMemberModalOpen(true);
-                }}
-                className="px-6 py-3 rounded-full bg-white text-slate-900 font-display text-xs font-bold uppercase tracking-wider hover:bg-white/90 transition-all cursor-pointer shadow-lg"
-              >
-                JOIN AND GET A CODE
-              </button>
-            </div>
-          ) : wishlist.length === 0 ? (
+          {wishlist.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center py-14 px-4">
               <p className="font-display text-base font-bold text-white mb-1">
                 Your wishlist is empty

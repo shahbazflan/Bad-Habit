@@ -75,7 +75,7 @@ export function preloadGarmentImages() {
     const categoryCovers = [
       withAssetVersion('/assets/categories/category_trousers_hd.webp'),
       withAssetVersion('/assets/categories/category_shirts_v3.webp'),
-      withAssetVersion('/assets/categories/category_hoodies_duo_v3.webp'),
+      withAssetVersion('/assets/categories/category_hoodies_v4.webp'),
     ];
     preloadUrls(
       [

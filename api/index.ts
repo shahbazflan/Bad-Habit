@@ -188,7 +188,7 @@ const PRODUCT_IMAGE_MAP: Record<string, { image: string; category: string }> = {
   'BH-H03': { image: '/assets/hoodies/ivory_sweatshirt_front_only.webp', category: 'Hoodies' },
   'BH-H04': { image: '/assets/hoodies/dusty_rose_hoodie_front_only.webp', category: 'Hoodies' },
   'BH-H05': { image: '/assets/hoodies/off_white_hoodie_front_only.webp', category: 'Hoodies' },
-  'BH-H06': { image: '/assets/hoodies/charcoal_raglan_hoodie_front.webp', category: 'Hoodies' },
+  'BH-H06': { image: '/assets/hoodies/charcoal_raglan_hoodie_front_v2.webp', category: 'Hoodies' },
   'BH-H07': { image: '/assets/hoodies/slate_grey_sweatshirt_front.webp', category: 'Hoodies' },
   'BH-H08': { image: '/assets/hoodies/washed_umber_hoodie_front.webp', category: 'Hoodies' },
   'BH-H09': { image: '/assets/hoodies/oatmeal_hoodie_front.webp', category: 'Hoodies' },
@@ -1705,8 +1705,30 @@ apiRouter.post('/members/me', (req, res) => {
 });
 
 apiRouter.post('/wishlist/add', async (req, res) => {
-  const { memberId, email, phone, productId, dryRun } = req.body || {};
-  const member = findMemberByIdentity({ memberId, email, phone });
+  const { memberId, email, phone, displayName, productId, dryRun } = req.body || {};
+  let member = findMemberByIdentity({ memberId, email, phone });
+
+  const normEmail = normalizeEmail(email);
+  const normPhone = normalizePakPhone(phone);
+  if (!member && normEmail && isValidEmail(normEmail) && normPhone) {
+    const now = new Date().toISOString();
+    const priorOrdered = hasPriorOrderByIdentity({ memberId, email: normEmail, phone: normPhone });
+    member = {
+      id: memberId || `mem_${Date.now()}_${Math.floor(10000 + Math.random() * 90000)}`,
+      email: normEmail,
+      phone: normPhone,
+      displayName: displayName ? String(displayName).trim().slice(0, 100) : '',
+      promoCode: MEMBER_PROMO_CODE,
+      orderCount: priorOrdered ? 1 : 0,
+      firstOrderDiscountUsed: priorOrdered,
+      firstOrderNumber: null,
+      wishlist: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+    upsertMemberRecord(member);
+  }
+
   if (!member) {
     return res.status(401).json({
       success: false,
@@ -1748,11 +1770,14 @@ apiRouter.post('/wishlist/add', async (req, res) => {
 
   let emailNotification: any = null;
   if (!dryRun) {
-    emailNotification = await sendWishlistNotification({
-      member,
-      item: wishlistEntry,
-      baseOrigin: reqOrigin,
-    });
+    emailNotification = await Promise.race([
+      sendWishlistNotification({
+        member,
+        item: wishlistEntry,
+        baseOrigin: reqOrigin,
+      }).catch(() => ({ sent: false, provider: 'none' })),
+      new Promise((resolve) => setTimeout(() => resolve({ sent: false, deferred: true }), 2500)),
+    ]);
   }
 
   return res.json({
@@ -1764,8 +1789,26 @@ apiRouter.post('/wishlist/add', async (req, res) => {
 });
 
 apiRouter.post('/wishlist/remove', (req, res) => {
-  const { memberId, email, phone, productId } = req.body || {};
-  const member = findMemberByIdentity({ memberId, email, phone });
+  const { memberId, email, phone, displayName, productId } = req.body || {};
+  let member = findMemberByIdentity({ memberId, email, phone });
+  const normEmail = normalizeEmail(email);
+  const normPhone = normalizePakPhone(phone);
+  if (!member && normEmail && isValidEmail(normEmail) && normPhone) {
+    const now = new Date().toISOString();
+    member = {
+      id: memberId || `mem_${Date.now()}_${Math.floor(10000 + Math.random() * 90000)}`,
+      email: normEmail,
+      phone: normPhone,
+      displayName: displayName ? String(displayName).trim().slice(0, 100) : '',
+      promoCode: MEMBER_PROMO_CODE,
+      orderCount: 0,
+      firstOrderDiscountUsed: false,
+      firstOrderNumber: null,
+      wishlist: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+  }
   if (!member) {
     return res.status(401).json({ success: false, error: 'Member session not found.' });
   }

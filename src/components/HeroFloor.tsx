@@ -22,8 +22,8 @@ interface HeroFloorProps {
 
 export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProps) {
   const { cartCount, setIsBagOpen } = useCart();
-  const { member, setIsMemberModalOpen, setIsWishlistOpen } = useMember();
-  const wishlistCount = member?.wishlist?.length || 0;
+  const { member, wishlistItems, setIsMemberModalOpen, setIsWishlistOpen } = useMember();
+  const wishlistCount = wishlistItems.length;
 
   return (
     <section
@@ -70,7 +70,7 @@ export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProp
 
           <button
             type="button"
-            onClick={() => (member ? setIsWishlistOpen(true) : setIsMemberModalOpen(true))}
+            onClick={() => setIsWishlistOpen(true)}
             className="glass-capsule glass-capsule-hover px-3.5 py-2 rounded-full flex items-center gap-1.5 text-xs font-mono text-white cursor-pointer transition-all shadow-sm"
             aria-label={`Wishlist (${wishlistCount} items)`}
           >

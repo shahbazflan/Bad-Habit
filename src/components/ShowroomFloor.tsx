@@ -52,12 +52,13 @@ export function ShowroomFloor({
   const { cartCount, addToCart, isAdding, setIsBagOpen } = useCart();
   const {
     member,
+    wishlistItems,
     isInWishlist,
     toggleWishlist,
     setIsMemberModalOpen,
     setIsWishlistOpen,
   } = useMember();
-  const wishlistCount = member?.wishlist?.length || 0;
+  const wishlistCount = wishlistItems.length;
 
   // Navigation state within showroom floor: 'categories' | 'trousers' | 'hoodies' | 'shirts' | 'pair'
   const [activeSection, setActiveSection] = useState<'categories' | 'trousers' | 'hoodies' | 'shirts' | 'pair'>('categories');
@@ -404,7 +405,7 @@ export function ShowroomFloor({
 
             <button
               type="button"
-              onClick={() => (member ? setIsWishlistOpen(true) : setIsMemberModalOpen(true))}
+              onClick={() => setIsWishlistOpen(true)}
               className="glass-capsule glass-capsule-hover px-3.5 py-2 rounded-full flex items-center gap-1.5 text-xs font-mono text-white cursor-pointer transition-all shadow-sm"
               aria-label={`Wishlist (${wishlistCount} items)`}
             >
@@ -451,7 +452,7 @@ export function ShowroomFloor({
 
             <button
               type="button"
-              onClick={() => (member ? setIsWishlistOpen(true) : setIsMemberModalOpen(true))}
+              onClick={() => setIsWishlistOpen(true)}
               className="glass-capsule px-2.5 py-1 rounded-full flex items-center gap-1 text-[11px] font-mono text-white cursor-pointer shadow-sm"
               aria-label="Wishlist"
             >
@@ -712,13 +713,15 @@ export function ShowroomFloor({
                 className="group relative w-full h-full overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset text-left"
                 aria-label="Shop Hoodies & Sweatshirts Category"
               >
-                <div className="absolute inset-x-0 top-3 bottom-12 flex items-end justify-center pointer-events-none">
-                  <img
-                    src={withAssetVersion('/assets/categories/category_hoodies_duo_v3.webp')}
-                    alt="BAD HABIT Hoodies & Sweatshirts"
-                    className="w-full h-full object-contain object-bottom select-none transition-transform duration-350 ease-out group-hover:scale-[1.03] origin-bottom motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-                    decoding="async"
-                  />
+                <div className="absolute inset-x-0 top-3 bottom-0 overflow-hidden pointer-events-none">
+                  <div className="w-full h-full scale-[1.07] origin-[46%_0%] transition-transform duration-350 ease-out group-hover:scale-[1.10] motion-reduce:transition-none motion-reduce:group-hover:scale-[1.07]">
+                    <img
+                      src={withAssetVersion('/assets/categories/category_hoodies_v4.webp')}
+                      alt="BAD HABIT Hoodies & Sweatshirts"
+                      className="w-full h-full object-cover object-[46%_top] select-none"
+                      decoding="async"
+                    />
+                  </div>
                 </div>
                 <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black/80 via-black/35 to-transparent pointer-events-none" />
 
@@ -771,7 +774,7 @@ export function ShowroomFloor({
         {/* 2B. DESKTOP COLLECTION CAROUSEL VIEW (Original horizontal floating row across Trousers, Shirts & Hoodies) */}
         {(activeSection === 'trousers' || activeSection === 'hoodies' || activeSection === 'shirts') && (
           <div
-            className="absolute inset-0 z-20 flex flex-col items-center justify-center transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[transform,opacity]"
+            className="absolute inset-0 z-20 flex flex-col items-center justify-center pt-[118px] lg:pt-[126px] pb-8 transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[transform,opacity]"
             style={{
               transform: isRevealed
                 ? 'translate3d(-34vw, -24vh, -280px) scale(0.28)'
@@ -783,7 +786,7 @@ export function ShowroomFloor({
           >
             <div
               ref={containerRef}
-              className="relative w-full h-[68vh] sm:h-[72vh] md:h-[76vh] max-h-[720px] flex items-center overflow-clip"
+              className="relative w-full h-full max-h-[680px] flex items-center overflow-clip"
             >
               <div
                 className="flex transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] w-full h-full"
@@ -812,10 +815,14 @@ export function ShowroomFloor({
                               <button
                                 type="button"
                                 onClick={(e) => {
+                                  e.preventDefault();
                                   e.stopPropagation();
                                   void toggleWishlist(product);
                                 }}
-                                className={`absolute top-1 left-2 z-30 w-9 h-9 rounded-full backdrop-blur-md border flex items-center justify-center transition-all cursor-pointer active:scale-90 shadow-md ${
+                                onPointerDown={(e) => e.stopPropagation()}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                onTouchStart={(e) => e.stopPropagation()}
+                                className={`absolute top-1 left-2 z-30 pointer-events-auto w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-all cursor-pointer active:scale-90 shadow-md ${
                                   saved
                                     ? 'bg-white/95 border-white text-rose-500'
                                     : 'bg-slate-900/45 border-white/30 text-white/90 hover:bg-slate-900/65 hover:text-white'

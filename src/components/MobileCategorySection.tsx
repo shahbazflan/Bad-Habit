@@ -45,7 +45,7 @@ export const CATEGORY_ITEMS: CategoryItem[] = [
   {
     id: 'hoodies',
     name: 'HOODIES & SWEATSHIRTS',
-    image: withAssetVersion('/assets/categories/category_hoodies_duo_v3.webp'),
+    image: withAssetVersion('/assets/categories/category_hoodies_v4.webp'),
     alt: 'BAD HABIT Hoodies & Sweatshirts Category',
     count: `${HOODIE_PRODUCTS.length} Articles`,
   },
@@ -61,6 +61,8 @@ interface MobilePortraitCardConfig {
   alt: string;
   count: string;
   imageWrapperClass: string;
+  innerWrapperClass?: string;
+  imageOriginClass?: string;
   imageClass: string;
 }
 
@@ -86,11 +88,11 @@ const MOBILE_PORTRAIT_CATEGORIES: MobilePortraitCardConfig[] = [
   {
     id: 'hoodies',
     label: 'HOODIES',
-    image: withAssetVersion('/assets/categories/category_hoodies_duo_v3.webp'),
+    image: withAssetVersion('/assets/categories/category_hoodies_v4.webp'),
     alt: 'BAD HABIT Hoodies & Sweatshirts Category',
     count: `${HOODIE_PRODUCTS.length} Articles`,
-    imageWrapperClass: 'inset-x-0.5 top-2 bottom-[42px] flex items-end justify-center',
-    imageClass: 'w-full h-full object-contain object-bottom',
+    imageWrapperClass: 'inset-x-0 top-1.5 bottom-0',
+    imageClass: 'w-full h-full object-cover object-[52%_top]',
   },
 ];
 
@@ -235,13 +237,15 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
 
               {/* Portrait Model Cutout */}
               <div className={`absolute ${cat.imageWrapperClass} overflow-hidden pointer-events-none`}>
-                <img
-                  src={cat.image}
-                  alt={cat.alt}
-                  className={`${cat.imageClass} select-none transition-transform duration-300 group-hover:scale-105 origin-bottom`}
-                  loading="eager"
-                  decoding="async"
-                />
+                <div className={cat.innerWrapperClass ?? 'w-full h-full'}>
+                  <img
+                    src={cat.image}
+                    alt={cat.alt}
+                    className={`${cat.imageClass} select-none transition-transform duration-300 group-hover:scale-105 ${cat.imageOriginClass ?? 'origin-bottom'}`}
+                    loading="eager"
+                    decoding="async"
+                  />
+                </div>
               </div>
 
               {/* Gentle bottom gradient overlay for high legibility */}

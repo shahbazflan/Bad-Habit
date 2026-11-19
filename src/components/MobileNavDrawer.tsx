@@ -23,8 +23,8 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
   onGoHome,
   cartCount,
 }) => {
-  const { member, setIsMemberModalOpen, setIsWishlistOpen } = useMember();
-  const wishlistCount = member?.wishlist?.length || 0;
+  const { member, wishlistItems, setIsMemberModalOpen, setIsWishlistOpen } = useMember();
+  const wishlistCount = wishlistItems.length;
   // Lock body scroll and attach Escape key listener when drawer is open
   useEffect(() => {
     if (!isOpen) return;
@@ -239,11 +239,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                 type="button"
                 onClick={() => {
                   onClose();
-                  if (member) {
-                    setIsWishlistOpen(true);
-                  } else {
-                    setIsMemberModalOpen(true);
-                  }
+                  setIsWishlistOpen(true);
                 }}
                 className="w-full mt-2.5 flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.14] hover:bg-white/[0.22] active:scale-[0.98] border border-white/25 backdrop-blur-md transition-all text-left cursor-pointer outline-none shadow-sm"
               >

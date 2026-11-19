@@ -16,6 +16,15 @@ export interface WishlistItem {
   addedAt: string;
 }
 
+const buildWishlistEntry = (product: Product): WishlistItem => ({
+  productId: product.id,
+  name: product.name,
+  price: product.price,
+  image: product.image,
+  category: product.category,
+  addedAt: new Date().toISOString(),
+});
+
 export interface MemberProfile {
   id: string;
   email: string;
@@ -53,6 +62,7 @@ interface MemberContextType {
   hasOrderedIdentity: (params: { email?: string; phone?: string; memberId?: string }) => boolean;
   recordOrderedIdentity: (params: { email?: string; phone?: string; memberId?: string }) => void;
   isInWishlist: (productId: string) => boolean;
+  wishlistItems: WishlistItem[];
   toggleWishlist: (product: Product) => Promise<void>;
   removeWishlistItem: (productId: string) => Promise<void>;
   wishlistLoadingId: string | null;
@@ -63,6 +73,7 @@ interface MemberContextType {
 const MemberContext = createContext<MemberContextType | null>(null);
 
 const MEMBER_STORAGE_KEY = 'bad_habit_member_v1';
+const WISHLIST_STORAGE_KEY = 'bad_habit_wishlist_v1';
 const ORDERED_IDENTITIES_KEY = 'bad_habit_ordered_identities_v1';
 
 const normEmail = (raw?: string) => String(raw || '').trim().toLowerCase();
@@ -115,6 +126,21 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return null;
   });
 
+  const [guestWishlist, setGuestWishlist] = useState<WishlistItem[]>(() => {
+    try {
+      const saved = localStorage.getItem(WISHLIST_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed as WishlistItem[];
+        }
+      }
+    } catch {
+      // ignore storage errors
+    }
+    return [];
+  });
+
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
@@ -123,6 +149,26 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [pendingWishlistProduct, setPendingWishlistProduct] = useState<Product | null>(null);
   const [wishlistLoadingId, setWishlistLoadingId] = useState<string | null>(null);
   const [wishlistNotice, setWishlistNotice] = useState<string | null>(null);
+  const noticeTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showWishlistNotice = useCallback((msg: string) => {
+    setWishlistNotice(msg);
+    if (noticeTimerRef.current) {
+      clearTimeout(noticeTimerRef.current);
+    }
+    noticeTimerRef.current = setTimeout(() => {
+      setWishlistNotice(null);
+    }, 2600);
+  }, []);
+
+  const persistGuestWishlist = useCallback((next: WishlistItem[]) => {
+    setGuestWishlist(next);
+    try {
+      localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // ignore storage errors
+    }
+  }, []);
 
   const hasOrderedIdentity = useCallback(
     ({ email, phone, memberId }: { email?: string; phone?: string; memberId?: string }) => {
@@ -254,7 +300,17 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const addWishlistInternal = useCallback(
     async (activeMember: MemberProfile, product: Product) => {
+      const entry = buildWishlistEntry(product);
+      const currentWishlist = Array.isArray(activeMember.wishlist) ? activeMember.wishlist : [];
+      const optimisticMember: MemberProfile = {
+        ...activeMember,
+        wishlist: [entry, ...currentWishlist.filter((w) => w.productId !== product.id)],
+        updatedAt: entry.addedAt,
+      };
+      persistMember(optimisticMember);
+      showWishlistNotice(`${product.name} added to your wishlist`);
       setWishlistLoadingId(product.id);
+
       try {
         const res = await fetch('/api/wishlist/add', {
           method: 'POST',
@@ -263,14 +319,32 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             memberId: activeMember.id,
             email: activeMember.email,
             phone: activeMember.phone,
+            displayName: activeMember.displayName,
             productId: product.id,
           }),
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => null);
         if (res.ok && data?.success && data.member) {
-          persistMember(data.member);
-          setWishlistNotice(`${product.name} added to your wishlist`);
-          setTimeout(() => setWishlistNotice(null), 2600);
+          setMember((latest) => {
+            if (!latest || latest.id !== data.member.id) {
+              persistMember(data.member);
+              return data.member;
+            }
+            // Keep any items toggled while request was in flight
+            const serverList: WishlistItem[] = Array.isArray(data.member.wishlist) ? data.member.wishlist : [];
+            const mergedIds = new Set(serverList.map((w) => w.productId));
+            const localExtras = (latest.wishlist || []).filter((w) => !mergedIds.has(w.productId));
+            const mergedMember: MemberProfile = {
+              ...data.member,
+              wishlist: [...localExtras, ...serverList],
+            };
+            try {
+              localStorage.setItem(MEMBER_STORAGE_KEY, JSON.stringify(mergedMember));
+            } catch {
+              // ignore
+            }
+            return mergedMember;
+          });
           if (auth.currentUser) {
             void syncFirebaseWishlistItem({
               uid: auth.currentUser.uid,
@@ -284,12 +358,12 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }
         }
       } catch {
-        // ignore network issues gracefully
+        // optimistic local state already persisted
       } finally {
         setWishlistLoadingId(null);
       }
     },
-    [persistMember]
+    [persistMember, showWishlistNotice]
   );
 
   const loginOrRegister = useCallback(
@@ -323,24 +397,48 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
 
         const savedMember: MemberProfile = data.member;
-        persistMember(savedMember);
+        const existingServerIds = new Set((savedMember.wishlist || []).map((w) => w.productId));
+        const unsyncedGuestItems = guestWishlist.filter((w) => !existingServerIds.has(w.productId));
+        const mergedSavedMember: MemberProfile =
+          unsyncedGuestItems.length > 0
+            ? { ...savedMember, wishlist: [...unsyncedGuestItems, ...(savedMember.wishlist || [])] }
+            : savedMember;
+
+        persistMember(mergedSavedMember);
+        if (unsyncedGuestItems.length > 0) {
+          persistGuestWishlist([]);
+          for (const gItem of unsyncedGuestItems) {
+            void fetch('/api/wishlist/add', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                memberId: mergedSavedMember.id,
+                email: mergedSavedMember.email,
+                phone: mergedSavedMember.phone,
+                displayName: mergedSavedMember.displayName,
+                productId: gItem.productId,
+                dryRun: true,
+              }),
+            }).catch(() => {});
+          }
+        }
         setJustRegistered(Boolean(data.isNewMember));
 
         if (auth.currentUser) {
           void syncFirebaseMemberProfile({
             uid: auth.currentUser.uid,
-            email: savedMember.email,
-            phone: savedMember.phone,
-            displayName: savedMember.displayName,
-            orderCount: savedMember.orderCount,
-            firstOrderDiscountUsed: savedMember.firstOrderDiscountUsed,
+            email: mergedSavedMember.email,
+            phone: mergedSavedMember.phone,
+            displayName: mergedSavedMember.displayName,
+            orderCount: mergedSavedMember.orderCount,
+            firstOrderDiscountUsed: mergedSavedMember.firstOrderDiscountUsed,
           }).catch(() => {});
         }
 
         if (pendingWishlistProduct) {
           const itemToSave = pendingWishlistProduct;
           setPendingWishlistProduct(null);
-          await addWishlistInternal(savedMember, itemToSave);
+          await addWishlistInternal(mergedSavedMember, itemToSave);
         }
 
         return { ok: true, isNewMember: Boolean(data.isNewMember) };
@@ -350,7 +448,14 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsLoading(false);
       }
     },
-    [persistMember, hasOrderedIdentity, pendingWishlistProduct, addWishlistInternal]
+    [
+      persistMember,
+      hasOrderedIdentity,
+      guestWishlist,
+      persistGuestWishlist,
+      pendingWishlistProduct,
+      addWishlistInternal,
+    ]
   );
 
   const logoutMember = useCallback(async () => {
@@ -366,17 +471,29 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [persistMember]);
 
+  const wishlistItems = React.useMemo(
+    () => (member ? member.wishlist || [] : guestWishlist),
+    [member, guestWishlist]
+  );
+
   const isInWishlist = useCallback(
-    (productId: string) => {
-      if (!member?.wishlist) return false;
-      return member.wishlist.some((item) => item.productId === productId);
-    },
-    [member?.wishlist]
+    (productId: string) => wishlistItems.some((item) => item.productId === productId),
+    [wishlistItems]
   );
 
   const removeWishlistItem = useCallback(
     async (productId: string) => {
-      if (!member) return;
+      if (!member) {
+        persistGuestWishlist(guestWishlist.filter((w) => w.productId !== productId));
+        return;
+      }
+
+      const optimisticMember: MemberProfile = {
+        ...member,
+        wishlist: (member.wishlist || []).filter((w) => w.productId !== productId),
+        updatedAt: new Date().toISOString(),
+      };
+      persistMember(optimisticMember);
       setWishlistLoadingId(productId);
       try {
         const res = await fetch('/api/wishlist/remove', {
@@ -386,10 +503,11 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             memberId: member.id,
             email: member.email,
             phone: member.phone,
+            displayName: member.displayName,
             productId,
           }),
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => null);
         if (res.ok && data?.success && data.member) {
           persistMember(data.member);
           if (auth.currentUser) {
@@ -405,28 +523,44 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }
         }
       } catch {
-        // ignore
+        // optimistic local state already updated
       } finally {
         setWishlistLoadingId(null);
       }
     },
-    [member, persistMember]
+    [member, guestWishlist, persistGuestWishlist, persistMember]
   );
 
   const toggleWishlist = useCallback(
     async (product: Product) => {
       if (!member) {
-        setPendingWishlistProduct(product);
-        setIsMemberModalOpen(true);
+        const exists = guestWishlist.some((item) => item.productId === product.id);
+        if (exists) {
+          persistGuestWishlist(guestWishlist.filter((item) => item.productId !== product.id));
+          showWishlistNotice(`${product.name} removed from wishlist`);
+        } else {
+          const entry = buildWishlistEntry(product);
+          persistGuestWishlist([entry, ...guestWishlist]);
+          showWishlistNotice(`${product.name} added to your wishlist`);
+        }
         return;
       }
       if (isInWishlist(product.id)) {
         await removeWishlistItem(product.id);
+        showWishlistNotice(`${product.name} removed from wishlist`);
       } else {
         await addWishlistInternal(member, product);
       }
     },
-    [member, isInWishlist, removeWishlistItem, addWishlistInternal]
+    [
+      member,
+      guestWishlist,
+      persistGuestWishlist,
+      showWishlistNotice,
+      isInWishlist,
+      removeWishlistItem,
+      addWishlistInternal,
+    ]
   );
 
   return (
@@ -450,6 +584,7 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         hasOrderedIdentity,
         recordOrderedIdentity,
         isInWishlist,
+        wishlistItems,
         toggleWishlist,
         removeWishlistItem,
         wishlistLoadingId,

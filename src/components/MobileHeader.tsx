@@ -30,8 +30,8 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   backLabel = 'Back',
   transparent = false,
 }) => {
-  const { member, setIsMemberModalOpen, setIsWishlistOpen } = useMember();
-  const wishlistCount = member?.wishlist?.length || 0;
+  const { member, wishlistItems, setIsMemberModalOpen, setIsWishlistOpen } = useMember();
+  const wishlistCount = wishlistItems.length;
 
   return (
     <>
@@ -92,7 +92,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
 
           <button
             type="button"
-            onClick={() => (member ? setIsWishlistOpen(true) : setIsMemberModalOpen(true))}
+            onClick={() => setIsWishlistOpen(true)}
             className="relative w-10 h-10 flex items-center justify-center text-white/90 hover:text-white transition-opacity active:scale-95 cursor-pointer outline-none"
             aria-label={`Wishlist containing ${wishlistCount} items`}
           >
