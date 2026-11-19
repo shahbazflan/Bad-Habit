@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { withAssetVersion } from '../data/products';
 
 interface SizeGuideModalProps {
   isOpen: boolean;
@@ -8,11 +9,11 @@ interface SizeGuideModalProps {
 
 const SIZE_GUIDE_ASSETS: Record<'Trousers' | 'Shirts', { src: string; title: string }> = {
   Trousers: {
-    src: '/assets/size_guides/trousers_size_guide.webp',
+    src: withAssetVersion('/assets/size_guides/trousers_size_guide.webp'),
     title: 'Trousers Size Guide',
   },
   Shirts: {
-    src: '/assets/size_guides/shirts_size_guide.webp',
+    src: withAssetVersion('/assets/size_guides/shirts_size_guide.webp'),
     title: 'Boxy Shirts Size Guide',
   },
 };

@@ -12,6 +12,7 @@ import { useCart } from '../context/CartContext';
 import { useMember } from '../context/MemberContext';
 import { BrandLogo } from './BrandLogo';
 import { HeroCloudOffer } from './HeroCloudOffer';
+import { withAssetVersion } from '../data/products';
 
 interface HeroFloorProps {
   onViewCollection: () => void;
@@ -31,7 +32,7 @@ export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProp
     >
       {/* 1. LAYER: Architecture & Sky at the back (Z-Index 1) */}
       <img
-        src="/clean_plate.jpg"
+        src={withAssetVersion('/clean_plate.jpg')}
         alt="Architectural space with sky and white floor"
         className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none z-[1]"
         loading="eager"
@@ -162,7 +163,7 @@ export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProp
       >
         <div className="w-[86vw] sm:w-[58vw] max-w-[840px] aspect-[1774/887] relative flex items-center justify-center -translate-y-8 md:translate-y-0">
           <img
-            src="/bad_habit_transparent.webp"
+            src={withAssetVersion('/bad_habit_transparent.webp')}
             alt="BAD HABIT"
             className="w-full h-full object-contain select-none pointer-events-none"
             loading="eager"
@@ -227,7 +228,7 @@ export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProp
 
         {/* Shared Model Cutout Image */}
         <img
-          src="/assets/aistudio/hero_mobile_model_cutout.webp"
+          src={withAssetVersion('/assets/aistudio/hero_mobile_model_cutout.webp')}
           alt="BAD HABIT fashion model"
           className="relative z-[2] w-full h-full object-contain object-bottom select-none pointer-events-none"
           loading="eager"

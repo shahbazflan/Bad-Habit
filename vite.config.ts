@@ -1,11 +1,40 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import {defineConfig} from 'vite';
+import { defineConfig } from 'vite';
+import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
 
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss()],
+    define: {
+      __ASSET_VERSION__: JSON.stringify(Date.now().toString(36)),
+    },
+    plugins: [
+      react(),
+      tailwindcss(),
+      ViteImageOptimizer({
+        includePublic: true,
+        exclude: /(?:Screenshot_|IMG_|BAD-HABIT-|Shop_by_category__)/i,
+        png: {
+          compressionLevel: 9,
+          palette: false,
+          effort: 8,
+        },
+        webp: {
+          quality: 94,
+          effort: 5,
+        },
+        jpeg: {
+          quality: 90,
+          mozjpeg: true,
+        },
+        jpg: {
+          quality: 90,
+          mozjpeg: true,
+        },
+        cache: true,
+      }),
+    ],
     resolve: {
       alias: {
         '@': path.resolve(import.meta.dirname || '.', '.'),

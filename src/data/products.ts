@@ -33,7 +33,17 @@ export interface Product {
   soldOut?: boolean;
 }
 
-export const PRODUCTS: Product[] = [
+export const ASSET_CACHE_VERSION =
+  typeof __ASSET_VERSION__ !== 'undefined' ? __ASSET_VERSION__ : '20261119-v5';
+
+export function withAssetVersion(assetPath: string): string {
+  if (!assetPath || assetPath.startsWith('http') || assetPath.includes('?')) {
+    return assetPath;
+  }
+  return `${assetPath}?v=${ASSET_CACHE_VERSION}`;
+}
+
+const RAW_PRODUCTS: Product[] = [
   // ==========================================
   // TAILORED TROUSERS (Exact Order: Midnight Blue, Ivory, Sage, Stone, Classic Brown)
   // ==========================================
@@ -385,6 +395,14 @@ export const PRODUCTS: Product[] = [
   },
 ];
 
+export const PRODUCTS: Product[] = RAW_PRODUCTS.map((p) => ({
+  ...p,
+  image: withAssetVersion(p.image),
+  backImage: p.backImage ? withAssetVersion(p.backImage) : undefined,
+  frontAndBackImage: p.frontAndBackImage ? withAssetVersion(p.frontAndBackImage) : undefined,
+  detailImages: p.detailImages ? p.detailImages.map(withAssetVersion) : undefined,
+}));
+
 export const TAILORED_TROUSERS = PRODUCTS.filter(
   (p) => p.category === 'Trousers' && p.subCollection !== 'Streetwear'
 );
@@ -399,3 +417,185 @@ export const SHIRT_PRODUCTS = PRODUCTS.filter((p) => p.category === 'Shirts');
 export function getColorVariants(product: Product): Product[] {
   return PRODUCTS.filter((p) => p.colorGroup === product.colorGroup);
 }
+
+export interface ShirtCardFrame {
+  desktopCardImgClass: string;
+  desktopDetailPaddingClass: string;
+  mobileGridImgClass: string;
+  mobileGridPaddingClass: string;
+  mobileDetailPaddingClass: string;
+}
+
+const DEFAULT_SHIRT_FRAME: ShirtCardFrame = {
+  desktopCardImgClass: 'w-[91%]',
+  desktopDetailPaddingClass: 'p-3',
+  mobileGridImgClass: 'w-full',
+  mobileGridPaddingClass: 'p-4 sm:p-5',
+  mobileDetailPaddingClass: 'p-2',
+};
+
+const DEFAULT_GARMENT_FRAME: ShirtCardFrame = {
+  desktopCardImgClass: 'w-full',
+  desktopDetailPaddingClass: 'p-0',
+  mobileGridImgClass: 'w-full',
+  mobileGridPaddingClass: 'p-1',
+  mobileDetailPaddingClass: 'p-0',
+};
+
+const GARMENT_FRAME_BY_ID: Record<string, ShirtCardFrame> = {
+  // ==========================================
+  // SHIRTS (Balanced Left/Right & Front/Back proportions)
+  // ==========================================
+  'BH-S05': DEFAULT_SHIRT_FRAME,
+  'BH-S06': {
+    desktopCardImgClass: 'w-[115%] max-w-none',
+    desktopDetailPaddingClass: 'p-0',
+    mobileGridImgClass: 'w-[112%] max-w-none',
+    mobileGridPaddingClass: 'px-0 py-2 sm:py-3',
+    mobileDetailPaddingClass: 'p-0',
+  },
+  'BH-S04': DEFAULT_SHIRT_FRAME,
+  'BH-S03': {
+    desktopCardImgClass: 'w-[94%]',
+    desktopDetailPaddingClass: 'p-2',
+    mobileGridImgClass: 'w-full',
+    mobileGridPaddingClass: 'px-3 py-4 sm:px-4 sm:py-5',
+    mobileDetailPaddingClass: 'p-1.5',
+  },
+  'BH-S02': {
+    desktopCardImgClass: 'w-[81%]',
+    desktopDetailPaddingClass: 'p-4',
+    mobileGridImgClass: 'w-[92%]',
+    mobileGridPaddingClass: 'p-4 sm:p-5',
+    mobileDetailPaddingClass: 'p-2.5',
+  },
+  'BH-S01': {
+    desktopCardImgClass: 'w-[98%]',
+    desktopDetailPaddingClass: 'p-1',
+    mobileGridImgClass: 'w-[105%] max-w-none',
+    mobileGridPaddingClass: 'px-1.5 py-2.5 sm:px-2.5 sm:py-3',
+    mobileDetailPaddingClass: 'p-0.5',
+  },
+
+  // ==========================================
+  // HOODIES & SWEATSHIRTS (Balanced aspect-ratio card & detail framing)
+  // ==========================================
+  'BH-H01': {
+    ...DEFAULT_GARMENT_FRAME,
+    desktopCardImgClass: 'w-[98%]',
+  },
+  'BH-H02': {
+    ...DEFAULT_GARMENT_FRAME,
+    desktopCardImgClass: 'w-[96%]',
+  },
+  'BH-H03': {
+    desktopCardImgClass: 'w-[108%] max-w-none',
+    desktopDetailPaddingClass: 'p-0',
+    mobileGridImgClass: 'w-[106%] max-w-none',
+    mobileGridPaddingClass: 'px-1 py-2',
+    mobileDetailPaddingClass: 'p-0',
+  },
+  'BH-H04': {
+    desktopCardImgClass: 'w-[86%]',
+    desktopDetailPaddingClass: 'p-3',
+    mobileGridImgClass: 'w-[90%]',
+    mobileGridPaddingClass: 'p-2.5 sm:p-3',
+    mobileDetailPaddingClass: 'p-2',
+  },
+  'BH-H05': {
+    desktopCardImgClass: 'w-[91%]',
+    desktopDetailPaddingClass: 'p-4',
+    mobileGridImgClass: 'w-[92%]',
+    mobileGridPaddingClass: 'p-2 sm:p-3',
+    mobileDetailPaddingClass: 'p-3',
+  },
+  'BH-H06': {
+    ...DEFAULT_GARMENT_FRAME,
+    desktopCardImgClass: 'w-[97%]',
+  },
+  'BH-H07': {
+    desktopCardImgClass: 'w-[107%] max-w-none',
+    desktopDetailPaddingClass: 'p-0',
+    mobileGridImgClass: 'w-[105%] max-w-none',
+    mobileGridPaddingClass: 'px-1 py-2',
+    mobileDetailPaddingClass: 'p-0',
+  },
+  'BH-H08': {
+    desktopCardImgClass: 'w-[102%] max-w-none',
+    desktopDetailPaddingClass: 'p-0',
+    mobileGridImgClass: 'w-[102%] max-w-none',
+    mobileGridPaddingClass: 'p-1',
+    mobileDetailPaddingClass: 'p-0',
+  },
+  'BH-H09': {
+    desktopCardImgClass: 'w-[92%]',
+    desktopDetailPaddingClass: 'p-1.5',
+    mobileGridImgClass: 'w-[94%]',
+    mobileGridPaddingClass: 'p-1.5 sm:p-2',
+    mobileDetailPaddingClass: 'p-1',
+  },
+
+  // ==========================================
+  // TROUSERS
+  // ==========================================
+  'BH-T09': {
+    ...DEFAULT_GARMENT_FRAME,
+    desktopDetailPaddingClass: 'p-1',
+    mobileDetailPaddingClass: 'p-1',
+  },
+};
+
+export function getShirtCardFrame(productId: string): ShirtCardFrame {
+  return GARMENT_FRAME_BY_ID[productId] || (productId.startsWith('BH-S') ? DEFAULT_SHIRT_FRAME : DEFAULT_GARMENT_FRAME);
+}
+
+export function getGarmentCardFrame(productId: string): ShirtCardFrame {
+  return getShirtCardFrame(productId);
+}
+
+export function getShirtDetailImageClass(
+  productId: string,
+  isBackView: boolean,
+  platform: 'desktop' | 'mobile'
+): string {
+  // Rough BOXY Back (1086x1448 portrait) vs Front (1448x1086 landscape):
+  // Constrain Back height so torso & collar-to-hem size match Front cleanly
+  if (productId === 'BH-S06' && isBackView) {
+    return platform === 'desktop' ? 'h-[71%] w-auto' : 'h-[63%] w-auto';
+  }
+  // Cream BOXY Front (1199x1312 portrait) vs Back (1312x1199 landscape):
+  if (productId === 'BH-S02' && !isBackView) {
+    return platform === 'desktop' ? 'h-[81%] w-auto' : 'h-[85%] w-auto';
+  }
+  // Off-White Hoodie Front (800x900 tight crop) vs Back (679x900 with top/bottom margin):
+  if (productId === 'BH-H05' && !isBackView) {
+    return platform === 'desktop' ? 'h-[88%] w-auto' : 'h-[88%] w-auto';
+  }
+  // Dusty Rose Hoodie Front (755x900 portrait) vs Back (900x885 wide):
+  if (productId === 'BH-H04' && !isBackView) {
+    return platform === 'desktop' ? 'h-[86%] w-auto' : 'h-[88%] w-auto';
+  }
+
+  const frame = getGarmentCardFrame(productId);
+  const fullBackIds = new Set(['BH-S02', 'BH-S01', 'BH-H04', 'BH-H05', 'BH-H09', 'BH-T09']);
+  const slightlyLooserBackIds = new Set(['BH-S05', 'BH-S04']);
+
+  if (isBackView && fullBackIds.has(productId)) {
+    return 'w-full h-full p-0';
+  }
+  if (isBackView && slightlyLooserBackIds.has(productId)) {
+    return platform === 'desktop' ? 'w-full h-full p-2' : 'w-full h-full p-1.5';
+  }
+  if (isBackView && productId === 'BH-S03') {
+    return platform === 'desktop' ? 'w-full h-full p-3' : 'w-full h-full p-2';
+  }
+
+  const pad =
+    platform === 'desktop'
+      ? frame.desktopDetailPaddingClass
+      : frame.mobileDetailPaddingClass;
+  return `w-full h-full ${pad}`;
+}
+
+
+

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { Product, getColorVariants } from '../data/products';
+import { Product, getColorVariants, getShirtDetailImageClass } from '../data/products';
 import { useCart } from '../context/CartContext';
 import { useMember } from '../context/MemberContext';
 import { CategoryId } from './MobileCategorySection';
@@ -146,9 +146,11 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
           <img
             src={currentImage}
             alt={`${product.name} ${galleryImages[activeImageIndex]?.label || 'garment view'}`}
-            className={`w-full h-full object-contain object-center select-none transition-opacity duration-150 ${
-              product.category === 'Shirts' ? 'p-2' : ''
-            }`}
+            className={`${
+              activeImageIndex <= 1
+                ? getShirtDetailImageClass(product.id, activeImageIndex === 1, 'mobile')
+                : 'w-full h-full'
+            } object-contain object-center select-none transition-opacity duration-150`}
             loading="eager"
             decoding="async"
             fetchPriority="high"

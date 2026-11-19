@@ -19,6 +19,9 @@ import {
   HOODIE_PRODUCTS,
   SHIRT_PRODUCTS,
   getColorVariants,
+  getGarmentCardFrame,
+  getShirtDetailImageClass,
+  withAssetVersion,
   Product,
 } from '../data/products';
 import { CATEGORY_ITEMS, CategoryItem } from './MobileCategorySection';
@@ -352,7 +355,7 @@ export function ShowroomFloor({
     >
       {/* 1. ARCHITECTURAL SHOWROOM BACKGROUND (Keyblue Runway Sky & White Floor) */}
       <img
-        src="/clean_plate.jpg"
+        src={withAssetVersion('/clean_plate.jpg')}
         alt="Architectural Showroom with sky and white floor"
         className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none z-[1]"
         loading="eager"
@@ -652,7 +655,7 @@ export function ShowroomFloor({
               >
                 <div className="absolute inset-0 pointer-events-none">
                   <img
-                    src="/assets/categories/category_trousers_hd.webp"
+                    src={withAssetVersion('/assets/categories/category_trousers_hd.webp')}
                     alt="BAD HABIT Trousers"
                     className="w-full h-full object-cover object-[center_top] select-none transition-transform duration-350 ease-out group-hover:scale-[1.03] origin-bottom motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                     decoding="async"
@@ -682,7 +685,7 @@ export function ShowroomFloor({
               >
                 <div className="absolute inset-0 pt-3 px-1 flex items-end justify-center pointer-events-none">
                   <img
-                    src="/assets/categories/category_shirts_v3.webp"
+                    src={withAssetVersion('/assets/categories/category_shirts_v3.webp')}
                     alt="BAD HABIT Shirts"
                     className="h-full w-full object-contain object-bottom select-none transition-transform duration-350 ease-out group-hover:scale-[1.03] origin-bottom motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                     decoding="async"
@@ -702,18 +705,18 @@ export function ShowroomFloor({
                 </div>
               </button>
 
-              {/* PANEL 4: HOODIES & SWEATSHIRTS (Ultra-HD Editorial Portrait Framing) */}
+              {/* PANEL 4: HOODIES & SWEATSHIRTS (Isolated Standing Duo Cutout over Sky Theme) */}
               <button
                 type="button"
                 onClick={() => handleCategoryTileClick(CATEGORY_ITEMS[3])}
                 className="group relative w-full h-full overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset text-left"
                 aria-label="Shop Hoodies & Sweatshirts Category"
               >
-                <div className="absolute inset-0 pt-2.5 pointer-events-none">
+                <div className="absolute inset-x-0 top-3 bottom-12 flex items-end justify-center pointer-events-none">
                   <img
-                    src="/assets/categories/category_hoodies_desktop.webp"
+                    src={withAssetVersion('/assets/categories/category_hoodies_duo_v3.webp')}
                     alt="BAD HABIT Hoodies & Sweatshirts"
-                    className="w-full h-full object-cover object-top select-none transition-transform duration-350 ease-out group-hover:scale-[1.03] origin-bottom motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                    className="w-full h-full object-contain object-bottom select-none transition-transform duration-350 ease-out group-hover:scale-[1.03] origin-bottom motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                     decoding="async"
                   />
                 </div>
@@ -849,13 +852,13 @@ export function ShowroomFloor({
                               {/* Transparent Garment-Only Cutout floating in skyline runway */}
                               <div
                                 className={`relative w-full h-[36vh] sm:h-[40vh] md:h-[44vh] min-h-[220px] max-h-[340px] flex items-center justify-center ${
-                                  product.category === 'Shirts' ? 'p-3' : 'p-1'
+                                  product.category === 'Shirts' ? 'p-0' : 'p-1'
                                 }`}
                               >
                                 <img
                                   src={product.image}
                                   alt={product.name}
-                                  className={`w-full h-full object-contain select-none transition-transform duration-300 group-hover:scale-[1.03] ${
+                                  className={`${getGarmentCardFrame(product.id).desktopCardImgClass} h-full object-contain select-none transition-transform duration-300 group-hover:scale-[1.03] ${
                                     product.soldOut ? 'opacity-85' : ''
                                   }`}
                                   loading={isCurrentPage ? 'eager' : 'lazy'}
@@ -1060,9 +1063,11 @@ export function ShowroomFloor({
                 <img
                   src={currentGarmentImage}
                   alt={`${selectedProduct.name} ${activeGallery[selectedImageIndex]?.label || 'garment view'}`}
-                  className={`w-full h-full object-contain select-none transition-opacity duration-150 ${
-                    selectedProduct.category === 'Shirts' ? 'p-3' : ''
-                  }`}
+                  className={`${
+                    selectedImageIndex <= 1
+                      ? getShirtDetailImageClass(selectedProduct.id, selectedImageIndex === 1, 'desktop')
+                      : 'w-full h-full'
+                  } object-contain select-none transition-opacity duration-150`}
                   loading="eager"
                   decoding="async"
                   fetchPriority="high"
@@ -1299,13 +1304,13 @@ export function ShowroomFloor({
               </div>
             )}
 
-            <div className="relative w-full h-[40vh] max-h-[360px] flex items-center justify-center p-1">
+            <div
+              className={`relative w-full h-[40vh] max-h-[360px] flex items-center justify-center ${getGarmentCardFrame(currentMobileProduct.id).mobileGridPaddingClass}`}
+            >
               <img
                 src={currentMobileProduct.image}
                 alt={currentMobileProduct.name}
-                className={`w-full h-full object-contain select-none active:scale-98 transition-transform ${
-                  currentMobileProduct.category === 'Shirts' ? 'p-3' : ''
-                } ${
+                className={`${getGarmentCardFrame(currentMobileProduct.id).mobileGridImgClass} h-full object-contain select-none active:scale-98 transition-transform ${
                   currentMobileProduct.soldOut ? 'opacity-85' : ''
                 }`}
                 loading="eager"
@@ -1394,14 +1399,18 @@ export function ShowroomFloor({
                   </button>
                 )}
 
-                <img
-                  src={currentGarmentImage}
-                  alt={`${selectedProduct.name} ${activeGallery[selectedImageIndex]?.label || 'garment view'}`}
-                  className={`h-[38vh] max-h-[350px] w-auto max-w-[80vw] object-contain select-none ${
-                    selectedProduct.category === 'Shirts' ? 'p-2' : ''
-                  }`}
-                  loading="eager"
-                />
+                <div className="h-[38vh] max-h-[350px] w-full max-w-[300px] flex items-center justify-center">
+                  <img
+                    src={currentGarmentImage}
+                    alt={`${selectedProduct.name} ${activeGallery[selectedImageIndex]?.label || 'garment view'}`}
+                    className={`${
+                      selectedImageIndex <= 1
+                        ? getShirtDetailImageClass(selectedProduct.id, selectedImageIndex === 1, 'mobile')
+                        : 'w-full h-full'
+                    } object-contain object-center select-none`}
+                    loading="eager"
+                  />
+                </div>
 
                 {selectedColorVariants.length > 1 && (
                   <div className="absolute right-0 top-1/2 -translate-y-1/2 z-25">

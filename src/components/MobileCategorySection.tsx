@@ -1,5 +1,5 @@
 import React from 'react';
-import { MAIN_COLLECTION, HOODIE_PRODUCTS, SHIRT_PRODUCTS } from '../data/products';
+import { MAIN_COLLECTION, HOODIE_PRODUCTS, SHIRT_PRODUCTS, withAssetVersion } from '../data/products';
 
 export type CategoryId = 'trousers' | 'hoodies' | 'shirts' | 'pair';
 
@@ -22,7 +22,7 @@ export const CATEGORY_ITEMS: CategoryItem[] = [
   {
     id: 'pair',
     name: 'MAKE A PAIR',
-    image: '/clean_plate.jpg',
+    image: withAssetVersion('/clean_plate.jpg'),
     alt: 'Make a pair — Top and Trousers Set',
     count: 'Build Pair',
     subtitle: 'Pair any Shirt or Hoodie + Trousers',
@@ -31,21 +31,21 @@ export const CATEGORY_ITEMS: CategoryItem[] = [
   {
     id: 'trousers',
     name: 'TROUSERS',
-    image: '/assets/categories/category_trousers_hd.webp',
+    image: withAssetVersion('/assets/categories/category_trousers_hd.webp'),
     alt: 'BAD HABIT Trousers Collection',
     count: `${MAIN_COLLECTION.length} Articles`,
   },
   {
     id: 'shirts',
     name: 'SHIRTS',
-    image: '/assets/categories/category_shirts_v3.webp',
+    image: withAssetVersion('/assets/categories/category_shirts_v3.webp'),
     alt: 'BAD HABIT Shirts Category',
     count: `${SHIRT_PRODUCTS.length} Articles`,
   },
   {
     id: 'hoodies',
     name: 'HOODIES & SWEATSHIRTS',
-    image: '/assets/categories/category_hoodies_desktop.webp',
+    image: withAssetVersion('/assets/categories/category_hoodies_duo_v3.webp'),
     alt: 'BAD HABIT Hoodies & Sweatshirts Category',
     count: `${HOODIE_PRODUCTS.length} Articles`,
   },
@@ -68,7 +68,7 @@ const MOBILE_PORTRAIT_CATEGORIES: MobilePortraitCardConfig[] = [
   {
     id: 'shirts',
     label: 'SHIRTS',
-    image: '/assets/categories/category_shirts_v3.webp',
+    image: withAssetVersion('/assets/categories/category_shirts_v3.webp'),
     alt: 'BAD HABIT Shirts Category',
     count: `${SHIRT_PRODUCTS.length} Articles`,
     imageWrapperClass: 'inset-x-0 top-1.5 bottom-0',
@@ -77,7 +77,7 @@ const MOBILE_PORTRAIT_CATEGORIES: MobilePortraitCardConfig[] = [
   {
     id: 'trousers',
     label: 'TROUSERS',
-    image: '/assets/categories/category_trousers_hd.webp',
+    image: withAssetVersion('/assets/categories/category_trousers_hd.webp'),
     alt: 'BAD HABIT Trousers Collection',
     count: `${MAIN_COLLECTION.length} Articles`,
     imageWrapperClass: 'inset-x-0 top-0 bottom-[52px]',
@@ -86,11 +86,11 @@ const MOBILE_PORTRAIT_CATEGORIES: MobilePortraitCardConfig[] = [
   {
     id: 'hoodies',
     label: 'HOODIES',
-    image: '/assets/categories/category_hoodies_desktop.webp',
+    image: withAssetVersion('/assets/categories/category_hoodies_duo_v3.webp'),
     alt: 'BAD HABIT Hoodies & Sweatshirts Category',
     count: `${HOODIE_PRODUCTS.length} Articles`,
-    imageWrapperClass: 'inset-x-0 top-1.5 bottom-0',
-    imageClass: 'w-full h-full object-cover object-[50%_8%]',
+    imageWrapperClass: 'inset-x-0.5 top-2 bottom-[42px] flex items-end justify-center',
+    imageClass: 'w-full h-full object-contain object-bottom',
   },
 ];
 
@@ -141,7 +141,7 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
         >
           {/* Unified Architectural Sky-Blue Runway Background */}
           <img
-            src="/clean_plate.jpg"
+            src={withAssetVersion('/clean_plate.jpg')}
             alt=""
             aria-hidden="true"
             className="w-full h-full object-cover object-center select-none pointer-events-none transition-transform duration-300 group-hover:scale-105"
@@ -225,7 +225,7 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
             >
               {/* Unified Architectural Sky-Blue Runway Background */}
               <img
-                src="/clean_plate.jpg"
+                src={withAssetVersion('/clean_plate.jpg')}
                 alt=""
                 aria-hidden="true"
                 className="w-full h-full object-cover object-center select-none pointer-events-none transition-transform duration-300 group-hover:scale-105"

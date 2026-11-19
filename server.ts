@@ -81,7 +81,14 @@ async function startServer() {
       }
     });
 
-    app.use(express.static(path.join(__dirname, 'public'), { maxAge: '7d' }));
+    app.use(
+      express.static(path.join(__dirname, 'public'), {
+        maxAge: 0,
+        setHeaders: (res) => {
+          res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+        },
+      })
+    );
 
     // Fallback for SPA routing in development
     app.use('*', async (req, res, next) => {
@@ -144,18 +151,27 @@ async function startServer() {
       })
     );
 
-    // Other dist files (index.html must never be staled across publishes)
+    // Other dist files (index.html and static images must never be staled across publishes)
     app.use(
       express.static(distPath, {
-        maxAge: '1d',
+        maxAge: 0,
         setHeaders: (res, filePath) => {
           if (filePath.endsWith('.html')) {
             res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          } else if (!/\.(js|css|woff2)$/i.test(filePath)) {
+            res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
           }
         },
       })
     );
-    app.use(express.static(path.join(__dirname, 'public'), { maxAge: '7d' }));
+    app.use(
+      express.static(path.join(__dirname, 'public'), {
+        maxAge: 0,
+        setHeaders: (res) => {
+          res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+        },
+      })
+    );
     app.get('*', (_req, res) => {
       if (fs.existsSync(indexPath)) {
         res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');

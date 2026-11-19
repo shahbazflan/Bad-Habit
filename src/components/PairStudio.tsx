@@ -3,6 +3,7 @@ import {
   SHIRT_PRODUCTS,
   HOODIE_PRODUCTS,
   MAIN_COLLECTION,
+  getShirtCardFrame,
   Product,
 } from '../data/products';
 import { useCart } from '../context/CartContext';
@@ -294,7 +295,11 @@ export const PairStudio: React.FC<PairStudioProps> = ({
               setOpenDropdown(null);
               setDrawerTab(isWinterTop ? 'hoodies' : 'shirts');
             }}
-            className="relative z-20 h-[156px] sm:h-[176px] flex items-center justify-center cursor-pointer outline-none group"
+            className={`relative z-20 flex items-center justify-center cursor-pointer outline-none group ${
+              selectedTop.id === 'BH-S06' && viewAngle === 'back'
+                ? 'h-[126px] sm:h-[142px] my-[15px] sm:my-[17px]'
+                : 'h-[156px] sm:h-[176px]'
+            }`}
             title={`Change ${topLabel} (${selectedTop.name})`}
             aria-label={`Selected ${topLabel}: ${selectedTop.name}. Click to change ${topLabel}.`}
           >
@@ -630,7 +635,13 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                             </span>
                           )}
 
-                          <div className="w-full h-24 sm:h-28 flex items-center justify-center p-1">
+                          <div
+                            className={`w-full h-24 sm:h-28 flex items-center justify-center ${
+                              viewAngle === 'back' && shirt.id === 'BH-S06'
+                                ? 'p-3'
+                                : getShirtCardFrame(shirt.id).mobileDetailPaddingClass
+                            }`}
+                          >
                             <img
                               src={cardImg}
                               alt={shirt.name}

@@ -23,7 +23,24 @@
       ]
     },
     {
-      "source": "/assets/(aistudio|shirts|trousers_v2|hoodies|categories|email-thumbs)/(.*)",
+      "source": "/assets/(aistudio|shirts|trousers_v2|hoodies|categories|email-thumbs|size_guides)/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        },
+        {
+          "key": "CDN-Cache-Control",
+          "value": "public, s-maxage=0, must-revalidate"
+        },
+        {
+          "key": "Vercel-CDN-Cache-Control",
+          "value": "public, s-maxage=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/(clean_plate\\.jpg|bad_habit_transparent\\.webp)",
       "headers": [
         {
           "key": "Cache-Control",

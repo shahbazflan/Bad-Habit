@@ -1,5 +1,5 @@
 import React from 'react';
-import { Product } from '../data/products';
+import { Product, getGarmentCardFrame } from '../data/products';
 import { CategoryId } from './MobileCategorySection';
 import { preloadProductDetailImages } from '../utils/preloadImages';
 import { useMember } from '../context/MemberContext';
@@ -46,6 +46,7 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
 
   const renderProductCard = (product: Product, index: number) => {
     const saved = isInWishlist(product.id);
+    const frame = getGarmentCardFrame(product.id);
     return (
       <div
         key={product.id}
@@ -102,16 +103,14 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
           </div>
         )}
 
-        {/* Full Garment Image Centered: clean uniform fit across all articles */}
+        {/* Full Garment Image Centered: balanced visual fit across all articles */}
         <div
-          className={`w-full h-72 sm:h-76 flex items-center justify-center relative overflow-hidden ${
-            product.category === 'Shirts' ? 'p-4 sm:p-5' : 'p-1'
-          }`}
+          className={`w-full h-72 sm:h-76 flex items-center justify-center relative overflow-hidden ${frame.mobileGridPaddingClass}`}
         >
           <img
             src={product.image}
             alt={product.name}
-            className={`w-full h-full object-contain object-center select-none transition-transform duration-150 group-hover:scale-[1.02] ${
+            className={`${frame.mobileGridImgClass} h-full object-contain object-center select-none transition-transform duration-150 group-hover:scale-[1.02] ${
               product.soldOut ? 'opacity-85' : ''
             }`}
             loading={index < 4 ? 'eager' : 'lazy'}

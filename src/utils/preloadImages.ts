@@ -4,6 +4,7 @@ import {
   MAIN_COLLECTION,
   SHIRT_PRODUCTS,
   getColorVariants,
+  withAssetVersion,
 } from '../data/products';
 
 let initialPreloaded = false;
@@ -72,9 +73,9 @@ export function preloadGarmentImages() {
 
   const startWarmup = () => {
     const categoryCovers = [
-      '/assets/categories/category_trousers_hd.webp',
-      '/assets/categories/category_shirts_v3.webp',
-      '/assets/categories/category_hoodies_desktop.webp',
+      withAssetVersion('/assets/categories/category_trousers_hd.webp'),
+      withAssetVersion('/assets/categories/category_shirts_v3.webp'),
+      withAssetVersion('/assets/categories/category_hoodies_duo_v3.webp'),
     ];
     preloadUrls(
       [
@@ -128,9 +129,9 @@ export function preloadCategoryImages(
   });
 
   if (category === 'trousers') {
-    backUrls.push('/assets/size_guides/trousers_size_guide.webp');
+    backUrls.push(withAssetVersion('/assets/size_guides/trousers_size_guide.webp'));
   } else if (category === 'shirts') {
-    backUrls.push('/assets/size_guides/shirts_size_guide.webp');
+    backUrls.push(withAssetVersion('/assets/size_guides/shirts_size_guide.webp'));
   }
 
   preloadUrls([...frontUrls, ...backUrls], 4);
@@ -158,9 +159,9 @@ export function preloadProductDetailImages(product: Product) {
   }
 
   if (product.category === 'Trousers') {
-    urls.push('/assets/size_guides/trousers_size_guide.webp');
+    urls.push(withAssetVersion('/assets/size_guides/trousers_size_guide.webp'));
   } else if (product.category === 'Shirts') {
-    urls.push('/assets/size_guides/shirts_size_guide.webp');
+    urls.push(withAssetVersion('/assets/size_guides/shirts_size_guide.webp'));
   }
 
   preloadUrls(urls, 4);
