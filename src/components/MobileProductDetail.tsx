@@ -77,7 +77,7 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
       void import('./SizeGuideModal');
     }
     setActiveImageIndex((prev) => {
-      if (prev === 1 && galleryImages.length > 1) return 1;
+      if (prev < galleryImages.length) return prev;
       return 0;
     });
     setSelectedSize('M');
@@ -191,7 +191,7 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
           )}
         </div>
 
-        {/* Dedicated Front / Back Toggle Pill */}
+        {/* Dedicated Front / Back / Details Toggle Pill */}
         <div className="relative z-20 mt-2.5 flex items-center justify-center">
           <div className="p-1 rounded-full bg-black/40 border border-white/25 backdrop-blur-md flex items-center gap-1 shadow-md">
             <button
@@ -216,6 +216,25 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
             >
               Back
             </button>
+            {galleryImages.slice(2).map((detailItem, offset) => {
+              const detailIdx = offset + 2;
+              const detailLabel =
+                galleryImages.length === 3 ? 'Details' : detailItem.label;
+              return (
+                <button
+                  key={detailIdx}
+                  type="button"
+                  onClick={() => setActiveImageIndex(detailIdx)}
+                  className={`px-4 py-1 rounded-full text-xs font-mono font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                    activeImageIndex === detailIdx
+                      ? 'bg-white text-slate-950 shadow-md scale-105'
+                      : 'text-white/75 hover:text-white'
+                  }`}
+                >
+                  {detailLabel}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

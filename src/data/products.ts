@@ -192,7 +192,7 @@ const RAW_PRODUCTS: Product[] = [
   // ==========================================
   {
     id: 'BH-H01',
-    backImage: '/assets/hoodies/storm_blue_back_only.webp',
+    backImage: '/assets/hoodies/storm_blue_back_only_v2.webp',
     name: 'Storm Blue Sweatshirt',
     category: 'Hoodies',
     color: 'Storm Blue',
@@ -208,7 +208,7 @@ const RAW_PRODUCTS: Product[] = [
   },
   {
     id: 'BH-H02',
-    backImage: '/assets/hoodies/onyx_hoodie_back_only.webp',
+    backImage: '/assets/hoodies/onyx_hoodie_back_only_v2.webp',
     name: 'Onyx Hoodie',
     category: 'Hoodies',
     color: 'Onyx Black',
@@ -224,7 +224,7 @@ const RAW_PRODUCTS: Product[] = [
   },
   {
     id: 'BH-H03',
-    backImage: '/assets/hoodies/ivory_sweatshirt_back_only.webp',
+    backImage: '/assets/hoodies/ivory_sweatshirt_back_only_v2.webp',
     name: 'Ivory Sweatshirt',
     category: 'Hoodies',
     color: 'Ivory',
@@ -233,14 +233,14 @@ const RAW_PRODUCTS: Product[] = [
     image: '/assets/hoodies/ivory_sweatshirt_front_only_v2.webp',
     frontAndBackImage: '/assets/hoodies/bad_habit_ivory_sweatshirt_showcase-6_431d360f.webp',
     detailImages: [
-      '/assets/hoodies/ivory_sweatshirt_detail_poster-5_d4199c93.webp',
+      '/assets/hoodies/ivory_sweatshirt_detail_poster-5_v2.webp',
     ],
     price: 'PKR 4,499',
     fabric: 'Clean heavyweight fleece in natural unbleached ivory with double-needle rib collar, balloon sleeves, and fitted hem',
   },
   {
     id: 'BH-H04',
-    backImage: '/assets/hoodies/dusty_rose_back_only.webp',
+    backImage: '/assets/hoodies/dusty_rose_back_only_v2.webp',
     name: 'Dusty Rose Hoodie',
     category: 'Hoodies',
     color: 'Dusty Rose',
@@ -249,14 +249,14 @@ const RAW_PRODUCTS: Product[] = [
     image: '/assets/hoodies/dusty_rose_hoodie_front_only_v2.webp',
     frontAndBackImage: '/assets/hoodies/dusty_rose_hoodie_front_and_back-1_6413d979.webp',
     detailImages: [
-      '/assets/hoodies/dusty_rose_hoodie_detail_showcase-3_1e9d1dee.webp',
+      '/assets/hoodies/dusty_rose_hoodie_detail_showcase-3_v2.webp',
     ],
     price: 'PKR 4,499',
     fabric: 'Premium peach-finish brushed cotton with tonal BAD HABIT chest embroidery, cross-over hood, and seamless kangaroo pocket',
   },
   {
     id: 'BH-H05',
-    backImage: '/assets/hoodies/off_white_back_only.webp',
+    backImage: '/assets/hoodies/off_white_back_only_v2.webp',
     name: 'Off-White Hoodie',
     category: 'Hoodies',
     color: 'Off-White',
@@ -283,7 +283,7 @@ const RAW_PRODUCTS: Product[] = [
   },
   {
     id: 'BH-H07',
-    backImage: '/assets/hoodies/slate_grey_sweatshirt_back.webp',
+    backImage: '/assets/hoodies/slate_grey_sweatshirt_back_v2.webp',
     name: 'Slate Grey Sweatshirt',
     category: 'Hoodies',
     color: 'Slate Grey',
@@ -295,7 +295,7 @@ const RAW_PRODUCTS: Product[] = [
   },
   {
     id: 'BH-H08',
-    backImage: '/assets/hoodies/washed_umber_hoodie_back.webp',
+    backImage: '/assets/hoodies/washed_umber_hoodie_back_v2.webp',
     name: 'Washed Umber Hoodie',
     category: 'Hoodies',
     color: 'Washed Umber',
@@ -307,7 +307,7 @@ const RAW_PRODUCTS: Product[] = [
   },
   {
     id: 'BH-H09',
-    backImage: '/assets/hoodies/oatmeal_hoodie_back.webp',
+    backImage: '/assets/hoodies/oatmeal_hoodie_back_v2.webp',
     name: 'Oatmeal Hoodie',
     category: 'Hoodies',
     color: 'Oatmeal',
@@ -359,13 +359,13 @@ const RAW_PRODUCTS: Product[] = [
   },
   {
     id: 'BH-S03',
-    backImage: '/assets/aistudio/ESPRESSO_BOXY_BACK__44ecc503.png',
+    backImage: '/assets/aistudio/ESPRESSO_BOXYFRONT_.png_0d972f00.png',
     name: 'Espresso BOXY',
     category: 'Shirts',
     color: 'Espresso',
     colorHex: '#3c2e28',
     colorGroup: 'shirts',
-    image: '/assets/aistudio/ESPRESSO_BOXYFRONT_.png_0d972f00.png',
+    image: '/assets/aistudio/ESPRESSO_BOXY_BACK__44ecc503.png',
     price: 'PKR 4,999',
     fabric: 'Ultra-smooth washed mulberry silk blend with fluid drape, tonal buttons, and architectural boxy camp collar',
   },
@@ -567,17 +567,13 @@ export function getShirtDetailImageClass(
   if (productId === 'BH-S02' && !isBackView) {
     return platform === 'desktop' ? 'h-[81%] w-auto' : 'h-[85%] w-auto';
   }
-  // Off-White Hoodie Front (800x900 tight crop) vs Back (679x900 with top/bottom margin):
-  if (productId === 'BH-H05' && !isBackView) {
-    return platform === 'desktop' ? 'h-[88%] w-auto' : 'h-[88%] w-auto';
-  }
-  // Dusty Rose Hoodie Front (755x900 portrait) vs Back (900x885 wide):
+  // Dusty Rose Hoodie Front (892x1054 portrait) vs Back (1230x1261 square-ish):
   if (productId === 'BH-H04' && !isBackView) {
-    return platform === 'desktop' ? 'h-[86%] w-auto' : 'h-[88%] w-auto';
+    return platform === 'desktop' ? 'h-[90%] w-auto' : 'h-[92%] w-auto';
   }
 
   const frame = getGarmentCardFrame(productId);
-  const fullBackIds = new Set(['BH-S02', 'BH-S01', 'BH-H04', 'BH-H05', 'BH-H09', 'BH-T09']);
+  const fullBackIds = new Set(['BH-S02', 'BH-S01', 'BH-H04', 'BH-H09', 'BH-T09']);
   const slightlyLooserBackIds = new Set(['BH-S05', 'BH-S04']);
 
   if (isBackView && fullBackIds.has(productId)) {

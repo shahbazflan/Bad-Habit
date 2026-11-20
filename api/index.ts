@@ -195,7 +195,7 @@ const PRODUCT_IMAGE_MAP: Record<string, { image: string; category: string }> = {
   'BH-S05': { image: '/assets/aistudio/MAGNUM_BOXY_FRONT__36e853c5.png', category: 'Shirts' },
   'BH-S06': { image: '/assets/aistudio/ROUGH_BOXY_FRONT__a3520722.png', category: 'Shirts' },
   'BH-S04': { image: '/assets/aistudio/MAROON_BOXY_FRONT__dce5cb1c.png', category: 'Shirts' },
-  'BH-S03': { image: '/assets/aistudio/ESPRESSO_BOXYFRONT_.png_0d972f00.png', category: 'Shirts' },
+  'BH-S03': { image: '/assets/aistudio/ESPRESSO_BOXY_BACK__44ecc503.png', category: 'Shirts' },
   'BH-S02': { image: '/assets/aistudio/IVORY_BOXY_front_png_8c2431ce', category: 'Shirts' },
   'BH-S01': { image: '/assets/aistudio/FOAM_BOXY_FRONT__348b6797.png', category: 'Shirts' },
 };
