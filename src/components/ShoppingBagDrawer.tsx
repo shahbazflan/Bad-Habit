@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useMember } from '../context/MemberContext';
+import { getProductSubtitle } from '../data/products';
+import { SmartImage } from './SmartImage';
 
 export const ShoppingBagDrawer: React.FC = () => {
   const {
@@ -21,14 +23,24 @@ export const ShoppingBagDrawer: React.FC = () => {
 
   const [validating, setValidating] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const validateAbortRef = useRef<AbortController | null>(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      validateAbortRef.current?.abort();
+    };
+  }, []);
 
   // On mobile (< 768px), shopping bag is handled as dedicated Screen 5 in MobileExperience
-  const [isDesktop, setIsDesktop] = React.useState(() => {
+  const [isDesktop, setIsDesktop] = useState(() => {
     if (typeof window !== 'undefined') return window.innerWidth >= 768;
     return true;
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     const check = () => setIsDesktop(window.innerWidth >= 768);
     check();
     window.addEventListener('resize', check);
@@ -43,7 +55,10 @@ export const ShoppingBagDrawer: React.FC = () => {
   };
 
   const handleProceedToCheckout = async () => {
-    if (items.length === 0) return;
+    if (items.length === 0 || validating) return;
+    validateAbortRef.current?.abort();
+    const controller = new AbortController();
+    validateAbortRef.current = controller;
     setValidating(true);
     setValidationError(null);
 
@@ -53,23 +68,29 @@ export const ShoppingBagDrawer: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items }),
+        signal: controller.signal,
       });
 
-      const data = await res.json();
-      if (!res.ok || !data.valid) {
-        setValidationError(data.error || 'Cart validation failed. Please check your items.');
+      const data = await res.json().catch(() => null);
+      if (!mountedRef.current) return;
+      if (!res.ok || !data?.valid) {
+        setValidationError(data?.error || 'Cart validation failed. Please check your items.');
         setValidating(false);
         return;
       }
 
       setIsBagOpen(false);
       setIsCheckoutOpen(true);
-    } catch {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
+      if (!mountedRef.current) return;
       // If server unreachable, proceed gracefully
       setIsBagOpen(false);
       setIsCheckoutOpen(true);
     } finally {
-      setValidating(false);
+      if (mountedRef.current) {
+        setValidating(false);
+      }
     }
   };
 
@@ -144,11 +165,15 @@ export const ShoppingBagDrawer: React.FC = () => {
               return (
                 <div key={`${item.productId}-${item.size}`} className="py-4 flex gap-4 items-center">
                   {/* Thumbnail */}
-                  <div className="w-20 h-24 shrink-0 bg-white/5 rounded-2xl border border-white/10 flex items-center justify-center p-1.5 overflow-hidden">
-                    <img
+                  <div className="relative w-20 h-24 shrink-0 bg-white/5 rounded-2xl border border-white/10 flex items-center justify-center p-1.5 overflow-hidden">
+                    <SmartImage
                       src={item.image}
                       alt={item.name}
                       className="w-full h-full object-contain select-none"
+                      sizes="80px"
+                      skeletonClassName="inset-1 rounded-xl"
+                      loading="lazy"
+                      decoding="async"
                     />
                   </div>
 
@@ -156,9 +181,16 @@ export const ShoppingBagDrawer: React.FC = () => {
                   <div className="flex-1 min-w-0 flex flex-col justify-between h-full">
                     <div>
                       <div className="flex items-start justify-between gap-2">
-                        <h4 className="font-display text-sm font-bold text-white tracking-tight truncate">
-                          {item.name}
-                        </h4>
+                        <div className="min-w-0">
+                          <h4 className="font-display text-sm font-bold text-white tracking-tight truncate">
+                            {item.name}
+                          </h4>
+                          {getProductSubtitle(item.productId) && (
+                            <p className="text-[11px] font-sans text-white/70 truncate">
+                              {getProductSubtitle(item.productId)}
+                            </p>
+                          )}
+                        </div>
                         {/* Remove Option */}
                         <button
                           type="button"

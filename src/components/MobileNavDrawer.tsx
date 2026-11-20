@@ -3,6 +3,7 @@ import { CategoryId } from './MobileCategorySection';
 import { PolicyType } from './PolicyModal';
 import { MAIN_COLLECTION, HOODIE_PRODUCTS, SHIRT_PRODUCTS } from '../data/products';
 import { useMember } from '../context/MemberContext';
+import { CleanPlatePicture } from './CleanPlatePicture';
 
 interface MobileNavDrawerProps {
   isOpen: boolean;
@@ -64,10 +65,16 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
       {/* Slide-out Menu Panel in Sky-Blue Showroom Palette */}
       <div className="relative w-[85vw] max-w-[340px] h-full flex flex-col justify-between p-6 z-10 shadow-[0_20px_60px_rgba(4,24,43,0.4)] border-r border-white/25 overflow-y-auto text-white">
         {/* Background Atmosphere: Clean plate glass texture + sky blue frosted wash */}
-        <div
-          className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-40 mix-blend-screen"
-          style={{ backgroundImage: `url('/clean_plate.jpg')` }}
-        />
+        <div className="absolute inset-0 pointer-events-none opacity-40 mix-blend-screen overflow-hidden">
+          <CleanPlatePicture
+            alt=""
+            ariaHidden={true}
+            className="w-full h-full object-cover object-center"
+            sizes="340px"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
         <div className="absolute inset-0 bg-[#2f5c88]/85 backdrop-blur-2xl pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-black/20 pointer-events-none" />
 

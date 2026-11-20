@@ -4,12 +4,13 @@ import {
   getFirestore,
   doc,
   getDocFromServer,
-  getDoc,
+  runTransaction,
   setDoc,
   deleteDoc,
   serverTimestamp,
 } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
+import { isValidPhoneNumber, normalizePhoneToE164, toPhoneRegistryKey } from './utils/phone';
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
@@ -89,34 +90,76 @@ export async function syncFirebaseMemberProfile(params: {
   orderCount?: number;
   firstOrderDiscountUsed?: boolean;
 }) {
+  const normalizedPhone = normalizePhoneToE164(params.phone);
+  const nextPhoneKey = toPhoneRegistryKey(normalizedPhone);
+  if (!isValidPhoneNumber(normalizedPhone) || !nextPhoneKey) {
+    throw new Error('Please provide a valid phone number.');
+  }
+
   const profilePath = `users/${params.uid}/private/info`;
-  const ref = doc(db, 'users', params.uid, 'private', 'info');
+  const profileRef = doc(db, 'users', params.uid, 'private', 'info');
+  const nextPhoneRef = doc(db, 'phoneRegistry', nextPhoneKey);
+
   try {
-    const existingSnap = await getDoc(ref);
-    if (!existingSnap.exists()) {
-      await setDoc(ref, {
-        uid: params.uid,
-        email: params.email.trim().toLowerCase().slice(0, 200),
-        phone: params.phone.trim().slice(0, 32),
-        ...(params.displayName ? { displayName: params.displayName.trim().slice(0, 100) } : {}),
-        promoCode: 'BH-DETECTED',
-        firstOrderDiscountUsed: false,
-        orderCount: 0,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-    } else {
-      await setDoc(
-        ref,
-        {
-          phone: params.phone.trim().slice(0, 32),
+    await runTransaction(db, async (tx) => {
+      const [existingProfileSnap, targetPhoneSnap] = await Promise.all([
+        tx.get(profileRef),
+        tx.get(nextPhoneRef),
+      ]);
+
+      if (targetPhoneSnap.exists() && targetPhoneSnap.data()?.uid !== params.uid) {
+        throw new Error(
+          'This phone number is already registered to another account. Please sign in with that account or use a different phone number.'
+        );
+      }
+
+      const prevPhoneKey = existingProfileSnap.exists()
+        ? String(existingProfileSnap.data()?.phoneKey || toPhoneRegistryKey(existingProfileSnap.data()?.phone))
+        : '';
+
+      if (prevPhoneKey && prevPhoneKey !== nextPhoneKey) {
+        const prevPhoneRef = doc(db, 'phoneRegistry', prevPhoneKey);
+        const prevPhoneSnap = await tx.get(prevPhoneRef);
+        if (prevPhoneSnap.exists() && prevPhoneSnap.data()?.uid === params.uid) {
+          tx.delete(prevPhoneRef);
+        }
+      }
+
+      if (!targetPhoneSnap.exists()) {
+        tx.set(nextPhoneRef, {
+          uid: params.uid,
+          createdAt: serverTimestamp(),
+        });
+      }
+
+      if (!existingProfileSnap.exists()) {
+        tx.set(profileRef, {
+          uid: params.uid,
+          email: params.email.trim().toLowerCase().slice(0, 200),
+          phone: normalizedPhone.slice(0, 32),
+          phoneKey: nextPhoneKey,
           ...(params.displayName ? { displayName: params.displayName.trim().slice(0, 100) } : {}),
+          promoCode: 'BH-DETECTED',
+          firstOrderDiscountUsed: false,
+          orderCount: 0,
+          createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
-        },
-        { merge: true }
-      );
-    }
+        });
+      } else {
+        tx.update(profileRef, {
+          phone: normalizedPhone.slice(0, 32),
+          phoneKey: nextPhoneKey,
+          ...(params.displayName !== undefined
+            ? { displayName: params.displayName.trim().slice(0, 100) }
+            : {}),
+          updatedAt: serverTimestamp(),
+        });
+      }
+    });
   } catch (error) {
+    if (error instanceof Error && error.message.includes('already registered to another account')) {
+      throw error;
+    }
     handleFirestoreError(error, OperationType.WRITE, profilePath);
   }
 }

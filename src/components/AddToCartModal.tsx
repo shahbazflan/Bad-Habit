@@ -1,5 +1,7 @@
 import React from 'react';
 import { useCart } from '../context/CartContext';
+import { getProductSubtitle } from '../data/products';
+import { SmartImage } from './SmartImage';
 
 export const AddToCartModal: React.FC = () => {
   const {
@@ -69,17 +71,26 @@ export const AddToCartModal: React.FC = () => {
 
         {/* Product Details: Thumbnail, Name, Size, Qty, Price */}
         <div className="flex items-center gap-4 py-3 border-y border-white/15 my-2">
-          <div className="w-16 h-20 shrink-0 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center p-1 overflow-hidden">
-            <img
+          <div className="relative w-16 h-20 shrink-0 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center p-1 overflow-hidden">
+            <SmartImage
               src={recentlyAddedItem.image}
               alt={recentlyAddedItem.name}
               className="w-full h-full object-contain select-none"
+              sizes="64px"
+              skeletonClassName="inset-1 rounded-lg"
+              loading="eager"
+              decoding="async"
             />
           </div>
           <div className="flex flex-col flex-1 min-w-0">
             <h4 className="font-display text-sm font-bold text-white tracking-tight truncate">
               {recentlyAddedItem.name}
             </h4>
+            {getProductSubtitle(recentlyAddedItem.productId) && (
+              <span className="text-[11px] font-sans text-white/75 truncate mt-0.5">
+                {getProductSubtitle(recentlyAddedItem.productId)}
+              </span>
+            )}
             <div className="flex items-center gap-2 mt-1 text-xs text-white/75 font-mono">
               <span className="px-2 py-0.5 rounded bg-white/10 text-white font-semibold">
                 Size {recentlyAddedItem.size}

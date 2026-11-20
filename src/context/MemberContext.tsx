@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
 import { Product } from '../data/products';
 import {
@@ -6,6 +6,14 @@ import {
   syncFirebaseMemberProfile,
   syncFirebaseWishlistItem,
 } from '../firebase';
+import { isValidPhoneNumber, normalizePhoneToE164 } from '../utils/phone';
+import {
+  safeStorageGet,
+  safeStorageRemove,
+  safeStorageSet,
+  sanitizeMemberProfile,
+  sanitizeWishlistItems,
+} from '../utils/runtimeSafety';
 
 export interface WishlistItem {
   productId: string;
@@ -56,6 +64,10 @@ interface MemberContextType {
     phone: string;
     displayName?: string;
   }) => Promise<{ ok: boolean; isNewMember?: boolean; error?: string }>;
+  updateMemberProfile: (params: {
+    phone?: string;
+    displayName?: string;
+  }) => Promise<{ ok: boolean; error?: string }>;
   logoutMember: () => Promise<void>;
   refreshMember: () => Promise<void>;
   syncMemberSnapshot: (updated: MemberProfile | null | undefined) => void;
@@ -77,15 +89,7 @@ const WISHLIST_STORAGE_KEY = 'bad_habit_wishlist_v1';
 const ORDERED_IDENTITIES_KEY = 'bad_habit_ordered_identities_v1';
 
 const normEmail = (raw?: string) => String(raw || '').trim().toLowerCase();
-const normPhone = (raw?: string) => {
-  const digits = String(raw || '').replace(/[\s\-\(\)]/g, '');
-  if (!digits) return '';
-  if (digits.startsWith('+92')) return `0${digits.slice(3).replace(/^0+/, '')}`;
-  if (digits.startsWith('0092')) return `0${digits.slice(4).replace(/^0+/, '')}`;
-  if (digits.startsWith('92') && digits.length >= 12) return `0${digits.slice(2).replace(/^0+/, '')}`;
-  if (digits.startsWith('3') && digits.length === 10) return `0${digits}`;
-  return digits;
-};
+const normPhone = (raw?: string) => normalizePhoneToE164(raw);
 
 interface OrderedIdentityLedger {
   emails: string[];
@@ -94,52 +98,30 @@ interface OrderedIdentityLedger {
 }
 
 function readOrderedLedger(): OrderedIdentityLedger {
-  try {
-    const raw = localStorage.getItem(ORDERED_IDENTITIES_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      return {
-        emails: Array.isArray(parsed?.emails) ? parsed.emails : [],
-        phones: Array.isArray(parsed?.phones) ? parsed.phones : [],
-        memberIds: Array.isArray(parsed?.memberIds) ? parsed.memberIds : [],
-      };
-    }
-  } catch {
-    // ignore storage errors
+  const parsed = safeStorageGet<Record<string, unknown> | null>(ORDERED_IDENTITIES_KEY, null);
+  if (!parsed || typeof parsed !== 'object') {
+    return { emails: [], phones: [], memberIds: [] };
   }
-  return { emails: [], phones: [], memberIds: [] };
+  const emails = Array.isArray(parsed.emails)
+    ? parsed.emails.filter((e): e is string => typeof e === 'string' && e.length > 0).map(normEmail)
+    : [];
+  const phones = Array.isArray(parsed.phones)
+    ? parsed.phones.filter((p): p is string => typeof p === 'string' && p.length > 0).map(normPhone).filter(Boolean)
+    : [];
+  const memberIds = Array.isArray(parsed.memberIds)
+    ? parsed.memberIds.filter((id): id is string => typeof id === 'string' && id.length > 0)
+    : [];
+  return { emails, phones, memberIds };
 }
 
 export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [member, setMember] = useState<MemberProfile | null>(() => {
-    try {
-      const saved = localStorage.getItem(MEMBER_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.id && parsed.email && parsed.phone) {
-          return parsed as MemberProfile;
-        }
-      }
-    } catch {
-      // ignore storage errors
-    }
-    return null;
-  });
+  const [member, setMember] = useState<MemberProfile | null>(() =>
+    sanitizeMemberProfile(safeStorageGet<unknown>(MEMBER_STORAGE_KEY, null))
+  );
 
-  const [guestWishlist, setGuestWishlist] = useState<WishlistItem[]>(() => {
-    try {
-      const saved = localStorage.getItem(WISHLIST_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          return parsed as WishlistItem[];
-        }
-      }
-    } catch {
-      // ignore storage errors
-    }
-    return [];
-  });
+  const [guestWishlist, setGuestWishlist] = useState<WishlistItem[]>(() =>
+    sanitizeWishlistItems(safeStorageGet<unknown>(WISHLIST_STORAGE_KEY, []))
+  );
 
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -149,25 +131,48 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [pendingWishlistProduct, setPendingWishlistProduct] = useState<Product | null>(null);
   const [wishlistLoadingId, setWishlistLoadingId] = useState<string | null>(null);
   const [wishlistNotice, setWishlistNotice] = useState<string | null>(null);
-  const noticeTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const noticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
+  const refreshAbortRef = useRef<AbortController | null>(null);
+  const refreshPromiseRef = useRef<Promise<void> | null>(null);
+  const sessionAbortRef = useRef<AbortController | null>(null);
+  const profileAbortRef = useRef<AbortController | null>(null);
+  const wishlistAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (noticeTimerRef.current) {
+        clearTimeout(noticeTimerRef.current);
+        noticeTimerRef.current = null;
+      }
+      refreshAbortRef.current?.abort();
+      sessionAbortRef.current?.abort();
+      profileAbortRef.current?.abort();
+      wishlistAbortRef.current?.abort();
+    };
+  }, []);
 
   const showWishlistNotice = useCallback((msg: string) => {
+    if (!mountedRef.current) return;
     setWishlistNotice(msg);
     if (noticeTimerRef.current) {
       clearTimeout(noticeTimerRef.current);
     }
     noticeTimerRef.current = setTimeout(() => {
-      setWishlistNotice(null);
+      if (mountedRef.current) {
+        setWishlistNotice(null);
+      }
+      noticeTimerRef.current = null;
     }, 2600);
   }, []);
 
   const persistGuestWishlist = useCallback((next: WishlistItem[]) => {
-    setGuestWishlist(next);
-    try {
-      localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      // ignore storage errors
-    }
+    const clean = sanitizeWishlistItems(next);
+    setGuestWishlist(clean);
+    safeStorageSet(WISHLIST_STORAGE_KEY, clean);
   }, []);
 
   const hasOrderedIdentity = useCallback(
@@ -186,7 +191,8 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   );
 
   const persistMember = useCallback(
-    (next: MemberProfile | null) => {
+    (rawNext: MemberProfile | null) => {
+      let next = sanitizeMemberProfile(rawNext);
       if (next && hasOrderedIdentity({ email: next.email, phone: next.phone, memberId: next.id })) {
         next = {
           ...next,
@@ -195,14 +201,10 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         };
       }
       setMember(next);
-      try {
-        if (next) {
-          localStorage.setItem(MEMBER_STORAGE_KEY, JSON.stringify(next));
-        } else {
-          localStorage.removeItem(MEMBER_STORAGE_KEY);
-        }
-      } catch {
-        // ignore
+      if (next) {
+        safeStorageSet(MEMBER_STORAGE_KEY, next);
+      } else {
+        safeStorageRemove(MEMBER_STORAGE_KEY);
       }
     },
     [hasOrderedIdentity]
@@ -217,11 +219,8 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (e && !ledger.emails.includes(e)) ledger.emails.push(e);
       if (p && !ledger.phones.includes(p)) ledger.phones.push(p);
       if (id && !ledger.memberIds.includes(id)) ledger.memberIds.push(id);
-      try {
-        localStorage.setItem(ORDERED_IDENTITIES_KEY, JSON.stringify(ledger));
-      } catch {
-        // ignore
-      }
+      safeStorageSet(ORDERED_IDENTITIES_KEY, ledger);
+
       setMember((prev) => {
         if (!prev) return prev;
         const matchesPrev =
@@ -234,52 +233,69 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           firstOrderDiscountUsed: true,
           orderCount: Math.max(1, Number(prev.orderCount || 0)),
         };
-        try {
-          localStorage.setItem(MEMBER_STORAGE_KEY, JSON.stringify(updated));
-        } catch {
-          // ignore
-        }
+        safeStorageSet(MEMBER_STORAGE_KEY, updated);
         return updated;
       });
     },
     []
   );
 
-  // Track Firebase Auth user state
+  // Track Firebase Auth user state cleanly
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setFirebaseUser(user);
+      if (mountedRef.current) {
+        setFirebaseUser(user);
+      }
     });
     return () => unsubscribe();
   }, []);
 
-  // Hydrate persisted member profile from backend on mount
+  // Hydrate persisted member profile from backend (deduplicated & cancellable)
   const refreshMember = useCallback(async () => {
     if (!member) return;
-    try {
-      const res = await fetch('/api/members/me', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          memberId: member.id,
-          email: member.email,
-          phone: member.phone,
-          clientPriorOrderUsed: hasOrderedIdentity({
+    if (refreshPromiseRef.current) {
+      return refreshPromiseRef.current;
+    }
+
+    refreshAbortRef.current?.abort();
+    const controller = new AbortController();
+    refreshAbortRef.current = controller;
+
+    const run = (async () => {
+      try {
+        const res = await fetch('/api/members/me', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({
             memberId: member.id,
             email: member.email,
-            phone: member.phone,
+            phone: normPhone(member.phone),
+            clientPriorOrderUsed: hasOrderedIdentity({
+              memberId: member.id,
+              email: member.email,
+              phone: member.phone,
+            }),
           }),
-        }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data?.success && data.member) {
-          persistMember(data.member);
+        });
+        if (res.ok && mountedRef.current) {
+          const data = await res.json().catch(() => null);
+          if (data?.success && data.member && mountedRef.current) {
+            persistMember(data.member);
+          }
+        }
+      } catch {
+        // Keep existing cached profile on network/abort errors
+      } finally {
+        if (refreshAbortRef.current === controller) {
+          refreshAbortRef.current = null;
+          refreshPromiseRef.current = null;
         }
       }
-    } catch {
-      // keep existing cached profile on offline
-    }
+    })();
+
+    refreshPromiseRef.current = run;
+    return run;
   }, [member?.id, member?.email, member?.phone, hasOrderedIdentity, persistMember]);
 
   useEffect(() => {
@@ -311,40 +327,54 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       showWishlistNotice(`${product.name} added to your wishlist`);
       setWishlistLoadingId(product.id);
 
+      wishlistAbortRef.current?.abort();
+      const controller = new AbortController();
+      wishlistAbortRef.current = controller;
+
       try {
         const res = await fetch('/api/wishlist/add', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
           body: JSON.stringify({
             memberId: activeMember.id,
             email: activeMember.email,
-            phone: activeMember.phone,
+            phone: normPhone(activeMember.phone),
             displayName: activeMember.displayName,
             productId: product.id,
           }),
         });
         const data = await res.json().catch(() => null);
+        if (!mountedRef.current) return;
+
+        if (res.status === 409) {
+          persistMember(activeMember);
+          showWishlistNotice(data?.error || 'This phone number belongs to another account.');
+          return;
+        }
+
         if (res.ok && data?.success && data.member) {
-          setMember((latest) => {
-            if (!latest || latest.id !== data.member.id) {
-              persistMember(data.member);
-              return data.member;
-            }
-            // Keep any items toggled while request was in flight
-            const serverList: WishlistItem[] = Array.isArray(data.member.wishlist) ? data.member.wishlist : [];
-            const mergedIds = new Set(serverList.map((w) => w.productId));
-            const localExtras = (latest.wishlist || []).filter((w) => !mergedIds.has(w.productId));
-            const mergedMember: MemberProfile = {
-              ...data.member,
-              wishlist: [...localExtras, ...serverList],
-            };
-            try {
-              localStorage.setItem(MEMBER_STORAGE_KEY, JSON.stringify(mergedMember));
-            } catch {
-              // ignore
-            }
-            return mergedMember;
-          });
+          const sanitizedServer = sanitizeMemberProfile(data.member);
+          if (sanitizedServer) {
+            setMember((latest) => {
+              if (!latest || latest.id !== sanitizedServer.id) {
+                persistMember(sanitizedServer);
+                return sanitizedServer;
+              }
+              const serverList: WishlistItem[] = Array.isArray(sanitizedServer.wishlist)
+                ? sanitizedServer.wishlist
+                : [];
+              const mergedIds = new Set(serverList.map((w) => w.productId));
+              const localExtras = (latest.wishlist || []).filter((w) => !mergedIds.has(w.productId));
+              const mergedMember: MemberProfile = {
+                ...sanitizedServer,
+                wishlist: [...localExtras, ...serverList],
+              };
+              safeStorageSet(MEMBER_STORAGE_KEY, mergedMember);
+              return mergedMember;
+            });
+          }
+
           if (auth.currentUser) {
             void syncFirebaseWishlistItem({
               uid: auth.currentUser.uid,
@@ -358,9 +388,11 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }
         }
       } catch {
-        // optimistic local state already persisted
+        // Optimistic local state already persisted unless aborted cleanly
       } finally {
-        setWishlistLoadingId(null);
+        if (mountedRef.current) {
+          setWishlistLoadingId(null);
+        }
       }
     },
     [persistMember, showWishlistNotice]
@@ -376,27 +408,70 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       phone: string;
       displayName?: string;
     }): Promise<{ ok: boolean; isNewMember?: boolean; error?: string }> => {
+      const normalizedEmail = normEmail(email);
+      const normalizedPhone = normPhone(phone);
+
+      if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+        return { ok: false, error: 'Please enter a valid email address.' };
+      }
+      if (!normalizedPhone || !isValidPhoneNumber(normalizedPhone)) {
+        return {
+          ok: false,
+          error: 'Please enter a valid mobile number (e.g. 03001234567 or +923001234567).',
+        };
+      }
+
+      sessionAbortRef.current?.abort();
+      const controller = new AbortController();
+      sessionAbortRef.current = controller;
       setIsLoading(true);
+
       try {
         const res = await fetch('/api/members/session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
           body: JSON.stringify({
-            email: email.trim(),
-            phone: phone.trim(),
+            email: normalizedEmail,
+            phone: normalizedPhone,
             displayName: displayName?.trim() || undefined,
-            clientPriorOrderUsed: hasOrderedIdentity({ email, phone }),
+            clientPriorOrderUsed: hasOrderedIdentity({ email: normalizedEmail, phone: normalizedPhone }),
           }),
         });
         const data = await res.json().catch(() => null);
+        if (!mountedRef.current) return { ok: false };
+
         if (!res.ok || !data?.success || !data.member) {
           return {
             ok: false,
-            error: data?.error || 'Could not complete member registration. Please verify your email and phone number.',
+            error:
+              data?.error ||
+              'Could not complete member registration. Please verify your email and phone number.',
           };
         }
 
-        const savedMember: MemberProfile = data.member;
+        const savedMember = sanitizeMemberProfile(data.member);
+        if (!savedMember) {
+          return { ok: false, error: 'Received an invalid member profile response.' };
+        }
+
+        if (auth.currentUser) {
+          try {
+            await syncFirebaseMemberProfile({
+              uid: auth.currentUser.uid,
+              email: savedMember.email,
+              phone: savedMember.phone,
+              displayName: savedMember.displayName,
+              orderCount: savedMember.orderCount,
+              firstOrderDiscountUsed: savedMember.firstOrderDiscountUsed,
+            });
+          } catch (fbErr) {
+            if (fbErr instanceof Error && fbErr.message.includes('already registered to another account')) {
+              return { ok: false, error: fbErr.message };
+            }
+          }
+        }
+
         const existingServerIds = new Set((savedMember.wishlist || []).map((w) => w.productId));
         const unsyncedGuestItems = guestWishlist.filter((w) => !existingServerIds.has(w.productId));
         const mergedSavedMember: MemberProfile =
@@ -407,33 +482,26 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         persistMember(mergedSavedMember);
         if (unsyncedGuestItems.length > 0) {
           persistGuestWishlist([]);
-          for (const gItem of unsyncedGuestItems) {
-            void fetch('/api/wishlist/add', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                memberId: mergedSavedMember.id,
-                email: mergedSavedMember.email,
-                phone: mergedSavedMember.phone,
-                displayName: mergedSavedMember.displayName,
-                productId: gItem.productId,
-                dryRun: true,
-              }),
-            }).catch(() => {});
-          }
+          void Promise.allSettled(
+            unsyncedGuestItems.map((gItem) =>
+              fetch('/api/wishlist/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                signal: controller.signal,
+                body: JSON.stringify({
+                  memberId: mergedSavedMember.id,
+                  email: mergedSavedMember.email,
+                  phone: mergedSavedMember.phone,
+                  displayName: mergedSavedMember.displayName,
+                  productId: gItem.productId,
+                  dryRun: true,
+                }),
+              })
+            )
+          );
         }
-        setJustRegistered(Boolean(data.isNewMember));
 
-        if (auth.currentUser) {
-          void syncFirebaseMemberProfile({
-            uid: auth.currentUser.uid,
-            email: mergedSavedMember.email,
-            phone: mergedSavedMember.phone,
-            displayName: mergedSavedMember.displayName,
-            orderCount: mergedSavedMember.orderCount,
-            firstOrderDiscountUsed: mergedSavedMember.firstOrderDiscountUsed,
-          }).catch(() => {});
-        }
+        setJustRegistered(Boolean(data.isNewMember));
 
         if (pendingWishlistProduct) {
           const itemToSave = pendingWishlistProduct;
@@ -442,10 +510,18 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
 
         return { ok: true, isNewMember: Boolean(data.isNewMember) };
-      } catch {
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          return { ok: false, error: 'Request was cancelled. Please try again.' };
+        }
         return { ok: false, error: 'Network error while connecting to member service.' };
       } finally {
-        setIsLoading(false);
+        if (sessionAbortRef.current === controller) {
+          sessionAbortRef.current = null;
+        }
+        if (mountedRef.current) {
+          setIsLoading(false);
+        }
       }
     },
     [
@@ -458,7 +534,98 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     ]
   );
 
+  const updateMemberProfile = useCallback(
+    async ({
+      phone,
+      displayName,
+    }: {
+      phone?: string;
+      displayName?: string;
+    }): Promise<{ ok: boolean; error?: string }> => {
+      if (!member) {
+        return { ok: false, error: 'Please sign in first to update your profile.' };
+      }
+
+      const normalizedPhone = phone !== undefined ? normPhone(phone) : undefined;
+      if (normalizedPhone !== undefined && (!normalizedPhone || !isValidPhoneNumber(normalizedPhone))) {
+        return {
+          ok: false,
+          error: 'Please enter a valid mobile number (e.g. 03001234567 or +923001234567).',
+        };
+      }
+
+      profileAbortRef.current?.abort();
+      const controller = new AbortController();
+      profileAbortRef.current = controller;
+      setIsLoading(true);
+
+      try {
+        const res = await fetch('/api/members/profile', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({
+            memberId: member.id,
+            email: member.email,
+            phone: normalizedPhone,
+            displayName: displayName !== undefined ? displayName.trim() : undefined,
+          }),
+        });
+        const data = await res.json().catch(() => null);
+        if (!mountedRef.current) return { ok: false };
+
+        if (!res.ok || !data?.success || !data.member) {
+          return {
+            ok: false,
+            error: data?.error || 'Could not update your profile details.',
+          };
+        }
+
+        const updated = sanitizeMemberProfile(data.member);
+        if (!updated) {
+          return { ok: false, error: 'Invalid response received while saving profile.' };
+        }
+
+        if (auth.currentUser) {
+          try {
+            await syncFirebaseMemberProfile({
+              uid: auth.currentUser.uid,
+              email: updated.email,
+              phone: updated.phone,
+              displayName: updated.displayName,
+              orderCount: updated.orderCount,
+              firstOrderDiscountUsed: updated.firstOrderDiscountUsed,
+            });
+          } catch (fbErr) {
+            if (fbErr instanceof Error && fbErr.message.includes('already registered to another account')) {
+              return { ok: false, error: fbErr.message };
+            }
+          }
+        }
+
+        persistMember(updated);
+        return { ok: true };
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          return { ok: false, error: 'Profile update was cancelled.' };
+        }
+        return { ok: false, error: 'Network error while updating profile.' };
+      } finally {
+        if (profileAbortRef.current === controller) {
+          profileAbortRef.current = null;
+        }
+        if (mountedRef.current) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [member, persistMember]
+  );
+
   const logoutMember = useCallback(async () => {
+    refreshAbortRef.current?.abort();
+    sessionAbortRef.current?.abort();
+    profileAbortRef.current?.abort();
     persistMember(null);
     setJustRegistered(false);
     setPendingWishlistProduct(null);
@@ -467,7 +634,7 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         await signOut(auth);
       }
     } catch {
-      // ignore signOut errors
+      // Ignore signOut errors
     }
   }, [persistMember]);
 
@@ -495,20 +662,26 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       };
       persistMember(optimisticMember);
       setWishlistLoadingId(productId);
+
+      wishlistAbortRef.current?.abort();
+      const controller = new AbortController();
+      wishlistAbortRef.current = controller;
+
       try {
         const res = await fetch('/api/wishlist/remove', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
           body: JSON.stringify({
             memberId: member.id,
             email: member.email,
-            phone: member.phone,
+            phone: normPhone(member.phone),
             displayName: member.displayName,
             productId,
           }),
         });
         const data = await res.json().catch(() => null);
-        if (res.ok && data?.success && data.member) {
+        if (res.ok && data?.success && data.member && mountedRef.current) {
           persistMember(data.member);
           if (auth.currentUser) {
             void syncFirebaseWishlistItem({
@@ -523,9 +696,11 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }
         }
       } catch {
-        // optimistic local state already updated
+        // Optimistic local state already updated
       } finally {
-        setWishlistLoadingId(null);
+        if (mountedRef.current) {
+          setWishlistLoadingId(null);
+        }
       }
     },
     [member, guestWishlist, persistGuestWishlist, persistMember]
@@ -533,6 +708,7 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const toggleWishlist = useCallback(
     async (product: Product) => {
+      if (!product?.id) return;
       if (!member) {
         const exists = guestWishlist.some((item) => item.productId === product.id);
         if (exists) {
@@ -578,6 +754,7 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         pendingWishlistProduct,
         clearPendingWishlistProduct: () => setPendingWishlistProduct(null),
         loginOrRegister,
+        updateMemberProfile,
         logoutMember,
         refreshMember,
         syncMemberSnapshot,

@@ -122,15 +122,16 @@ async function startServer() {
     const distPath = path.join(__dirname, 'dist');
     const indexPath = path.join(distPath, 'index.html');
 
-    // Hashed Vite bundles get long-term immutable caching; unhashed public/assets revalidate cleanly
+    // Hashed Vite bundles & versioned image assets get long-term caching while index.html stays no-cache
     app.use(
       '/assets',
       express.static(path.join(distPath, 'assets'), {
-        maxAge: '1y',
-        immutable: true,
+        maxAge: '7d',
         setHeaders: (res, filePath) => {
-          if (!/\.(js|css|woff2)$/i.test(filePath)) {
-            res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+          if (/\.(js|css|woff2)$/i.test(filePath)) {
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+          } else {
+            res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
           }
           if (filePath.endsWith('IVORY_BOXY_front_png_8c2431ce')) {
             res.setHeader('Content-Type', 'image/png');
@@ -141,9 +142,9 @@ async function startServer() {
     app.use(
       '/assets',
       express.static(path.join(__dirname, 'public', 'assets'), {
-        maxAge: 0,
+        maxAge: '1d',
         setHeaders: (res, filePath) => {
-          res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+          res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
           if (filePath.endsWith('IVORY_BOXY_front_png_8c2431ce')) {
             res.setHeader('Content-Type', 'image/png');
           }
@@ -151,24 +152,26 @@ async function startServer() {
       })
     );
 
-    // Other dist files (index.html and static images must never be staled across publishes)
+    // Other dist files (index.html never stales across publishes; images cache with revalidation window)
     app.use(
       express.static(distPath, {
-        maxAge: 0,
+        maxAge: '1d',
         setHeaders: (res, filePath) => {
           if (filePath.endsWith('.html')) {
             res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-          } else if (!/\.(js|css|woff2)$/i.test(filePath)) {
-            res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+          } else if (/\.(js|css|woff2)$/i.test(filePath)) {
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+          } else {
+            res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
           }
         },
       })
     );
     app.use(
       express.static(path.join(__dirname, 'public'), {
-        maxAge: 0,
+        maxAge: '1d',
         setHeaders: (res) => {
-          res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+          res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
         },
       })
     );

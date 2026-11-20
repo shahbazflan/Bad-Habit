@@ -1,5 +1,7 @@
 import React from 'react';
-import { MAIN_COLLECTION, HOODIE_PRODUCTS, SHIRT_PRODUCTS, withAssetVersion } from '../data/products';
+import { MAIN_COLLECTION, HOODIE_PRODUCTS, SHIRT_PRODUCTS, HERO_PLATE_URL, withAssetVersion } from '../data/products';
+import { CleanPlatePicture } from './CleanPlatePicture';
+import { SmartImage } from './SmartImage';
 
 export type CategoryId = 'trousers' | 'hoodies' | 'shirts' | 'pair';
 
@@ -22,7 +24,7 @@ export const CATEGORY_ITEMS: CategoryItem[] = [
   {
     id: 'pair',
     name: 'MAKE A PAIR',
-    image: withAssetVersion('/clean_plate.jpg'),
+    image: HERO_PLATE_URL,
     alt: 'Make a pair — Top and Trousers Set',
     count: 'Build Pair',
     subtitle: 'Pair any Shirt or Hoodie + Trousers',
@@ -142,30 +144,37 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
           aria-label={`Shop ${pairCategory.name}${pairCategory.badgeText ? ` — ${pairCategory.badgeText}` : ''}`}
         >
           {/* Unified Architectural Sky-Blue Runway Background */}
-          <img
-            src={withAssetVersion('/clean_plate.jpg')}
+          <CleanPlatePicture
             alt=""
-            aria-hidden="true"
+            ariaHidden={true}
             className="w-full h-full object-cover object-center select-none pointer-events-none transition-transform duration-300 group-hover:scale-105"
-            loading="eager"
+            sizes="(max-width: 640px) 94vw, 600px"
+            loading="lazy"
             decoding="async"
+            fetchPriority="low"
           />
 
           {/* Right-side Magnum BOXY Shirt + Classic Brown Trousers Cutouts */}
           <div className="absolute inset-y-2 right-2 sm:right-4 w-[58%] flex items-center justify-end -space-x-4 sm:-space-x-3 pointer-events-none z-10">
-            <img
+            <SmartImage
               src={POSTER_SHIRT.image}
               alt={POSTER_SHIRT.name}
               className="relative z-10 h-[78%] sm:h-[82%] w-auto object-contain drop-shadow-[0_10px_18px_rgba(4,24,43,0.28)] transition-transform duration-300 group-hover:scale-105"
-              loading="eager"
+              sizes="(max-width: 640px) 150px, 200px"
+              showSkeleton={false}
+              loading="lazy"
               decoding="async"
+              fetchPriority="low"
             />
-            <img
+            <SmartImage
               src={POSTER_TROUSER.image}
               alt={POSTER_TROUSER.name}
               className="h-[84%] sm:h-[88%] w-auto object-contain drop-shadow-[0_10px_18px_rgba(4,24,43,0.28)] transition-transform duration-300 group-hover:scale-105"
-              loading="eager"
+              sizes="(max-width: 640px) 150px, 200px"
+              showSkeleton={false}
+              loading="lazy"
               decoding="async"
+              fetchPriority="low"
             />
           </div>
 
@@ -226,24 +235,28 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
               aria-label={`Shop ${cat.label} — ${cat.count}`}
             >
               {/* Unified Architectural Sky-Blue Runway Background */}
-              <img
-                src={withAssetVersion('/clean_plate.jpg')}
+              <CleanPlatePicture
                 alt=""
-                aria-hidden="true"
+                ariaHidden={true}
                 className="w-full h-full object-cover object-center select-none pointer-events-none transition-transform duration-300 group-hover:scale-105"
-                loading="eager"
+                sizes="(max-width: 640px) 32vw, 220px"
+                loading="lazy"
                 decoding="async"
+                fetchPriority="low"
               />
 
               {/* Portrait Model Cutout */}
               <div className={`absolute ${cat.imageWrapperClass} overflow-hidden pointer-events-none`}>
                 <div className={cat.innerWrapperClass ?? 'w-full h-full'}>
-                  <img
+                  <SmartImage
                     src={cat.image}
                     alt={cat.alt}
                     className={`${cat.imageClass} select-none transition-transform duration-300 group-hover:scale-105 ${cat.imageOriginClass ?? 'origin-bottom'}`}
-                    loading="eager"
+                    sizes="(max-width: 640px) 32vw, 220px"
+                    skeletonClassName="inset-1 rounded-xl"
+                    loading="lazy"
                     decoding="async"
+                    fetchPriority="low"
                   />
                 </div>
               </div>

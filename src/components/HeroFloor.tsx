@@ -12,7 +12,8 @@ import { useCart } from '../context/CartContext';
 import { useMember } from '../context/MemberContext';
 import { BrandLogo } from './BrandLogo';
 import { HeroCloudOffer } from './HeroCloudOffer';
-import { withAssetVersion } from '../data/products';
+import { CleanPlatePicture } from './CleanPlatePicture';
+import { HERO_LOGO_URL, HERO_MODEL_URL, getResponsiveSrcSet } from '../data/products';
 
 interface HeroFloorProps {
   onViewCollection: () => void;
@@ -31,10 +32,10 @@ export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProp
       aria-label="BAD HABIT Hero Runway"
     >
       {/* 1. LAYER: Architecture & Sky at the back (Z-Index 1) */}
-      <img
-        src={withAssetVersion('/clean_plate.jpg')}
+      <CleanPlatePicture
         alt="Architectural space with sky and white floor"
         className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none z-[1]"
+        sizes="100vw"
         loading="eager"
         decoding="async"
         fetchPriority="high"
@@ -163,11 +164,16 @@ export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProp
       >
         <div className="w-[86vw] sm:w-[58vw] max-w-[840px] aspect-[1774/887] relative flex items-center justify-center -translate-y-8 md:translate-y-0">
           <img
-            src={withAssetVersion('/bad_habit_transparent.webp')}
+            src={HERO_LOGO_URL}
+            srcSet={getResponsiveSrcSet(HERO_LOGO_URL)}
+            sizes="(max-width: 640px) 86vw, (max-width: 1450px) 58vw, 840px"
+            width={1000}
+            height={500}
             alt="BAD HABIT"
             className="w-full h-full object-contain select-none pointer-events-none"
             loading="eager"
             decoding="async"
+            fetchPriority="high"
           />
         </div>
       </div>
@@ -228,7 +234,11 @@ export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProp
 
         {/* Shared Model Cutout Image */}
         <img
-          src={withAssetVersion('/assets/aistudio/hero_mobile_model_cutout.webp')}
+          src={HERO_MODEL_URL}
+          srcSet={getResponsiveSrcSet(HERO_MODEL_URL)}
+          sizes="(max-width: 767px) 220px, 290px"
+          width={375}
+          height={1116}
           alt="BAD HABIT fashion model"
           className="relative z-[2] w-full h-full object-contain object-bottom select-none pointer-events-none"
           loading="eager"

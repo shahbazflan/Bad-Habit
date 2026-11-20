@@ -8,7 +8,8 @@ import {
 } from '../data/products';
 import { useCart } from '../context/CartContext';
 import { parseNumericPrice, PAIR_DISCOUNT_RATE } from '../utils/pairPricing';
-import { preloadCategoryImages, preloadProductDetailImages } from '../utils/preloadImages';
+import { preloadCategoryImages, preloadPairAlternateAngles } from '../utils/preloadImages';
+import { SmartImage } from './SmartImage';
 
 export interface PairStudioProps {
   initialTop?: Product | null;
@@ -80,18 +81,25 @@ export const PairStudio: React.FC<PairStudioProps> = ({
   const [pairAdded, setPairAdded] = useState(false);
 
   const dropdownContainerRef = useRef<HTMLDivElement | null>(null);
+  const pairAddedTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (pairAddedTimerRef.current !== null) {
+        window.clearTimeout(pairAddedTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     preloadCategoryImages('pair');
   }, []);
 
   useEffect(() => {
-    preloadProductDetailImages(selectedTop);
-  }, [selectedTop]);
-
-  useEffect(() => {
-    preloadProductDetailImages(selectedTrouser);
-  }, [selectedTrouser]);
+    if (viewAngle === 'front') {
+      preloadPairAlternateAngles(selectedTop, selectedTrouser);
+    }
+  }, [selectedTop, selectedTrouser, viewAngle]);
 
   useEffect(() => {
     if (resolvedSeedTop) {
@@ -184,7 +192,13 @@ export const PairStudio: React.FC<PairStudioProps> = ({
 
     if (ok) {
       setPairAdded(true);
-      setTimeout(() => setPairAdded(false), 3500);
+      if (pairAddedTimerRef.current !== null) {
+        window.clearTimeout(pairAddedTimerRef.current);
+      }
+      pairAddedTimerRef.current = window.setTimeout(() => {
+        pairAddedTimerRef.current = null;
+        setPairAdded(false);
+      }, 3500);
     }
   };
 
@@ -303,12 +317,15 @@ export const PairStudio: React.FC<PairStudioProps> = ({
             title={`Change ${topLabel} (${selectedTop.name})`}
             aria-label={`Selected ${topLabel}: ${selectedTop.name}. Click to change ${topLabel}.`}
           >
-            <img
+            <SmartImage
               src={topImageSrc}
               alt={selectedTop.name}
               className="h-full w-auto object-contain select-none transition-transform duration-200 group-hover:scale-[1.03]"
+              sizes="240px"
+              showSkeleton={false}
               loading="eager"
               decoding="async"
+              fetchPriority="high"
             />
           </button>
 
@@ -334,14 +351,17 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                 SOLD OUT
               </span>
             )}
-            <img
+            <SmartImage
               src={trouserImageSrc}
               alt={selectedTrouser.name}
               className={`h-full w-auto object-contain select-none transition-transform duration-200 group-hover:scale-[1.02] ${
                 isTrouserSoldOut ? 'opacity-75' : ''
               }`}
+              sizes="240px"
+              showSkeleton={false}
               loading="eager"
               decoding="async"
+              fetchPriority="high"
             />
           </button>
         </div>
@@ -351,6 +371,11 @@ export const PairStudio: React.FC<PairStudioProps> = ({
           <p className="font-display text-xs font-semibold text-white/95 tracking-wide truncate px-2">
             {selectedTop.name} + {selectedTrouser.name}
           </p>
+          {selectedTop.subtitle && (
+            <p className="text-[10.5px] font-sans text-white/75 tracking-tight truncate px-2 mt-0.5">
+              {selectedTop.subtitle}
+            </p>
+          )}
         </div>
 
         {/* =============================================================== */}
@@ -636,16 +661,18 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                           )}
 
                           <div
-                            className={`w-full h-24 sm:h-28 flex items-center justify-center ${
+                            className={`relative w-full h-24 sm:h-28 flex items-center justify-center ${
                               viewAngle === 'back' && shirt.id === 'BH-S06'
                                 ? 'p-3'
                                 : getShirtCardFrame(shirt.id).mobileDetailPaddingClass
                             }`}
                           >
-                            <img
+                            <SmartImage
                               src={cardImg}
                               alt={shirt.name}
                               className="h-full w-auto object-contain select-none"
+                              sizes="(max-width: 640px) 42vw, 180px"
+                              skeletonClassName="inset-1 rounded-xl"
                               loading={idx < 4 ? 'eager' : 'lazy'}
                               decoding="async"
                             />
@@ -654,6 +681,11 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                           <span className="mt-1 font-display text-[13px] font-semibold text-white tracking-tight truncate w-full text-center drop-shadow-[0_1px_2px_rgba(8,64,118,0.25)]">
                             {shirt.name}
                           </span>
+                          {shirt.subtitle && (
+                            <span className="text-[10px] font-sans text-white/75 tracking-tight truncate w-full text-center">
+                              {shirt.subtitle}
+                            </span>
+                          )}
                         </button>
                       );
                     })
@@ -687,11 +719,13 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                             </span>
                           )}
 
-                          <div className="w-full h-24 sm:h-28 flex items-center justify-center p-1">
-                            <img
+                          <div className="relative w-full h-24 sm:h-28 flex items-center justify-center p-1">
+                            <SmartImage
                               src={cardImg}
                               alt={hoodie.name}
                               className="h-full w-auto object-contain select-none"
+                              sizes="(max-width: 640px) 42vw, 180px"
+                              skeletonClassName="inset-1 rounded-xl"
                               loading={idx < 4 ? 'eager' : 'lazy'}
                               decoding="async"
                             />
@@ -738,13 +772,15 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                             </span>
                           )}
 
-                          <div className="w-full h-24 sm:h-28 flex items-center justify-center p-1">
-                            <img
+                          <div className="relative w-full h-24 sm:h-28 flex items-center justify-center p-1">
+                            <SmartImage
                               src={cardImg}
                               alt={trouser.name}
                               className={`h-full w-auto object-contain select-none ${
                                 trouser.soldOut ? 'opacity-65' : ''
                               }`}
+                              sizes="(max-width: 640px) 42vw, 180px"
+                              skeletonClassName="inset-1 rounded-xl"
                               loading={idx < 4 ? 'eager' : 'lazy'}
                               decoding="async"
                             />

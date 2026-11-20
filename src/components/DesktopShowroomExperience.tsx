@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { HeroFloor } from './HeroFloor';
 import { useCart } from '../context/CartContext';
+import { ErrorBoundary } from './ErrorBoundary';
 
 const ShowroomFloor = lazy(() =>
   import('./ShowroomFloor').then((m) => ({ default: m.ShowroomFloor }))
@@ -120,24 +121,28 @@ export function DesktopShowroomExperience() {
         >
           {/* LEVEL 02: HERO RUNWAY */}
           <div className="w-full h-[100vh] h-[100dvh] shrink-0">
-            <HeroFloor
-              onViewCollection={() => scrollToFloor('showroom')}
-              activeFloor={activeFloor}
-              onNavigateToFloor={scrollToFloor}
-            />
+            <ErrorBoundary compact sectionName="Hero Runway">
+              <HeroFloor
+                onViewCollection={() => scrollToFloor('showroom')}
+                activeFloor={activeFloor}
+                onNavigateToFloor={scrollToFloor}
+              />
+            </ErrorBoundary>
           </div>
 
           {/* LEVEL 01: LOWER SHOWROOM */}
           <div className="w-full h-[100vh] h-[100dvh] shrink-0">
             {showroomMounted && (
-              <Suspense fallback={null}>
-                <ShowroomFloor
-                  onReturnToHero={() => scrollToFloor('hero')}
-                  isFullyInView={scrollProgress >= 0.9}
-                  activeFloor={activeFloor}
-                  onNavigateToFloor={scrollToFloor}
-                />
-              </Suspense>
+              <ErrorBoundary compact sectionName="Showroom Collection">
+                <Suspense fallback={null}>
+                  <ShowroomFloor
+                    onReturnToHero={() => scrollToFloor('hero')}
+                    isFullyInView={scrollProgress >= 0.9}
+                    activeFloor={activeFloor}
+                    onNavigateToFloor={scrollToFloor}
+                  />
+                </Suspense>
+              </ErrorBoundary>
             )}
           </div>
         </div>

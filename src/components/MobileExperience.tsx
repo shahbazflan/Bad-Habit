@@ -4,6 +4,8 @@ import { useCart } from '../context/CartContext';
 import { MobileHero } from './MobileHero';
 import { MobileCategorySection, CategoryId } from './MobileCategorySection';
 import { MobileHeader } from './MobileHeader';
+import { CleanPlatePicture } from './CleanPlatePicture';
+import { ErrorBoundary } from './ErrorBoundary';
 import type { PolicyType } from './PolicyModal';
 import { preloadCategoryImages, preloadProductDetailImages } from '../utils/preloadImages';
 
@@ -57,6 +59,15 @@ export const MobileExperience: React.FC = () => {
 
   // Store grid scroll position so returning from product detail restores it
   const gridScrollPosition = useRef<number>(0);
+  const scrollTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (scrollTimerRef.current !== null) {
+        window.clearTimeout(scrollTimerRef.current);
+      }
+    };
+  }, []);
 
   // Pre-warm grid & detail chunks gently after initial hero mount so navigation is zero-wait
   useEffect(() => {
@@ -95,7 +106,7 @@ export const MobileExperience: React.FC = () => {
   }, []);
 
   const handlePrefetchCategory = useCallback((catId: CategoryId) => {
-    preloadCategoryImages(catId);
+    preloadCategoryImages(catId, PRODUCTS);
     if (catId === 'pair') {
       void import('./PairStudio');
     } else {
@@ -106,7 +117,7 @@ export const MobileExperience: React.FC = () => {
 
   // Open Category view (Screen 3) or Make a Pair Studio
   const handleSelectCategory = useCallback((catId: CategoryId) => {
-    preloadCategoryImages(catId);
+    preloadCategoryImages(catId, PRODUCTS);
     if (catId === 'pair') {
       void import('./PairStudio');
       setPairSeedShirt(null);
@@ -129,7 +140,9 @@ export const MobileExperience: React.FC = () => {
   const handleBackToCategories = useCallback(() => {
     setActiveView('home');
     setSelectedProduct(null);
-    setTimeout(() => {
+    if (scrollTimerRef.current !== null) window.clearTimeout(scrollTimerRef.current);
+    scrollTimerRef.current = window.setTimeout(() => {
+      scrollTimerRef.current = null;
       handleScrollToCategories();
     }, 40);
   }, [handleScrollToCategories]);
@@ -182,7 +195,9 @@ export const MobileExperience: React.FC = () => {
   const handleBackToCategory = useCallback(() => {
     setActiveView('category');
     setSelectedProduct(null);
-    setTimeout(() => {
+    if (scrollTimerRef.current !== null) window.clearTimeout(scrollTimerRef.current);
+    scrollTimerRef.current = window.setTimeout(() => {
+      scrollTimerRef.current = null;
       window.scrollTo({ top: gridScrollPosition.current, behavior: 'auto' });
     }, 40);
   }, []);
@@ -200,7 +215,9 @@ export const MobileExperience: React.FC = () => {
   const handleCloseBag = useCallback(() => {
     setActiveView(previousViewRef.current || 'home');
     if (previousViewRef.current === 'category') {
-      setTimeout(() => {
+      if (scrollTimerRef.current !== null) window.clearTimeout(scrollTimerRef.current);
+      scrollTimerRef.current = window.setTimeout(() => {
+        scrollTimerRef.current = null;
         window.scrollTo({ top: gridScrollPosition.current, behavior: 'auto' });
       }, 40);
     }
@@ -237,10 +254,11 @@ export const MobileExperience: React.FC = () => {
     }`}>
       {/* GLOBAL BACKGROUND: Keyblue architectural sky runway matching desktop exactly */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
-        <img
-          src="/clean_plate.jpg"
+        <CleanPlatePicture
           alt="Architectural sky runway"
           className="w-full h-full object-cover object-center"
+          sizes="100vw"
+          loading="eager"
           decoding="async"
           fetchPriority="high"
         />
@@ -257,19 +275,21 @@ export const MobileExperience: React.FC = () => {
         {/* 1. HOME VIEW: SCREEN 1 (HERO) + SCREEN 2 (CATEGORIES) IN NORMAL DOCUMENT FLOW */}
         {activeView === 'home' && (
           <div className="w-full flex flex-col">
-            {/* SCREEN 1: Full-screen opening hero */}
-            <MobileHero
-              onExplore={handleScrollToCategories}
-              onOpenMenu={() => setIsNavDrawerOpen(true)}
-              onOpenBag={handleOpenBag}
-              cartCount={cartCount}
-            />
+            <ErrorBoundary compact sectionName="Hero">
+              <MobileHero
+                onExplore={handleScrollToCategories}
+                onOpenMenu={() => setIsNavDrawerOpen(true)}
+                onOpenBag={handleOpenBag}
+                cartCount={cartCount}
+              />
+            </ErrorBoundary>
 
-            {/* SCREEN 2: Shop by category (4 stacked horizontal tiles) */}
-            <MobileCategorySection
-              onSelectCategory={handleSelectCategory}
-              onPrefetchCategory={handlePrefetchCategory}
-            />
+            <ErrorBoundary compact sectionName="Categories">
+              <MobileCategorySection
+                onSelectCategory={handleSelectCategory}
+                onPrefetchCategory={handlePrefetchCategory}
+              />
+            </ErrorBoundary>
           </div>
         )}
 
@@ -284,12 +304,14 @@ export const MobileExperience: React.FC = () => {
                 cartCount={cartCount}
               />
 
-              <MobileProductGrid
-                categoryId={selectedCategory}
-                products={categoryProducts}
-                onSelectProduct={handleSelectProduct}
-                onBackToCategories={handleBackToCategories}
-              />
+              <ErrorBoundary compact sectionName="Collection Grid">
+                <MobileProductGrid
+                  categoryId={selectedCategory}
+                  products={categoryProducts}
+                  onSelectProduct={handleSelectProduct}
+                  onBackToCategories={handleBackToCategories}
+                />
+              </ErrorBoundary>
             </div>
           )}
 
@@ -303,14 +325,16 @@ export const MobileExperience: React.FC = () => {
                 cartCount={cartCount}
               />
 
-              <MobileProductDetail
-                product={selectedProduct}
-                categoryId={selectedCategory}
-                onBack={handleBackToCategory}
-                onOpenBag={handleOpenBag}
-                onSelectProduct={handleSwitchProductColor}
-                onPairProduct={handlePairFromProduct}
-              />
+              <ErrorBoundary compact sectionName="Product Detail">
+                <MobileProductDetail
+                  product={selectedProduct}
+                  categoryId={selectedCategory}
+                  onBack={handleBackToCategory}
+                  onOpenBag={handleOpenBag}
+                  onSelectProduct={handleSwitchProductColor}
+                  onPairProduct={handlePairFromProduct}
+                />
+              </ErrorBoundary>
             </div>
           )}
 
@@ -324,14 +348,16 @@ export const MobileExperience: React.FC = () => {
                 cartCount={cartCount}
               />
 
-              <PairStudio
-                initialTop={pairSeedShirt}
-                initialTrouser={pairSeedTrouser}
-                initialMode={pairInitialMode}
-                onBack={handleBackFromPair}
-                onOpenBag={handleOpenBag}
-                backLabel={pairReturnViewRef.current === 'product' ? 'Back to article' : 'Back to categories'}
-              />
+              <ErrorBoundary compact sectionName="Make a Pair Studio">
+                <PairStudio
+                  initialTop={pairSeedShirt}
+                  initialTrouser={pairSeedTrouser}
+                  initialMode={pairInitialMode}
+                  onBack={handleBackFromPair}
+                  onOpenBag={handleOpenBag}
+                  backLabel={pairReturnViewRef.current === 'product' ? 'Back to article' : 'Back to categories'}
+                />
+              </ErrorBoundary>
             </div>
           )}
 
@@ -345,10 +371,12 @@ export const MobileExperience: React.FC = () => {
                 cartCount={cartCount}
               />
 
-              <MobileShoppingBag
-                onContinueShopping={handleCloseBag}
-                onProceedToCheckout={() => setIsCheckoutOpen(true)}
-              />
+              <ErrorBoundary compact sectionName="Shopping Bag">
+                <MobileShoppingBag
+                  onContinueShopping={handleCloseBag}
+                  onProceedToCheckout={() => setIsCheckoutOpen(true)}
+                />
+              </ErrorBoundary>
             </div>
           )}
         </Suspense>
@@ -357,20 +385,24 @@ export const MobileExperience: React.FC = () => {
       {/* Slideout Mobile Navigation Drawer */}
       <Suspense fallback={null}>
         {isNavDrawerOpen && (
-          <MobileNavDrawer
-            isOpen={isNavDrawerOpen}
-            onClose={() => setIsNavDrawerOpen(false)}
-            onSelectCategory={handleSelectCategory}
-            onOpenBag={handleOpenBag}
-            onOpenPolicy={(type) => setActivePolicy(type)}
-            onGoHome={handleGoHome}
-            cartCount={cartCount}
-          />
+          <ErrorBoundary compact sectionName="Navigation Menu">
+            <MobileNavDrawer
+              isOpen={isNavDrawerOpen}
+              onClose={() => setIsNavDrawerOpen(false)}
+              onSelectCategory={handleSelectCategory}
+              onOpenBag={handleOpenBag}
+              onOpenPolicy={(type) => setActivePolicy(type)}
+              onGoHome={handleGoHome}
+              cartCount={cartCount}
+            />
+          </ErrorBoundary>
         )}
 
         {/* Policy Modal Overlay */}
         {activePolicy && (
-          <PolicyModal type={activePolicy} onClose={() => setActivePolicy(null)} />
+          <ErrorBoundary compact sectionName="Policy">
+            <PolicyModal type={activePolicy} onClose={() => setActivePolicy(null)} />
+          </ErrorBoundary>
         )}
       </Suspense>
     </div>

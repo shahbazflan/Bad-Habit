@@ -1,11 +1,48 @@
 import React from 'react';
 import { useCart } from '../context/CartContext';
+import { getProductSubtitle } from '../data/products';
 import { BrandLogo } from './BrandLogo';
+import { CleanPlatePicture } from './CleanPlatePicture';
+import { SmartImage } from './SmartImage';
 
 export const OrderConfirmationView: React.FC = () => {
   const { confirmedOrder, setConfirmedOrder } = useCart();
 
   if (!confirmedOrder) return null;
+
+  const orderItems = Array.isArray(confirmedOrder.items) ? confirmedOrder.items : [];
+  const delivery = confirmedOrder.delivery ?? {
+    country: 'Pakistan',
+    firstName: '',
+    lastName: '',
+    address: '',
+    city: '',
+    province: '',
+  };
+  const payment = confirmedOrder.payment ?? {
+    method: 'cod' as const,
+    methodName: 'Cash on Delivery (COD)',
+    status: 'pending_delivery',
+    statusLabel: 'Payment due on delivery',
+  };
+  const shippingMethod = confirmedOrder.shippingMethod ?? {
+    id: 'standard',
+    name: 'Standard Courier Delivery',
+    charge: 0,
+    estimate: '3–5 business days',
+  };
+  const pricing = confirmedOrder.pricing ?? {
+    currency: 'PKR',
+    subtotal: 0,
+    shippingCharge: 0,
+    codFee: 0,
+    total: 0,
+    formattedSubtotal: 'PKR 0',
+    formattedShippingCharge: 'PKR 0',
+    formattedCodFee: 'PKR 0',
+    formattedTotal: 'PKR 0',
+  };
+  const customer = confirmedOrder.customer ?? { email: '', phone: '' };
 
   const handleContinueShopping = () => {
     setConfirmedOrder(null);
@@ -21,10 +58,12 @@ export const OrderConfirmationView: React.FC = () => {
     >
       {/* Pristine Sky Blue Architectural Background */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <img
-          src="/clean_plate.jpg"
+        <CleanPlatePicture
           alt="BAD HABIT architectural background"
           className="w-full h-full object-cover object-center pointer-events-none"
+          sizes="100vw"
+          loading="eager"
+          decoding="async"
         />
       </div>
 
@@ -73,33 +112,45 @@ export const OrderConfirmationView: React.FC = () => {
             {/* Ordered Articles */}
             <div className="space-y-3 pb-4">
               <h3 className="text-xs font-display font-bold uppercase tracking-wider text-white/80">
-                Ordered Articles ({confirmedOrder.items.reduce((s, it) => s + it.quantity, 0)})
+                Ordered Articles ({orderItems.reduce((s, it) => s + (Number(it.quantity) || 0), 0)})
               </h3>
               <div className="divide-y divide-white/10">
-                {confirmedOrder.items.map((item) => (
-                  <div key={`${item.productId}-${item.size}`} className="py-2.5 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-12 h-14 object-contain rounded-xl bg-white/[0.08] border border-white/15 p-1 shrink-0 flex items-center justify-center overflow-hidden">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-full h-full object-contain"
-                        />
+                {orderItems.map((item) => {
+                  const itemSubtitle = getProductSubtitle(item.productId);
+                  return (
+                    <div key={`${item.productId}-${item.size}`} className="py-2.5 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="relative w-12 h-14 object-contain rounded-xl bg-white/[0.08] border border-white/15 p-1 shrink-0 flex items-center justify-center overflow-hidden">
+                          <SmartImage
+                            src={item.image}
+                            alt={item.name}
+                            className="w-full h-full object-contain"
+                            sizes="56px"
+                            skeletonClassName="inset-1 rounded-lg"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-display text-xs sm:text-sm font-bold text-white tracking-tight truncate">
+                            {item.name}
+                          </p>
+                          {itemSubtitle && (
+                            <p className="text-[10.5px] font-sans text-white/75 truncate">
+                              {itemSubtitle}
+                            </p>
+                          )}
+                          <p className="text-[11px] font-display text-white/70">
+                            Size: {item.size} · Quantity: {Number(item.quantity) || 1}
+                          </p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-display text-xs sm:text-sm font-bold text-white tracking-tight truncate">
-                          {item.name}
-                        </p>
-                        <p className="text-[11px] font-display text-white/70">
-                          Size: {item.size} · Quantity: {item.quantity}
-                        </p>
-                      </div>
+                      <span className="font-display text-xs sm:text-sm font-bold text-white shrink-0">
+                        PKR {(Number(item.lineTotal) || 0).toLocaleString()}
+                      </span>
                     </div>
-                    <span className="font-display text-xs sm:text-sm font-bold text-white shrink-0">
-                      PKR {item.lineTotal.toLocaleString()}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -110,17 +161,17 @@ export const OrderConfirmationView: React.FC = () => {
                   Delivery Destination
                 </span>
                 <p className="text-white font-semibold">
-                  {confirmedOrder.delivery.firstName} {confirmedOrder.delivery.lastName}
+                  {delivery.firstName} {delivery.lastName}
                 </p>
-                <p className="text-white/90">{confirmedOrder.delivery.address}</p>
-                {confirmedOrder.delivery.apartment && (
-                  <p className="text-white/80">{confirmedOrder.delivery.apartment}</p>
+                <p className="text-white/90">{delivery.address}</p>
+                {delivery.apartment && (
+                  <p className="text-white/80">{delivery.apartment}</p>
                 )}
                 <p className="text-white/90">
-                  {confirmedOrder.delivery.city}, {confirmedOrder.delivery.province}
+                  {delivery.city}, {delivery.province}
                 </p>
-                {confirmedOrder.delivery.postalCode && (
-                  <p className="text-white/70">{confirmedOrder.delivery.postalCode}</p>
+                {delivery.postalCode && (
+                  <p className="text-white/70">{delivery.postalCode}</p>
                 )}
                 <p className="text-white/70 mt-1 font-bold">Pakistan</p>
               </div>
@@ -131,26 +182,26 @@ export const OrderConfirmationView: React.FC = () => {
                     Payment Method
                   </span>
                   <p className="text-white font-semibold">
-                    {confirmedOrder.payment.methodName}
+                    {payment.methodName}
                   </p>
                   <p className="text-white/90 font-medium mt-0.5">
-                    {confirmedOrder.payment.statusLabel}
+                    {payment.statusLabel}
                   </p>
-                  {confirmedOrder.payment.method === 'bank_transfer' && (
+                  {payment.method === 'bank_transfer' && (
                     <div className="mt-2 p-2.5 rounded-xl bg-white/[0.08] border border-white/15 space-y-1 text-[11px]">
                       <p className="text-white/90">
                         Account number:{' '}
                         <span className="font-bold text-white">
-                          {confirmedOrder.payment.accountNumber || '01210113983722'}
+                          {payment.accountNumber || '01210113983722'}
                         </span>
                       </p>
                       <p className="text-white font-semibold">
-                        {confirmedOrder.payment.accountTitle || 'Meezan Bank - Hassan Ahmed'}
+                        {payment.accountTitle || 'Meezan Bank - Hassan Ahmed'}
                       </p>
                       <p className="text-white/90">
                         Send screenshot to:{' '}
                         <span className="font-bold text-white">
-                          {confirmedOrder.payment.confirmationPhone || '03310266534'}
+                          {payment.confirmationPhone || '03310266534'}
                         </span>
                       </p>
                     </div>
@@ -162,7 +213,7 @@ export const OrderConfirmationView: React.FC = () => {
                     Delivery Estimate
                   </span>
                   <p className="text-white">
-                    {confirmedOrder.shippingMethod.estimate} ({confirmedOrder.shippingMethod.name})
+                    {shippingMethod.estimate} ({shippingMethod.name})
                   </p>
                 </div>
               </div>
@@ -170,47 +221,47 @@ export const OrderConfirmationView: React.FC = () => {
 
             {/* Total Summary */}
             <div className="pt-4 space-y-1.5 text-xs font-display">
-              {(confirmedOrder.pricing.pairDiscount ?? 0) > 0 && (
+              {(pricing.pairDiscount ?? 0) > 0 && (
                 <>
                   <div className="flex justify-between text-white/75">
                     <span>Articles Total</span>
-                    <span>PKR {(confirmedOrder.pricing.rawSubtotal ?? confirmedOrder.pricing.subtotal).toLocaleString()}</span>
+                    <span>PKR {(Number(pricing.rawSubtotal ?? pricing.subtotal) || 0).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-emerald-200 font-semibold">
                     <span>
-                      Pair Discount (15% Off · {confirmedOrder.pricing.pairCount || 1}{' '}
-                      {(confirmedOrder.pricing.pairCount || 1) === 1 ? 'pair' : 'pairs'})
+                      Pair Discount (15% Off · {pricing.pairCount || 1}{' '}
+                      {(pricing.pairCount || 1) === 1 ? 'pair' : 'pairs'})
                     </span>
-                    <span>-PKR {(confirmedOrder.pricing.pairDiscount ?? 0).toLocaleString()}</span>
+                    <span>-PKR {(Number(pricing.pairDiscount) || 0).toLocaleString()}</span>
                   </div>
                 </>
               )}
-              {(confirmedOrder.pricing.promoDiscount ?? 0) > 0 && (
+              {(pricing.promoDiscount ?? 0) > 0 && (
                 <div className="flex justify-between text-cyan-200 font-semibold">
-                  <span>Member Code ({confirmedOrder.pricing.promoCode || 'BH-DETECTED'} · 10% Off)</span>
-                  <span>-PKR {(confirmedOrder.pricing.promoDiscount ?? 0).toLocaleString()}</span>
+                  <span>Member Code ({pricing.promoCode || 'BH-DETECTED'} · 10% Off)</span>
+                  <span>-PKR {(Number(pricing.promoDiscount) || 0).toLocaleString()}</span>
                 </div>
               )}
               <div className="flex justify-between text-white/80">
                 <span>Subtotal</span>
-                <span>PKR {confirmedOrder.pricing.subtotal.toLocaleString()}</span>
+                <span>PKR {(Number(pricing.subtotal) || 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-white/80">
                 <span>Delivery Charge</span>
                 <span>
-                  {confirmedOrder.pricing.shippingCharge === 0
+                  {(Number(pricing.shippingCharge) || 0) === 0
                     ? 'FREE (PKR 0)'
-                    : `PKR ${confirmedOrder.pricing.shippingCharge.toLocaleString()}`}
+                    : `PKR ${(Number(pricing.shippingCharge) || 0).toLocaleString()}`}
                 </span>
               </div>
               <div className="flex justify-between text-white font-bold text-sm sm:text-base pt-2 border-t border-white/10 font-display">
                 <span>
-                  {confirmedOrder.payment.method === 'bank_transfer'
+                  {payment.method === 'bank_transfer'
                     ? 'Total Amount (Bank Transfer)'
                     : 'Total Due on Arrival'}
                 </span>
                 <span className="text-white text-lg">
-                  PKR {confirmedOrder.pricing.total.toLocaleString()}
+                  PKR {(Number(pricing.total) || 0).toLocaleString()}
                 </span>
               </div>
             </div>
@@ -219,8 +270,8 @@ export const OrderConfirmationView: React.FC = () => {
           {/* Transactional Notification Note */}
           <p className="text-xs font-display text-white/70 mt-6 max-w-md mx-auto">
             Your order summary will be shortly sent to{' '}
-            <span className="text-white font-bold">{confirmedOrder.customer.email}</span> and courier dispatch updates will be sent to{' '}
-            <span className="text-white font-bold">{confirmedOrder.customer.phone}</span>.
+            <span className="text-white font-bold">{customer.email}</span> and courier dispatch updates will be sent to{' '}
+            <span className="text-white font-bold">{customer.phone}</span>.
           </p>
 
           {/* Primary Action Button */}

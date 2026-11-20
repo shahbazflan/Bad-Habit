@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useMember } from '../context/MemberContext';
+import { getProductSubtitle } from '../data/products';
+import { SmartImage } from './SmartImage';
 
 interface MobileShoppingBagProps {
   onContinueShopping: () => void;
@@ -27,9 +29,22 @@ export const MobileShoppingBag: React.FC<MobileShoppingBagProps> = ({
 
   const [validating, setValidating] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const validateAbortRef = useRef<AbortController | null>(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      validateAbortRef.current?.abort();
+    };
+  }, []);
 
   const handleCheckout = async () => {
-    if (items.length === 0) return;
+    if (items.length === 0 || validating) return;
+    validateAbortRef.current?.abort();
+    const controller = new AbortController();
+    validateAbortRef.current = controller;
     setValidating(true);
     setValidationError(null);
 
@@ -38,20 +53,26 @@ export const MobileShoppingBag: React.FC<MobileShoppingBagProps> = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items }),
+        signal: controller.signal,
       });
 
-      const data = await res.json();
-      if (!res.ok || !data.valid) {
-        setValidationError(data.error || 'Cart validation failed. Please check your items.');
+      const data = await res.json().catch(() => null);
+      if (!mountedRef.current) return;
+      if (!res.ok || !data?.valid) {
+        setValidationError(data?.error || 'Cart validation failed. Please check your items.');
         setValidating(false);
         return;
       }
       onProceedToCheckout();
-    } catch {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
+      if (!mountedRef.current) return;
       // Proceed gracefully if server temporarily unreachable
       onProceedToCheckout();
     } finally {
-      setValidating(false);
+      if (mountedRef.current) {
+        setValidating(false);
+      }
     }
   };
 
@@ -108,12 +129,15 @@ export const MobileShoppingBag: React.FC<MobileShoppingBagProps> = ({
                     className="relative w-full rounded-xl bg-white/[0.08] border border-white/15 p-3 flex items-center gap-3.5 transition-all"
                   >
                     {/* Thumbnail in rounded container */}
-                    <div className="w-16 h-20 rounded-lg bg-white/[0.06] border border-white/10 flex items-center justify-center p-1 shrink-0 overflow-hidden">
-                      <img
+                    <div className="relative w-16 h-20 rounded-lg bg-white/[0.06] border border-white/10 flex items-center justify-center p-1 shrink-0 overflow-hidden">
+                      <SmartImage
                         src={item.image}
                         alt={item.name}
                         className="max-h-full max-w-full object-contain"
+                        sizes="64px"
+                        skeletonClassName="inset-1 rounded-md"
                         loading="lazy"
+                        decoding="async"
                       />
                     </div>
 
@@ -122,6 +146,11 @@ export const MobileShoppingBag: React.FC<MobileShoppingBagProps> = ({
                       <h3 className="font-display text-xs sm:text-sm font-bold text-white tracking-tight truncate">
                         {item.name}
                       </h3>
+                      {getProductSubtitle(item.productId) && (
+                        <p className="text-[10.5px] font-sans text-white/70 truncate">
+                          {getProductSubtitle(item.productId)}
+                        </p>
+                      )}
                       <p className="text-[11px] font-mono text-white/80 mt-0.5">
                         Size: {item.size}
                       </p>

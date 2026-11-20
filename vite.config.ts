@@ -14,14 +14,14 @@ export default defineConfig(() => {
       tailwindcss(),
       ViteImageOptimizer({
         includePublic: true,
-        exclude: /(?:Screenshot_|IMG_|BAD-HABIT-|Shop_by_category__)/i,
+        exclude: /(?:Screenshot_|IMG_|BAD-HABIT-|Shop_by_category__|_sm\.webp|_v2\.webp|clean_plate_|size_guide)/i,
         png: {
           compressionLevel: 9,
           palette: false,
           effort: 8,
         },
         webp: {
-          quality: 94,
+          quality: 82,
           effort: 5,
         },
         jpeg: {

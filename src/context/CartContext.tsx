@@ -1,5 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { calculateBagTotals } from '../utils/pairPricing';
+import {
+  safeStorageGet,
+  safeStorageRemove,
+  safeStorageSet,
+  sanitizeCartItems,
+} from '../utils/runtimeSafety';
 
 export interface CartItem {
   productId: string;
@@ -119,18 +125,9 @@ const CartContext = createContext<CartContextType | null>(null);
 const STORAGE_KEY = 'bad_habit_cart_v1';
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [items, setItems] = useState<CartItem[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch {
-      // Fallback
-    }
-    return [];
-  });
+  const [items, setItems] = useState<CartItem[]>(() =>
+    sanitizeCartItems(safeStorageGet<unknown>(STORAGE_KEY, []))
+  );
 
   const [isAdding, setIsAdding] = useState(false);
   const [recentlyAddedItem, setRecentlyAddedItem] = useState<CartItem | null>(null);
@@ -138,17 +135,29 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [confirmedOrder, setConfirmedOrder] = useState<ConfirmedOrder | null>(null);
 
+  const isAddingRef = useRef(false);
+  const addTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (addTimerRef.current) {
+        clearTimeout(addTimerRef.current);
+        addTimerRef.current = null;
+      }
+    };
+  }, []);
+
   // Persist non-sensitive cart items to localStorage across refreshes
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    } catch {
-      // localStorage may fail in restricted environments
-    }
+    safeStorageSet(STORAGE_KEY, items);
   }, [items]);
 
-  const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  const pairBreakdown = React.useMemo(() => calculateBagTotals(items), [items]);
+  const safeItems = Array.isArray(items) ? items : [];
+  const cartCount = safeItems.reduce((sum, item) => sum + Math.max(0, Number(item?.quantity) || 0), 0);
+  const pairBreakdown = React.useMemo(() => calculateBagTotals(safeItems), [safeItems]);
   const rawSubtotal = pairBreakdown.rawSubtotal;
   const pairCount = pairBreakdown.pairCount;
   const pairDiscount = pairBreakdown.pairDiscount;
@@ -157,45 +166,65 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const formattedPairDiscount = pairBreakdown.formattedPairDiscount;
   const formattedSubtotal = pairBreakdown.formattedDiscountedSubtotal;
 
+  const scheduleAddUnlock = useCallback(() => {
+    if (addTimerRef.current) {
+      clearTimeout(addTimerRef.current);
+    }
+    addTimerRef.current = setTimeout(() => {
+      isAddingRef.current = false;
+      if (mountedRef.current) {
+        setIsAdding(false);
+      }
+      addTimerRef.current = null;
+    }, 280);
+  }, []);
+
   const addToCart = useCallback(
     async (productData: Omit<CartItem, 'quantity'> & { quantity?: number }): Promise<boolean> => {
-      if (isAdding) return false;
+      if (isAddingRef.current || !productData?.productId) return false;
+      isAddingRef.current = true;
       setIsAdding(true);
 
-      const qtyToAdd = productData.quantity || 1;
+      const qtyToAdd = Math.min(Math.max(1, Math.floor(Number(productData.quantity) || 1)), 5);
+      const validSize =
+        productData.size === 'S' || productData.size === 'M' || productData.size === 'L' || productData.size === 'XL'
+          ? productData.size
+          : 'M';
+      const numericPrice = Math.max(0, Number(productData.price) || 0);
+
       const targetItem: CartItem = {
-        productId: productData.productId,
-        name: productData.name,
-        price: productData.price,
-        formattedPrice: productData.formattedPrice,
-        size: productData.size,
+        productId: String(productData.productId),
+        name: String(productData.name || productData.productId),
+        price: numericPrice,
+        formattedPrice: productData.formattedPrice || `PKR ${numericPrice.toLocaleString()}`,
+        size: validSize,
         quantity: qtyToAdd,
-        image: productData.image,
+        image: String(productData.image || ''),
       };
 
       try {
         setItems((prevItems) => {
-          const existingIdx = prevItems.findIndex(
+          const list = Array.isArray(prevItems) ? prevItems : [];
+          const existingIdx = list.findIndex(
             (it) => it.productId === targetItem.productId && it.size === targetItem.size
           );
 
           if (existingIdx !== -1) {
-            const updated = [...prevItems];
-            const newQty = Math.min(updated[existingIdx].quantity + qtyToAdd, 5); // Stock limit 5 per size
+            const updated = [...list];
+            const newQty = Math.min(updated[existingIdx].quantity + qtyToAdd, 5);
             updated[existingIdx] = { ...updated[existingIdx], quantity: newQty };
             return updated;
-          } else {
-            return [...prevItems, targetItem];
           }
+          return [...list, targetItem];
         });
 
         setRecentlyAddedItem(targetItem);
         return true;
       } finally {
-        setTimeout(() => setIsAdding(false), 300);
+        scheduleAddUnlock();
       }
     },
-    [isAdding]
+    [scheduleAddUnlock]
   );
 
   const addPairToCart = useCallback(
@@ -203,19 +232,23 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       shirtData: Omit<CartItem, 'quantity'> & { quantity?: number },
       trouserData: Omit<CartItem, 'quantity'> & { quantity?: number }
     ): Promise<boolean> => {
-      if (isAdding) return false;
+      if (isAddingRef.current || !shirtData?.productId || !trouserData?.productId) return false;
+      isAddingRef.current = true;
       setIsAdding(true);
 
       const upsertItem = (list: CartItem[], data: Omit<CartItem, 'quantity'> & { quantity?: number }): CartItem[] => {
-        const qtyToAdd = data.quantity || 1;
+        const qtyToAdd = Math.min(Math.max(1, Math.floor(Number(data.quantity) || 1)), 5);
+        const validSize =
+          data.size === 'S' || data.size === 'M' || data.size === 'L' || data.size === 'XL' ? data.size : 'M';
+        const numericPrice = Math.max(0, Number(data.price) || 0);
         const targetItem: CartItem = {
-          productId: data.productId,
-          name: data.name,
-          price: data.price,
-          formattedPrice: data.formattedPrice,
-          size: data.size,
+          productId: String(data.productId),
+          name: String(data.name || data.productId),
+          price: numericPrice,
+          formattedPrice: data.formattedPrice || `PKR ${numericPrice.toLocaleString()}`,
+          size: validSize,
           quantity: qtyToAdd,
-          image: data.image,
+          image: String(data.image || ''),
         };
         const idx = list.findIndex((it) => it.productId === targetItem.productId && it.size === targetItem.size);
         if (idx !== -1) {
@@ -227,48 +260,54 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       try {
-        setItems((prev) => upsertItem(upsertItem(prev, shirtData), trouserData));
+        setItems((prev) => {
+          const list = Array.isArray(prev) ? prev : [];
+          return upsertItem(upsertItem(list, shirtData), trouserData);
+        });
         return true;
       } finally {
-        setTimeout(() => setIsAdding(false), 300);
+        scheduleAddUnlock();
       }
     },
-    [isAdding]
+    [scheduleAddUnlock]
   );
 
-  const updateQuantity = useCallback((productId: string, size: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(productId, size);
-      return;
-    }
+  const removeFromCart = useCallback((productId: string, size: string) => {
     setItems((prev) =>
-      prev.map((item) => {
-        if (item.productId === productId && item.size === size) {
-          const clampedQty = Math.min(Math.max(1, quantity), 5); // Stock limit
-          return { ...item, quantity: clampedQty };
-        }
-        return item;
-      })
+      (Array.isArray(prev) ? prev : []).filter(
+        (item) => !(item.productId === productId && item.size === size)
+      )
     );
   }, []);
 
-  const removeFromCart = useCallback((productId: string, size: string) => {
-    setItems((prev) => prev.filter((item) => !(item.productId === productId && item.size === size)));
-  }, []);
+  const updateQuantity = useCallback(
+    (productId: string, size: string, quantity: number) => {
+      if (quantity <= 0) {
+        removeFromCart(productId, size);
+        return;
+      }
+      setItems((prev) =>
+        (Array.isArray(prev) ? prev : []).map((item) => {
+          if (item.productId === productId && item.size === size) {
+            const clampedQty = Math.min(Math.max(1, Math.floor(quantity)), 5);
+            return { ...item, quantity: clampedQty };
+          }
+          return item;
+        })
+      );
+    },
+    [removeFromCart]
+  );
 
   const clearCart = useCallback(() => {
     setItems([]);
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // Ignore
-    }
+    safeStorageRemove(STORAGE_KEY);
   }, []);
 
   return (
     <CartContext.Provider
       value={{
-        items,
+        items: safeItems,
         cartCount,
         rawSubtotal,
         pairCount,

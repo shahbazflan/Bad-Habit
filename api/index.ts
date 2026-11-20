@@ -28,12 +28,12 @@ const CATALOG_ITEMS = [
   { id: 'BH-H09', name: 'Oatmeal Hoodie', price: 4499, stock: 12 },
 
   // Authoritative Shirts Collection
-  { id: 'BH-S01', name: 'Foam BOXY', price: 4999, stock: 12 },
-  { id: 'BH-S02', name: 'Cream BOXY', price: 4999, stock: 10 },
-  { id: 'BH-S03', name: 'Espresso BOXY', price: 4999, stock: 10 },
-  { id: 'BH-S04', name: 'Maroon BOXY', price: 4999, stock: 14 },
-  { id: 'BH-S05', name: 'Magnum BOXY', price: 4999, stock: 12 },
-  { id: 'BH-S06', name: 'Rough BOXY', price: 4999, stock: 11 },
+  { id: 'BH-S01', name: 'Foam BOXY', subtitle: 'Rough Cuban collar', price: 4999, stock: 12 },
+  { id: 'BH-S02', name: 'Cream BOXY', subtitle: 'Rough Cuban collar', price: 4999, stock: 10 },
+  { id: 'BH-S03', name: 'Espresso BOXY', subtitle: 'Rough Cuban collar', price: 4999, stock: 10 },
+  { id: 'BH-S04', name: 'Maroon BOXY', subtitle: 'Rough Cuban collar', price: 4999, stock: 14 },
+  { id: 'BH-S05', name: 'Magnum BOXY', subtitle: 'Rough Cuban collar', price: 4999, stock: 12 },
+  { id: 'BH-S06', name: 'Rough BOXY', subtitle: 'Rough Cuban collar', price: 4999, stock: 11 },
 
   // Backwards compatibility legacy aliases
   { id: 'BH-001', name: 'Midnight Blue', price: 6499, stock: 12 },
@@ -105,18 +105,63 @@ const MEMBERS_FILE = path.join(DATA_DIR, 'members.json');
 
 const memoryOrders: any[] = [];
 const memoryMembers: any[] = [];
-const idempotencyCache = new Map<string, any>();
+let ordersHydrated = false;
+let membersHydrated = false;
+let tempWriteCounter = 0;
 
-const ensureOrderStore = () => {
+// Async mutex serializing all reads/writes to members & orders so concurrent multi-user traffic has zero races
+let storeLockChain: Promise<unknown> = Promise.resolve();
+const withStoreLock = <T>(task: () => Promise<T>): Promise<T> => {
+  const run = storeLockChain.then(task, task);
+  storeLockChain = run.then(
+    () => undefined,
+    () => undefined
+  );
+  return run;
+};
+
+// Bounded idempotency cache (max 500 entries, 30 min TTL) + in-flight promise map to coalesce concurrent identical submits
+const IDEMPOTENCY_MAX_ENTRIES = 500;
+const IDEMPOTENCY_TTL_MS = 30 * 60 * 1000;
+const idempotencyCache = new Map<string, { value: any; expiresAt: number }>();
+const idempotencyInFlight = new Map<string, Promise<any>>();
+
+const getCachedIdempotentOrder = (key?: string): any | null => {
+  if (!key) return null;
+  const entry = idempotencyCache.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    idempotencyCache.delete(key);
+    return null;
+  }
+  return entry.value;
+};
+
+const setCachedIdempotentOrder = (key: string, value: any) => {
+  const now = Date.now();
+  if (idempotencyCache.size >= IDEMPOTENCY_MAX_ENTRIES) {
+    for (const [k, v] of idempotencyCache.entries()) {
+      if (now > v.expiresAt || idempotencyCache.size >= IDEMPOTENCY_MAX_ENTRIES) {
+        idempotencyCache.delete(k);
+        if (idempotencyCache.size < IDEMPOTENCY_MAX_ENTRIES * 0.8) break;
+      }
+    }
+  }
+  idempotencyCache.set(key, { value, expiresAt: now + IDEMPOTENCY_TTL_MS });
+};
+
+const ensureOrderStoreAsync = async () => {
   try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
+    await fs.promises.mkdir(DATA_DIR, { recursive: true });
+    try {
+      await fs.promises.access(ORDERS_FILE);
+    } catch {
+      await fs.promises.writeFile(ORDERS_FILE, JSON.stringify([], null, 2));
     }
-    if (!fs.existsSync(ORDERS_FILE)) {
-      fs.writeFileSync(ORDERS_FILE, JSON.stringify([], null, 2));
-    }
-    if (!fs.existsSync(MEMBERS_FILE)) {
-      fs.writeFileSync(MEMBERS_FILE, JSON.stringify([], null, 2));
+    try {
+      await fs.promises.access(MEMBERS_FILE);
+    } catch {
+      await fs.promises.writeFile(MEMBERS_FILE, JSON.stringify([], null, 2));
     }
     return true;
   } catch {
@@ -124,65 +169,113 @@ const ensureOrderStore = () => {
   }
 };
 
-const readOrders = (): any[] => {
+const atomicWriteJsonFile = async (filePath: string, data: unknown) => {
+  const ok = await ensureOrderStoreAsync();
+  if (!ok) return;
+  tempWriteCounter += 1;
+  const tempPath = `${filePath}.tmp.${process.pid}.${tempWriteCounter}`;
+  await fs.promises.writeFile(tempPath, JSON.stringify(data, null, 2), 'utf-8');
+  await fs.promises.rename(tempPath, filePath);
+};
+
+const readOrdersAsync = async (): Promise<any[]> => {
+  if (ordersHydrated) {
+    return memoryOrders;
+  }
   try {
-    if (fs.existsSync(ORDERS_FILE)) {
-      const data = fs.readFileSync(ORDERS_FILE, 'utf-8');
-      const parsed = JSON.parse(data);
-      if (Array.isArray(parsed)) return parsed;
+    await ensureOrderStoreAsync();
+    const raw = await fs.promises.readFile(ORDERS_FILE, 'utf-8');
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      memoryOrders.length = 0;
+      memoryOrders.push(...parsed.slice(0, 500));
     }
+    ordersHydrated = true;
   } catch {
-    // Fallback to in-memory orders in read-only runtimes
+    ordersHydrated = true;
   }
   return memoryOrders;
 };
 
-const saveOrder = (order: any) => {
-  memoryOrders.unshift(order);
-  if (memoryOrders.length > 200) memoryOrders.pop();
+const saveOrderAsync = async (order: any) => {
+  const orders = await readOrdersAsync();
+  const filtered = orders.filter((o: any) => o.orderNumber !== order.orderNumber);
+  filtered.unshift(order);
+  const capped = filtered.slice(0, 500);
+  memoryOrders.length = 0;
+  memoryOrders.push(...capped);
 
   try {
-    if (ensureOrderStore()) {
-      const orders = readOrders();
-      const filtered = orders.filter((o: any) => o.orderNumber !== order.orderNumber);
-      filtered.unshift(order);
-      fs.writeFileSync(ORDERS_FILE, JSON.stringify(filtered, null, 2));
-    }
+    await atomicWriteJsonFile(ORDERS_FILE, capped);
   } catch (err: any) {
-    console.warn('[BAD HABIT] File order persistence skipped:', err?.message || err);
+    console.warn('[BAD HABIT] Async order persistence skipped:', err?.message || err);
   }
 };
 
 const normalizeEmail = (raw: unknown): string => String(raw ?? '').trim().toLowerCase();
 
-const normalizePakPhone = (raw: unknown): string => {
-  const digits = String(raw ?? '').replace(/[\s\-\(\)]/g, '');
+/**
+ * Canonical E.164 phone normalization (+923XXXXXXXXX for Pakistan, +[1-9]... for international).
+ */
+const normalizePhoneToE164 = (raw: unknown): string => {
+  const input = String(raw ?? '').trim();
+  if (!input) return '';
+  const hasPlus = input.startsWith('+');
+  const digits = input.replace(/[^\d]/g, '');
   if (!digits) return '';
-  if (digits.startsWith('+92')) return `0${digits.slice(3).replace(/^0+/, '')}`;
-  if (digits.startsWith('0092')) return `0${digits.slice(4).replace(/^0+/, '')}`;
-  if (digits.startsWith('92') && digits.length >= 12) return `0${digits.slice(2).replace(/^0+/, '')}`;
-  if (digits.startsWith('3') && digits.length === 10) return `0${digits}`;
-  return digits;
+
+  let cleaned = hasPlus ? `+${digits}` : digits;
+  if (cleaned.startsWith('00')) {
+    cleaned = `+${cleaned.slice(2)}`;
+  }
+
+  if (cleaned.startsWith('+92')) {
+    const sub = cleaned.slice(3).replace(/^0+/, '');
+    return sub ? `+92${sub}` : '+92';
+  }
+  if (cleaned.startsWith('92') && cleaned.length >= 12) {
+    const sub = cleaned.slice(2).replace(/^0+/, '');
+    return sub ? `+92${sub}` : '+92';
+  }
+  if (cleaned.startsWith('03') && cleaned.length === 11) {
+    return `+92${cleaned.slice(1)}`;
+  }
+  if (cleaned.startsWith('3') && cleaned.length === 10) {
+    return `+92${cleaned}`;
+  }
+
+  if (hasPlus) return `+${digits}`;
+  if (digits.length >= 8 && digits.length <= 15 && !digits.startsWith('0')) {
+    return `+${digits}`;
+  }
+  return cleaned;
 };
 
 const isValidEmail = (email: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-const isValidPakPhone = (raw: string): boolean => {
-  const cleaned = String(raw ?? '').replace(/[\s\-\(\)]/g, '');
-  return /^(?:\+92|0092|92)?0?3[0-9]{9}$/.test(cleaned);
+const isValidPhoneNumber = (raw: string): boolean => {
+  const e164 = normalizePhoneToE164(raw);
+  if (!e164) return false;
+  if (e164.startsWith('+92')) {
+    return /^\+923[0-9]{9}$/.test(e164);
+  }
+  return /^\+[1-9][0-9]{7,14}$/.test(e164);
 };
+
+const PHONE_CONFLICT_ERROR =
+  "This phone number is already registered to another account. Please sign in with that account's email or use a different phone number.";
 
 const MEMBER_PROMO_CODE = 'BH-DETECTED';
 const MEMBER_FIRST_ORDER_RATE = 0.10;
 
 const PRODUCT_IMAGE_MAP: Record<string, { image: string; category: string }> = {
-  'BH-T01': { image: '/assets/trousers_v2/midnight_blue_front_only.webp', category: 'Trousers' },
-  'BH-T06': { image: '/assets/trousers_v2/ivory_trousers_front_only.webp', category: 'Trousers' },
-  'BH-T07': { image: '/assets/trousers_v2/sage_trousers_front_only.webp', category: 'Trousers' },
-  'BH-T08': { image: '/assets/trousers_v2/stone_trousers_front_only.webp', category: 'Trousers' },
-  'BH-T10': { image: '/assets/trousers_v2/classic_brown_front_only.webp', category: 'Trousers' },
-  'BH-T09': { image: '/assets/trousers_v2/deep_charcoal_front_only.webp', category: 'Trousers' },
-  'BH-T05': { image: '/assets/trousers_v2/ash_baggy_front_only.webp', category: 'Trousers' },
-  'BH-T11': { image: '/assets/trousers_v2/chocolate_balloon_front_only.webp', category: 'Trousers' },
+  'BH-T01': { image: '/assets/trousers_v2/midnight_blue_front_only_v2.webp', category: 'Trousers' },
+  'BH-T06': { image: '/assets/trousers_v2/ivory_trousers_front_only_v2.webp', category: 'Trousers' },
+  'BH-T07': { image: '/assets/trousers_v2/sage_trousers_front_only_v2.webp', category: 'Trousers' },
+  'BH-T08': { image: '/assets/trousers_v2/stone_trousers_front_only_v2.webp', category: 'Trousers' },
+  'BH-T10': { image: '/assets/trousers_v2/classic_brown_front_only_v2.webp', category: 'Trousers' },
+  'BH-T09': { image: '/assets/trousers_v2/deep_charcoal_front_only_v2.webp', category: 'Trousers' },
+  'BH-T05': { image: '/assets/trousers_v2/ash_baggy_front_only_v2.webp', category: 'Trousers' },
+  'BH-T11': { image: '/assets/trousers_v2/chocolate_balloon_front_only_v2.webp', category: 'Trousers' },
   'BH-H01': { image: '/assets/hoodies/storm_blue_front_only_v2.webp', category: 'Hoodies' },
   'BH-H02': { image: '/assets/hoodies/onyx_hoodie_front_only_v2.webp', category: 'Hoodies' },
   'BH-H03': { image: '/assets/hoodies/ivory_sweatshirt_front_only_v2.webp', category: 'Hoodies' },
@@ -192,108 +285,146 @@ const PRODUCT_IMAGE_MAP: Record<string, { image: string; category: string }> = {
   'BH-H07': { image: '/assets/hoodies/slate_grey_sweatshirt_front_v2.webp', category: 'Hoodies' },
   'BH-H08': { image: '/assets/hoodies/washed_umber_hoodie_front_v2.webp', category: 'Hoodies' },
   'BH-H09': { image: '/assets/hoodies/oatmeal_hoodie_front_v2.webp', category: 'Hoodies' },
-  'BH-S05': { image: '/assets/aistudio/MAGNUM_BOXY_FRONT__36e853c5.png', category: 'Shirts' },
-  'BH-S06': { image: '/assets/aistudio/ROUGH_BOXY_FRONT__a3520722.png', category: 'Shirts' },
-  'BH-S04': { image: '/assets/aistudio/MAROON_BOXY_FRONT__dce5cb1c.png', category: 'Shirts' },
-  'BH-S03': { image: '/assets/aistudio/ESPRESSO_BOXY_BACK__44ecc503.png', category: 'Shirts' },
-  'BH-S02': { image: '/assets/aistudio/IVORY_BOXY_front_png_8c2431ce', category: 'Shirts' },
-  'BH-S01': { image: '/assets/aistudio/FOAM_BOXY_FRONT__348b6797.png', category: 'Shirts' },
+  'BH-S05': { image: '/assets/shirts/magnum_boxy_front_v2.webp', category: 'Shirts' },
+  'BH-S06': { image: '/assets/shirts/rough_boxy_front_v2.webp', category: 'Shirts' },
+  'BH-S04': { image: '/assets/shirts/maroon_boxy_front_v2.webp', category: 'Shirts' },
+  'BH-S03': { image: '/assets/shirts/espresso_boxy_front_v2.webp', category: 'Shirts' },
+  'BH-S02': { image: '/assets/shirts/cream_boxy_front_v2.webp', category: 'Shirts' },
+  'BH-S01': { image: '/assets/shirts/foam_boxy_front_v2.webp', category: 'Shirts' },
 };
 
-const readMembers = (): any[] => {
+const readMembersAsync = async (): Promise<any[]> => {
+  if (membersHydrated) {
+    return memoryMembers;
+  }
   try {
-    if (fs.existsSync(MEMBERS_FILE)) {
-      const data = fs.readFileSync(MEMBERS_FILE, 'utf-8');
-      const parsed = JSON.parse(data);
-      if (Array.isArray(parsed)) return parsed;
+    await ensureOrderStoreAsync();
+    const raw = await fs.promises.readFile(MEMBERS_FILE, 'utf-8');
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      memoryMembers.length = 0;
+      memoryMembers.push(
+        ...parsed.slice(0, 1000).map((m: any) => ({
+          ...m,
+          email: normalizeEmail(m?.email),
+          phone: normalizePhoneToE164(m?.phone) || String(m?.phone || ''),
+        }))
+      );
     }
+    membersHydrated = true;
   } catch {
-    // Fallback to memoryMembers
+    membersHydrated = true;
   }
   return memoryMembers;
 };
 
-const writeMembers = (members: any[]) => {
+const writeMembersAsync = async (members: any[]) => {
+  const capped = members.slice(0, 1000);
   memoryMembers.length = 0;
-  memoryMembers.push(...members.slice(0, 500));
+  memoryMembers.push(...capped);
 
   try {
-    if (ensureOrderStore()) {
-      fs.writeFileSync(MEMBERS_FILE, JSON.stringify(members, null, 2));
-    }
+    await atomicWriteJsonFile(MEMBERS_FILE, capped);
   } catch (err: any) {
-    console.warn('[BAD HABIT] File member persistence skipped:', err?.message || err);
+    console.warn('[BAD HABIT] Async member persistence skipped:', err?.message || err);
   }
 };
 
-const upsertMemberRecord = (member: any) => {
-  const members = readMembers();
-  const filtered = members.filter((m: any) => m.id !== member.id);
-  filtered.unshift(member);
-  writeMembers(filtered);
+const upsertMemberRecordAsync = async (member: any) => {
+  const members = await readMembersAsync();
+  const normalizedMember = {
+    ...member,
+    email: normalizeEmail(member?.email),
+    phone: normalizePhoneToE164(member?.phone) || String(member?.phone || ''),
+  };
+  const filtered = members.filter((m: any) => m.id !== normalizedMember.id);
+  filtered.unshift(normalizedMember);
+  await writeMembersAsync(filtered);
+  return normalizedMember;
 };
 
-const findAllMatchingMembers = ({
-  memberId,
-  email,
-  phone,
-}: {
-  memberId?: string;
-  email?: string;
-  phone?: string;
-}) => {
-  const members = readMembers();
+const findMemberByIdInList = (members: any[], memberId?: string) => {
+  if (!memberId) return null;
+  return members.find((m: any) => m.id === memberId) || null;
+};
+
+const findMemberByEmailInList = (members: any[], email?: string) => {
   const normEmail = normalizeEmail(email);
-  const normPhone = normalizePakPhone(phone);
+  if (!normEmail) return null;
+  return members.find((m: any) => normalizeEmail(m.email) === normEmail) || null;
+};
+
+const findMemberByPhoneInList = (members: any[], phone?: string) => {
+  const normPhone = normalizePhoneToE164(phone);
+  if (!normPhone) return null;
+  return members.find((m: any) => normalizePhoneToE164(m.phone) === normPhone) || null;
+};
+
+const findAllMatchingMembersInList = (
+  members: any[],
+  {
+    memberId,
+    email,
+    phone,
+  }: {
+    memberId?: string;
+    email?: string;
+    phone?: string;
+  }
+) => {
+  const normEmail = normalizeEmail(email);
+  const normPhone = normalizePhoneToE164(phone);
 
   return members.filter((m: any) => {
     if (memberId && m.id === memberId) return true;
     if (normEmail && normalizeEmail(m.email) === normEmail) return true;
-    if (normPhone && normalizePakPhone(m.phone) === normPhone) return true;
+    if (normPhone && normalizePhoneToE164(m.phone) === normPhone) return true;
     return false;
   });
 };
 
-const findMemberByIdentity = ({
-  memberId,
-  email,
-  phone,
-}: {
-  memberId?: string;
-  email?: string;
-  phone?: string;
-}) => {
-  const matches = findAllMatchingMembers({ memberId, email, phone });
-  if (matches.length === 0) return null;
+const findMemberByIdentityInList = (
+  members: any[],
+  {
+    memberId,
+    email,
+    phone,
+  }: {
+    memberId?: string;
+    email?: string;
+    phone?: string;
+  }
+) => {
   if (memberId) {
-    const byId = matches.find((m: any) => m.id === memberId);
+    const byId = findMemberByIdInList(members, memberId);
     if (byId) return byId;
   }
-  const normEmail = normalizeEmail(email);
-  if (normEmail) {
-    const byEmail = matches.find((m: any) => normalizeEmail(m.email) === normEmail);
-    if (byEmail) return byEmail;
-  }
-  return matches[0];
+  const byEmail = findMemberByEmailInList(members, email);
+  if (byEmail) return byEmail;
+  const byPhone = findMemberByPhoneInList(members, phone);
+  if (byPhone) return byPhone;
+  return null;
 };
 
-const hasPriorOrderByIdentity = ({
-  memberId,
-  email,
-  phone,
-}: {
-  memberId?: string;
-  email?: string;
-  phone?: string;
-}): boolean => {
+const hasPriorOrderByIdentityInLists = (
+  orders: any[],
+  members: any[],
+  {
+    memberId,
+    email,
+    phone,
+  }: {
+    memberId?: string;
+    email?: string;
+    phone?: string;
+  }
+): boolean => {
   const normEmail = normalizeEmail(email);
-  const normPhone = normalizePakPhone(phone);
-  const orders = readOrders();
-  const members = readMembers();
+  const normPhone = normalizePhoneToE164(phone);
 
   const orderedInHistory = orders.some((o: any) => {
     const oEmail = normalizeEmail(o?.customer?.email);
-    const oPhone = normalizePakPhone(o?.customer?.phone);
+    const oPhone = normalizePhoneToE164(o?.customer?.phone);
     const oMemberId = o?.memberId ? String(o.memberId) : '';
     return (
       (memberId && oMemberId === memberId) ||
@@ -306,7 +437,7 @@ const hasPriorOrderByIdentity = ({
   return members.some((m: any) => {
     if ((m.orderCount || 0) <= 0 && !m.firstOrderDiscountUsed) return false;
     const mEmail = normalizeEmail(m.email);
-    const mPhone = normalizePakPhone(m.phone);
+    const mPhone = normalizePhoneToE164(m.phone);
     return (
       (memberId && m.id === memberId) ||
       (normEmail && mEmail === normEmail) ||
@@ -315,13 +446,14 @@ const hasPriorOrderByIdentity = ({
   });
 };
 
-const validateFirstOrderPromo = ({
+const validateFirstOrderPromoAsync = async ({
   code,
   memberId,
   email,
   phone,
   subtotalAfterPair,
   clientPriorOrderUsed,
+  persistFlagIfUsed = true,
 }: {
   code?: string;
   memberId?: string;
@@ -329,6 +461,7 @@ const validateFirstOrderPromo = ({
   phone?: string;
   subtotalAfterPair: number;
   clientPriorOrderUsed?: boolean;
+  persistFlagIfUsed?: boolean;
 }) => {
   const normalizedCode = String(code || '').trim().toUpperCase();
   if (!normalizedCode) {
@@ -343,8 +476,9 @@ const validateFirstOrderPromo = ({
     };
   }
 
-  const matchedMembers = findAllMatchingMembers({ memberId, email, phone });
-  const primaryMember = findMemberByIdentity({ memberId, email, phone });
+  const [members, orders] = await Promise.all([readMembersAsync(), readOrdersAsync()]);
+  const matchedMembers = findAllMatchingMembersInList(members, { memberId, email, phone });
+  const primaryMember = findMemberByIdentityInList(members, { memberId, email, phone });
   if (!primaryMember || matchedMembers.length === 0) {
     return {
       valid: false,
@@ -361,17 +495,19 @@ const validateFirstOrderPromo = ({
       (m: any) =>
         Boolean(m.firstOrderDiscountUsed) ||
         Number(m.orderCount || 0) > 0 ||
-        hasPriorOrderByIdentity({ memberId: m.id, email: m.email, phone: m.phone })
+        hasPriorOrderByIdentityInLists(orders, members, { memberId: m.id, email: m.email, phone: m.phone })
     ) ||
-    hasPriorOrderByIdentity({ memberId, email, phone });
+    hasPriorOrderByIdentityInLists(orders, members, { memberId, email, phone });
 
   if (alreadyUsed) {
-    for (const m of matchedMembers) {
-      if (!m.firstOrderDiscountUsed || Number(m.orderCount || 0) === 0) {
-        m.firstOrderDiscountUsed = true;
-        m.orderCount = Math.max(1, Number(m.orderCount || 0));
-        m.updatedAt = new Date().toISOString();
-        upsertMemberRecord(m);
+    if (persistFlagIfUsed) {
+      for (const m of matchedMembers) {
+        if (!m.firstOrderDiscountUsed || Number(m.orderCount || 0) === 0) {
+          m.firstOrderDiscountUsed = true;
+          m.orderCount = Math.max(1, Number(m.orderCount || 0));
+          m.updatedAt = new Date().toISOString();
+          await upsertMemberRecordAsync(m);
+        }
       }
     }
     return {
@@ -1596,603 +1732,875 @@ apiRouter.post('/cart/validate', (req, res) => {
   });
 });
 
-// 3. Member Signup / Login (Phone + Email) & Wishlist & First-Order Promo Validation
+// 3. Member Signup / Login (Phone + Email) with strict 1-account-per-phone-number enforcement
 apiRouter.post('/members/session', async (req, res) => {
-  const { email, phone, displayName, dryRun, clientPriorOrderUsed } = req.body || {};
-  const normEmail = normalizeEmail(email);
-  const normPhone = normalizePakPhone(phone);
+  try {
+    const { email, phone, displayName, dryRun, clientPriorOrderUsed } = req.body || {};
+    const normEmail = normalizeEmail(email);
+    const normPhone = normalizePhoneToE164(phone);
 
-  if (!normEmail || !isValidEmail(normEmail)) {
-    return res.status(400).json({ success: false, field: 'email', error: 'Please enter a valid email address.' });
-  }
-  if (!phone || !isValidPakPhone(String(phone))) {
-    return res.status(400).json({
-      success: false,
-      field: 'phone',
-      error: 'Please enter a valid Pakistani mobile number (e.g. 03001234567 or +923001234567).',
-    });
-  }
-
-  const matched = findAllMatchingMembers({ email: normEmail, phone: normPhone });
-  const existing = findMemberByIdentity({ email: normEmail, phone: normPhone });
-  const now = new Date().toISOString();
-
-  if (existing) {
-    const priorOrdered =
-      Boolean(clientPriorOrderUsed) ||
-      matched.some(
-        (m: any) =>
-          Boolean(m.firstOrderDiscountUsed) ||
-          Number(m.orderCount || 0) > 0 ||
-          hasPriorOrderByIdentity({ memberId: m.id, email: m.email, phone: m.phone })
-      ) ||
-      hasPriorOrderByIdentity({ email: normEmail, phone: normPhone });
-    if (priorOrdered && (!existing.firstOrderDiscountUsed || Number(existing.orderCount || 0) === 0)) {
-      existing.firstOrderDiscountUsed = true;
-      existing.orderCount = Math.max(1, Number(existing.orderCount || 0));
+    if (!normEmail || !isValidEmail(normEmail)) {
+      return res.status(400).json({ success: false, field: 'email', error: 'Please enter a valid email address.' });
     }
-    if (displayName && !existing.displayName) {
-      existing.displayName = String(displayName).trim().slice(0, 100);
+    if (!normPhone || !isValidPhoneNumber(normPhone)) {
+      return res.status(400).json({
+        success: false,
+        field: 'phone',
+        error: 'Please enter a valid mobile number (e.g. 03001234567 or +923001234567).',
+      });
     }
-    existing.updatedAt = now;
-    upsertMemberRecord(existing);
-    return res.json({
-      success: true,
-      isNewMember: false,
-      member: existing,
+
+    const sessionResult = await withStoreLock(async () => {
+      const [members, orders] = await Promise.all([readMembersAsync(), readOrdersAsync()]);
+      const existingByEmail = findMemberByEmailInList(members, normEmail);
+      const existingByPhone = findMemberByPhoneInList(members, normPhone);
+      const now = new Date().toISOString();
+
+      // Strict uniqueness check: reject if this phone number belongs to a different account (zero PII leaked)
+      if (
+        existingByPhone &&
+        (!existingByEmail || existingByPhone.id !== existingByEmail.id) &&
+        normalizeEmail(existingByPhone.email) !== normEmail
+      ) {
+        return {
+          status: 409 as const,
+          payload: {
+            success: false,
+            field: 'phone',
+            code: 'PHONE_ALREADY_REGISTERED',
+            error: PHONE_CONFLICT_ERROR,
+          },
+        };
+      }
+
+      if (existingByEmail) {
+        // Ensure updating phone to an unclaimed number or retaining normalized E.164 never collides
+        const emailMatches = findAllMatchingMembersInList(members, {
+          memberId: existingByEmail.id,
+          email: normEmail,
+          phone: normPhone,
+        });
+        const priorOrdered =
+          Boolean(clientPriorOrderUsed) ||
+          emailMatches.some(
+            (m: any) =>
+              Boolean(m.firstOrderDiscountUsed) ||
+              Number(m.orderCount || 0) > 0 ||
+              hasPriorOrderByIdentityInLists(orders, members, {
+                memberId: m.id,
+                email: m.email,
+                phone: m.phone,
+              })
+          ) ||
+          hasPriorOrderByIdentityInLists(orders, members, { email: normEmail, phone: normPhone });
+
+        if (priorOrdered && (!existingByEmail.firstOrderDiscountUsed || Number(existingByEmail.orderCount || 0) === 0)) {
+          existingByEmail.firstOrderDiscountUsed = true;
+          existingByEmail.orderCount = Math.max(1, Number(existingByEmail.orderCount || 0));
+        }
+        existingByEmail.phone = normPhone;
+        if (displayName && !existingByEmail.displayName) {
+          existingByEmail.displayName = String(displayName).trim().slice(0, 100);
+        }
+        existingByEmail.updatedAt = now;
+        const saved = await upsertMemberRecordAsync(existingByEmail);
+        return {
+          status: 200 as const,
+          isNew: false,
+          member: saved,
+          payload: {
+            success: true,
+            isNewMember: false,
+            member: saved,
+          },
+        };
+      }
+
+      const priorOrdered =
+        Boolean(clientPriorOrderUsed) ||
+        hasPriorOrderByIdentityInLists(orders, members, { email: normEmail, phone: normPhone });
+      const rand = Math.floor(10000 + Math.random() * 90000);
+      const newMember = {
+        id: `mem_${Date.now()}_${rand}`,
+        email: normEmail,
+        phone: normPhone,
+        displayName: displayName ? String(displayName).trim().slice(0, 100) : '',
+        promoCode: MEMBER_PROMO_CODE,
+        orderCount: priorOrdered ? 1 : 0,
+        firstOrderDiscountUsed: priorOrdered,
+        firstOrderNumber: null,
+        wishlist: [],
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      const saved = await upsertMemberRecordAsync(newMember);
+      return {
+        status: 201 as const,
+        isNew: true,
+        member: saved,
+        payload: {
+          success: true,
+          isNewMember: true,
+          member: saved,
+        },
+      };
     });
+
+    if (sessionResult.status !== 201) {
+      return res.status(sessionResult.status).json(sessionResult.payload);
+    }
+
+    const host = req.get('x-forwarded-host') || req.get('host');
+    const proto = req.get('x-forwarded-proto') || req.protocol || 'https';
+    const reqOrigin = host ? `${proto}://${host}` : '';
+
+    let notification: any = null;
+    if (!dryRun && sessionResult.member) {
+      notification = await sendMemberSignupNotification(sessionResult.member, reqOrigin);
+    }
+
+    return res.status(201).json({
+      ...sessionResult.payload,
+      emailNotification: notification?.storeNotification || null,
+    });
+  } catch (err: any) {
+    console.error('[BAD HABIT] /members/session error:', err?.message || err);
+    return res.status(500).json({ success: false, error: 'Unable to process member session right now.' });
   }
-
-  const priorOrdered =
-    Boolean(clientPriorOrderUsed) || hasPriorOrderByIdentity({ email: normEmail, phone: normPhone });
-  const rand = Math.floor(10000 + Math.random() * 90000);
-  const newMember = {
-    id: `mem_${Date.now()}_${rand}`,
-    email: normEmail,
-    phone: normPhone,
-    displayName: displayName ? String(displayName).trim().slice(0, 100) : '',
-    promoCode: MEMBER_PROMO_CODE,
-    orderCount: priorOrdered ? 1 : 0,
-    firstOrderDiscountUsed: priorOrdered,
-    firstOrderNumber: null,
-    wishlist: [],
-    createdAt: now,
-    updatedAt: now,
-  };
-
-  upsertMemberRecord(newMember);
-
-  const host = req.get('x-forwarded-host') || req.get('host');
-  const proto = req.get('x-forwarded-proto') || req.protocol || 'https';
-  const reqOrigin = host ? `${proto}://${host}` : '';
-
-  let notification: any = null;
-  if (!dryRun) {
-    notification = await sendMemberSignupNotification(newMember, reqOrigin);
-  }
-
-  return res.status(201).json({
-    success: true,
-    isNewMember: true,
-    member: newMember,
-    emailNotification: notification?.storeNotification || null,
-  });
 });
 
-apiRouter.post('/members/me', (req, res) => {
-  const { memberId, email, phone, clientPriorOrderUsed } = req.body || {};
-  const matched = findAllMatchingMembers({ memberId, email, phone });
-  const member = findMemberByIdentity({ memberId, email, phone });
-  if (!member) {
-    return res.status(404).json({ success: false, error: 'Member not found.' });
+// Phone availability check (privacy-safe: returns availability boolean only, never PII)
+apiRouter.post('/members/phone/check', async (req, res) => {
+  try {
+    const { phone, excludeMemberId } = req.body || {};
+    const normPhone = normalizePhoneToE164(phone);
+    if (!normPhone || !isValidPhoneNumber(normPhone)) {
+      return res.status(400).json({
+        success: false,
+        available: false,
+        error: 'Please enter a valid mobile number (e.g. 03001234567 or +923001234567).',
+      });
+    }
+    const members = await readMembersAsync();
+    const owner = findMemberByPhoneInList(members, normPhone);
+    const available = !owner || (Boolean(excludeMemberId) && owner.id === String(excludeMemberId));
+    return res.json({
+      success: true,
+      available,
+      ...(available ? {} : { code: 'PHONE_ALREADY_REGISTERED', error: PHONE_CONFLICT_ERROR }),
+    });
+  } catch {
+    return res.status(500).json({ success: false, available: false, error: 'Phone verification failed.' });
   }
-  const priorOrdered =
-    Boolean(clientPriorOrderUsed) ||
-    matched.some(
-      (m: any) =>
-        Boolean(m.firstOrderDiscountUsed) ||
-        Number(m.orderCount || 0) > 0 ||
-        hasPriorOrderByIdentity({ memberId: m.id, email: m.email, phone: m.phone })
-    ) ||
-    hasPriorOrderByIdentity({ memberId, email, phone });
-  if (priorOrdered && (!member.firstOrderDiscountUsed || Number(member.orderCount || 0) === 0)) {
-    member.firstOrderDiscountUsed = true;
-    member.orderCount = Math.max(1, Number(member.orderCount || 0));
-    member.updatedAt = new Date().toISOString();
-    upsertMemberRecord(member);
+});
+
+// Member Profile / Contact Update (enforces 1-account-per-phone-number atomically)
+const handleProfileUpdate = async (req: express.Request, res: express.Response) => {
+  try {
+    const { memberId, email, phone, displayName } = req.body || {};
+    const normEmail = normalizeEmail(email);
+    const normPhone = phone !== undefined ? normalizePhoneToE164(phone) : '';
+
+    if (phone !== undefined && (!normPhone || !isValidPhoneNumber(normPhone))) {
+      return res.status(400).json({
+        success: false,
+        field: 'phone',
+        error: 'Please enter a valid mobile number (e.g. 03001234567 or +923001234567).',
+      });
+    }
+
+    const result = await withStoreLock(async () => {
+      const members = await readMembersAsync();
+      let target = findMemberByIdInList(members, memberId);
+      if (!target && normEmail) {
+        target = findMemberByEmailInList(members, normEmail);
+      }
+      if (!target) {
+        return { status: 404 as const, payload: { success: false, error: 'Member account not found.' } };
+      }
+      if (normEmail && normalizeEmail(target.email) !== normEmail) {
+        return { status: 403 as const, payload: { success: false, error: 'Account identity mismatch.' } };
+      }
+
+      if (normPhone) {
+        const phoneOwner = findMemberByPhoneInList(members, normPhone);
+        if (phoneOwner && phoneOwner.id !== target.id) {
+          return {
+            status: 409 as const,
+            payload: {
+              success: false,
+              field: 'phone',
+              code: 'PHONE_ALREADY_REGISTERED',
+              error: PHONE_CONFLICT_ERROR,
+            },
+          };
+        }
+        target.phone = normPhone;
+      }
+
+      if (displayName !== undefined) {
+        target.displayName = String(displayName).trim().slice(0, 100);
+      }
+      target.updatedAt = new Date().toISOString();
+      const saved = await upsertMemberRecordAsync(target);
+      return { status: 200 as const, payload: { success: true, member: saved } };
+    });
+
+    return res.status(result.status).json(result.payload);
+  } catch (err: any) {
+    console.error('[BAD HABIT] /members/profile error:', err?.message || err);
+    return res.status(500).json({ success: false, error: 'Unable to update member profile right now.' });
   }
-  return res.json({ success: true, member });
+};
+
+apiRouter.post('/members/profile', handleProfileUpdate);
+apiRouter.patch('/members/profile', handleProfileUpdate);
+
+apiRouter.post('/members/me', async (req, res) => {
+  try {
+    const { memberId, email, phone, clientPriorOrderUsed } = req.body || {};
+    const result = await withStoreLock(async () => {
+      const [members, orders] = await Promise.all([readMembersAsync(), readOrdersAsync()]);
+      const matched = findAllMatchingMembersInList(members, { memberId, email, phone });
+      const member = findMemberByIdentityInList(members, { memberId, email, phone });
+      if (!member) {
+        return { status: 404 as const, payload: { success: false, error: 'Member not found.' } };
+      }
+      const priorOrdered =
+        Boolean(clientPriorOrderUsed) ||
+        matched.some(
+          (m: any) =>
+            Boolean(m.firstOrderDiscountUsed) ||
+            Number(m.orderCount || 0) > 0 ||
+            hasPriorOrderByIdentityInLists(orders, members, { memberId: m.id, email: m.email, phone: m.phone })
+        ) ||
+        hasPriorOrderByIdentityInLists(orders, members, { memberId, email, phone });
+      if (priorOrdered && (!member.firstOrderDiscountUsed || Number(member.orderCount || 0) === 0)) {
+        member.firstOrderDiscountUsed = true;
+        member.orderCount = Math.max(1, Number(member.orderCount || 0));
+        member.updatedAt = new Date().toISOString();
+        const saved = await upsertMemberRecordAsync(member);
+        return { status: 200 as const, payload: { success: true, member: saved } };
+      }
+      return { status: 200 as const, payload: { success: true, member } };
+    });
+    return res.status(result.status).json(result.payload);
+  } catch {
+    return res.status(500).json({ success: false, error: 'Unable to fetch member session.' });
+  }
 });
 
 apiRouter.post('/wishlist/add', async (req, res) => {
-  const { memberId, email, phone, displayName, productId, dryRun } = req.body || {};
-  let member = findMemberByIdentity({ memberId, email, phone });
-
-  const normEmail = normalizeEmail(email);
-  const normPhone = normalizePakPhone(phone);
-  if (!member && normEmail && isValidEmail(normEmail) && normPhone) {
-    const now = new Date().toISOString();
-    const priorOrdered = hasPriorOrderByIdentity({ memberId, email: normEmail, phone: normPhone });
-    member = {
-      id: memberId || `mem_${Date.now()}_${Math.floor(10000 + Math.random() * 90000)}`,
-      email: normEmail,
-      phone: normPhone,
-      displayName: displayName ? String(displayName).trim().slice(0, 100) : '',
-      promoCode: MEMBER_PROMO_CODE,
-      orderCount: priorOrdered ? 1 : 0,
-      firstOrderDiscountUsed: priorOrdered,
-      firstOrderNumber: null,
-      wishlist: [],
-      createdAt: now,
-      updatedAt: now,
-    };
-    upsertMemberRecord(member);
-  }
-
-  if (!member) {
-    return res.status(401).json({
-      success: false,
-      requiresMembership: true,
-      error: 'Please become a member or sign in first to add articles to your wishlist.',
-    });
-  }
-
-  const product = CATALOG_ITEMS.find((p) => p.id === productId);
-  if (!product) {
-    return res.status(404).json({ success: false, error: 'Article not found.' });
-  }
-
-  const meta = PRODUCT_IMAGE_MAP[product.id] || {
-    image: `/assets/email-thumbs/${product.id}.png`,
-    category: 'Collection',
-  };
-  const now = new Date().toISOString();
-  const wishlistEntry = {
-    productId: product.id,
-    name: product.name,
-    price: `PKR ${product.price.toLocaleString()}`,
-    image: meta.image,
-    category: meta.category,
-    addedAt: now,
-  };
-
-  const currentWishlist = Array.isArray(member.wishlist) ? member.wishlist : [];
-  member.wishlist = [
-    wishlistEntry,
-    ...currentWishlist.filter((w: any) => w.productId !== product.id),
-  ];
-  member.updatedAt = now;
-  upsertMemberRecord(member);
-
-  const host = req.get('x-forwarded-host') || req.get('host');
-  const proto = req.get('x-forwarded-proto') || req.protocol || 'https';
-  const reqOrigin = host ? `${proto}://${host}` : '';
-
-  let emailNotification: any = null;
-  if (!dryRun) {
-    emailNotification = await Promise.race([
-      sendWishlistNotification({
-        member,
-        item: wishlistEntry,
-        baseOrigin: reqOrigin,
-      }).catch(() => ({ sent: false, provider: 'none' })),
-      new Promise((resolve) => setTimeout(() => resolve({ sent: false, deferred: true }), 2500)),
-    ]);
-  }
-
-  return res.json({
-    success: true,
-    member,
-    item: wishlistEntry,
-    emailNotification,
-  });
-});
-
-apiRouter.post('/wishlist/remove', (req, res) => {
-  const { memberId, email, phone, displayName, productId } = req.body || {};
-  let member = findMemberByIdentity({ memberId, email, phone });
-  const normEmail = normalizeEmail(email);
-  const normPhone = normalizePakPhone(phone);
-  if (!member && normEmail && isValidEmail(normEmail) && normPhone) {
-    const now = new Date().toISOString();
-    member = {
-      id: memberId || `mem_${Date.now()}_${Math.floor(10000 + Math.random() * 90000)}`,
-      email: normEmail,
-      phone: normPhone,
-      displayName: displayName ? String(displayName).trim().slice(0, 100) : '',
-      promoCode: MEMBER_PROMO_CODE,
-      orderCount: 0,
-      firstOrderDiscountUsed: false,
-      firstOrderNumber: null,
-      wishlist: [],
-      createdAt: now,
-      updatedAt: now,
-    };
-  }
-  if (!member) {
-    return res.status(401).json({ success: false, error: 'Member session not found.' });
-  }
-  const currentWishlist = Array.isArray(member.wishlist) ? member.wishlist : [];
-  member.wishlist = currentWishlist.filter((w: any) => w.productId !== productId);
-  member.updatedAt = new Date().toISOString();
-  upsertMemberRecord(member);
-  return res.json({ success: true, member });
-});
-
-apiRouter.post('/promo/validate', (req, res) => {
-  const { code, memberId, email, phone, items, clientPriorOrderUsed } = req.body || {};
-  let subtotalAfterPair = 0;
-
-  if (Array.isArray(items) && items.length > 0) {
-    const validatedItems = [];
-    for (const item of items) {
-      const product = CATALOG_ITEMS.find((p) => p.id === item.productId);
-      if (product) {
-        const qty = Math.max(1, Math.min(Number(item.quantity) || 1, product.stock || 5));
-        validatedItems.push({ productId: product.id, unitPrice: product.price, quantity: qty });
-      }
+  try {
+    const { memberId, email, phone, displayName, productId, dryRun } = req.body || {};
+    const product = CATALOG_ITEMS.find((p) => p.id === productId);
+    if (!product) {
+      return res.status(404).json({ success: false, error: 'Article not found.' });
     }
-    subtotalAfterPair = calculateServerPairPricing(validatedItems).subtotal;
-  }
 
-  const result = validateFirstOrderPromo({
-    code,
-    memberId,
-    email,
-    phone,
-    subtotalAfterPair,
-    clientPriorOrderUsed: Boolean(clientPriorOrderUsed),
-  });
+    const meta = PRODUCT_IMAGE_MAP[product.id] || {
+      image: `/assets/email-thumbs/${product.id}.png`,
+      category: 'Collection',
+    };
+    const now = new Date().toISOString();
+    const wishlistEntry = {
+      productId: product.id,
+      name: product.name,
+      price: `PKR ${product.price.toLocaleString()}`,
+      image: meta.image,
+      category: meta.category,
+      addedAt: now,
+    };
 
-  if (!result.valid) {
-    return res.status(400).json({
-      valid: false,
-      requiresMembership: Boolean(result.requiresMembership),
-      alreadyUsed: Boolean(result.alreadyUsed),
-      discountAmount: 0,
-      error: result.error,
+    const lockResult = await withStoreLock(async () => {
+      const [members, orders] = await Promise.all([readMembersAsync(), readOrdersAsync()]);
+      const normEmail = normalizeEmail(email);
+      const normPhone = normalizePhoneToE164(phone);
+      let member = findMemberByIdInList(members, memberId) || findMemberByEmailInList(members, normEmail);
+
+      if (!member && normPhone) {
+        const phoneOwner = findMemberByPhoneInList(members, normPhone);
+        if (phoneOwner && normEmail && normalizeEmail(phoneOwner.email) !== normEmail) {
+          return {
+            status: 409 as const,
+            payload: {
+              success: false,
+              field: 'phone',
+              code: 'PHONE_ALREADY_REGISTERED',
+              error: PHONE_CONFLICT_ERROR,
+            },
+          };
+        }
+        member = phoneOwner;
+      }
+
+      if (!member && normEmail && isValidEmail(normEmail) && normPhone && isValidPhoneNumber(normPhone)) {
+        const priorOrdered = hasPriorOrderByIdentityInLists(orders, members, {
+          memberId,
+          email: normEmail,
+          phone: normPhone,
+        });
+        member = {
+          id: memberId || `mem_${Date.now()}_${Math.floor(10000 + Math.random() * 90000)}`,
+          email: normEmail,
+          phone: normPhone,
+          displayName: displayName ? String(displayName).trim().slice(0, 100) : '',
+          promoCode: MEMBER_PROMO_CODE,
+          orderCount: priorOrdered ? 1 : 0,
+          firstOrderDiscountUsed: priorOrdered,
+          firstOrderNumber: null,
+          wishlist: [],
+          createdAt: now,
+          updatedAt: now,
+        };
+      }
+
+      if (!member) {
+        return {
+          status: 401 as const,
+          payload: {
+            success: false,
+            requiresMembership: true,
+            error: 'Please become a member or sign in first to add articles to your wishlist.',
+          },
+        };
+      }
+
+      const currentWishlist = Array.isArray(member.wishlist) ? member.wishlist : [];
+      member.wishlist = [
+        wishlistEntry,
+        ...currentWishlist.filter((w: any) => w.productId !== product.id),
+      ];
+      member.updatedAt = now;
+      const savedMember = await upsertMemberRecordAsync(member);
+      return {
+        status: 200 as const,
+        member: savedMember,
+      };
     });
-  }
 
-  const finalSubtotal = Math.max(0, subtotalAfterPair - result.discountAmount);
-  return res.json({
-    valid: true,
-    code: result.code,
-    discountRate: result.discountRate,
-    discountAmount: result.discountAmount,
-    formattedDiscountAmount: `PKR ${result.discountAmount.toLocaleString()}`,
-    finalSubtotal,
-    formattedFinalSubtotal: `PKR ${finalSubtotal.toLocaleString()}`,
-    message: `Code ${MEMBER_PROMO_CODE} applied — 10% off your first order!`,
-  });
-});
+    if (lockResult.status !== 200) {
+      return res.status(lockResult.status).json(lockResult.payload);
+    }
 
-// 4. POST /api/orders & /api/orders/create: Create real order with server-authoritative verification
-apiRouter.post(['/orders', '/orders/create'], async (req, res) => {
-  const body = req.body || {};
-  const {
-    idempotencyKey,
-    contact = body.customer,
-    delivery,
-    items,
-    shippingMethodId = body.shipping?.methodId || 'standard',
-    paymentMethod = 'cod',
-    marketingConsent = false,
-    sendOrderSummaryToEmail = true,
-    promoCode = '',
-    memberId = '',
-    clientPriorOrderUsed = false,
-  } = body;
+    const host = req.get('x-forwarded-host') || req.get('host');
+    const proto = req.get('x-forwarded-proto') || req.protocol || 'https';
+    const reqOrigin = host ? `${proto}://${host}` : '';
 
-  // Check idempotency cache first to prevent duplicate orders
-  if (idempotencyKey && idempotencyCache.has(idempotencyKey)) {
+    let emailNotification: any = null;
+    if (!dryRun && lockResult.member) {
+      emailNotification = await Promise.race([
+        sendWishlistNotification({
+          member: lockResult.member,
+          item: wishlistEntry,
+          baseOrigin: reqOrigin,
+        }).catch(() => ({ sent: false, provider: 'none' })),
+        new Promise((resolve) => setTimeout(() => resolve({ sent: false, deferred: true }), 2500)),
+      ]);
+    }
+
     return res.json({
       success: true,
-      order: idempotencyCache.get(idempotencyKey),
+      member: lockResult.member,
+      item: wishlistEntry,
+      emailNotification,
+    });
+  } catch (err: any) {
+    console.error('[BAD HABIT] /wishlist/add error:', err?.message || err);
+    return res.status(500).json({ success: false, error: 'Unable to update wishlist right now.' });
+  }
+});
+
+apiRouter.post('/wishlist/remove', async (req, res) => {
+  try {
+    const { memberId, email, phone, productId } = req.body || {};
+    const result = await withStoreLock(async () => {
+      const members = await readMembersAsync();
+      const member = findMemberByIdentityInList(members, { memberId, email, phone });
+      if (!member) {
+        return { status: 401 as const, payload: { success: false, error: 'Member session not found.' } };
+      }
+      const currentWishlist = Array.isArray(member.wishlist) ? member.wishlist : [];
+      member.wishlist = currentWishlist.filter((w: any) => w.productId !== productId);
+      member.updatedAt = new Date().toISOString();
+      const savedMember = await upsertMemberRecordAsync(member);
+      return { status: 200 as const, payload: { success: true, member: savedMember } };
+    });
+    return res.status(result.status).json(result.payload);
+  } catch {
+    return res.status(500).json({ success: false, error: 'Unable to update wishlist right now.' });
+  }
+});
+
+apiRouter.post('/promo/validate', async (req, res) => {
+  try {
+    const { code, memberId, email, phone, items, clientPriorOrderUsed } = req.body || {};
+    let subtotalAfterPair = 0;
+
+    if (Array.isArray(items) && items.length > 0) {
+      const validatedItems = [];
+      for (const item of items) {
+        const product = CATALOG_ITEMS.find((p) => p.id === item?.productId);
+        if (product) {
+          const qty = Math.max(1, Math.min(Number(item?.quantity) || 1, product.stock || 5));
+          validatedItems.push({ productId: product.id, unitPrice: product.price, quantity: qty });
+        }
+      }
+      subtotalAfterPair = calculateServerPairPricing(validatedItems).subtotal;
+    }
+
+    const result = await validateFirstOrderPromoAsync({
+      code,
+      memberId,
+      email,
+      phone,
+      subtotalAfterPair,
+      clientPriorOrderUsed: Boolean(clientPriorOrderUsed),
+      persistFlagIfUsed: false,
+    });
+
+    if (!result.valid) {
+      return res.status(400).json({
+        valid: false,
+        requiresMembership: Boolean(result.requiresMembership),
+        alreadyUsed: Boolean(result.alreadyUsed),
+        discountAmount: 0,
+        error: result.error,
+      });
+    }
+
+    const finalSubtotal = Math.max(0, subtotalAfterPair - result.discountAmount);
+    return res.json({
+      valid: true,
+      code: result.code,
+      discountRate: result.discountRate,
+      discountAmount: result.discountAmount,
+      formattedDiscountAmount: `PKR ${result.discountAmount.toLocaleString()}`,
+      finalSubtotal,
+      formattedFinalSubtotal: `PKR ${finalSubtotal.toLocaleString()}`,
+      message: `Code ${MEMBER_PROMO_CODE} applied — 10% off your first order!`,
+    });
+  } catch {
+    return res.status(500).json({ valid: false, discountAmount: 0, error: 'Promo verification unavailable.' });
+  }
+});
+
+// 4. POST /api/orders & /api/orders/create: Create real order with server-authoritative verification + concurrent idempotency guard
+apiRouter.post(['/orders', '/orders/create'], async (req, res) => {
+  const body = req.body || {};
+  const idempotencyKey = typeof body.idempotencyKey === 'string' ? body.idempotencyKey.trim() : '';
+
+  const cachedOrder = getCachedIdempotentOrder(idempotencyKey);
+  if (cachedOrder) {
+    return res.json({
+      success: true,
+      order: cachedOrder,
       duplicatePrevented: true,
     });
   }
 
-  // Server-side validation of customer contact info
-  if (!contact || !contact.email || !contact.phone) {
-    return res.status(400).json({
-      success: false,
-      error: 'Please provide both email address and phone number.',
-    });
-  }
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(String(contact.email).trim())) {
-    return res.status(400).json({
-      success: false,
-      field: 'email',
-      error: 'Please enter a valid email address.',
-    });
-  }
-
-  // Pakistani phone normalization & validation (supports 03XX, +923XX, +9203XX, 00923XX, 923XX)
-  const cleanPhone = String(contact.phone).replace(/[\s\-\(\)]/g, '');
-  const pakPhoneRegex = /^(?:\+92|0092|92)?0?3[0-9]{9}$/;
-  if (!pakPhoneRegex.test(cleanPhone)) {
-    return res.status(400).json({
-      success: false,
-      field: 'phone',
-      error: 'Please enter a valid Pakistani mobile number (e.g. 03001234567 or +923001234567).',
-    });
-  }
-
-  // Delivery validation
-  if (!delivery || !delivery.firstName || !delivery.lastName || !delivery.address || !delivery.city || !delivery.province) {
-    return res.status(400).json({
-      success: false,
-      error: 'Please fill in all required delivery fields (first name, last name, street address, city, and province).',
-    });
-  }
-
-  if (delivery.country && delivery.country !== 'Pakistan') {
-    return res.status(400).json({
-      success: false,
-      field: 'country',
-      error: 'Delivery is currently available exclusively within Pakistan.',
-    });
-  }
-
-  // Validate Items on server
-  if (!Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({
-      success: false,
-      error: 'Cannot place an order with an empty shopping bag.',
-    });
-  }
-
-  const validatedItems = [];
-
-  for (const item of items) {
-    const product = CATALOG_ITEMS.find((p) => p.id === item.productId) as
-      | ((typeof CATALOG_ITEMS)[number] & { soldOut?: boolean })
-      | undefined;
-    if (!product) {
-      return res.status(400).json({
-        success: false,
-        error: `Unrecognized product item ${item.productId}.`,
-      });
+  // Coalesce concurrent requests sharing the same idempotencyKey
+  if (idempotencyKey && idempotencyInFlight.has(idempotencyKey)) {
+    try {
+      const inflightResponse = await idempotencyInFlight.get(idempotencyKey);
+      return res.status(inflightResponse.status).json(inflightResponse.payload);
+    } catch {
+      return res.status(500).json({ success: false, error: 'Order submission could not complete.' });
     }
-    if (product.soldOut || product.stock <= 0) {
-      return res.status(400).json({
-        success: false,
-        error: `${product.name} is currently Sold Out.`,
-      });
-    }
-
-    if (!VALID_SIZES.includes(item.size)) {
-      return res.status(400).json({
-        success: false,
-        error: `Size ${item.size} is unavailable for ${product.name}.`,
-      });
-    }
-
-    const qty = Math.max(1, Math.min(Number(item.quantity) || 1, product.stock));
-    const lineTotal = product.price * qty;
-
-    validatedItems.push({
-      productId: product.id,
-      name: product.name,
-      size: item.size,
-      quantity: qty,
-      unitPrice: product.price,
-      lineTotal,
-      image: item.image,
-    });
   }
 
-  // Validate payment method
-  if (paymentMethod !== 'cod' && paymentMethod !== 'bank_transfer') {
-    return res.status(400).json({
-      success: false,
-      error: 'Unsupported payment method selected.',
-    });
-  }
+  const processOrder = async (): Promise<{ status: number; payload: Record<string, any> }> => {
+    const {
+      contact = body.customer,
+      delivery,
+      items,
+      shippingMethodId = body.shipping?.methodId || 'standard',
+      paymentMethod = 'cod',
+      marketingConsent = false,
+      sendOrderSummaryToEmail = true,
+      promoCode = '',
+      memberId = '',
+      clientPriorOrderUsed = false,
+    } = body;
 
-  const isBankTransfer = paymentMethod === 'bank_transfer';
-  const pairPricing = calculateServerPairPricing(validatedItems);
-
-  // Server-authoritative First-Order Member Promo Code validation (BH-DETECTED -> 10% off 1st order only)
-  let appliedPromoCode = '';
-  let promoDiscount = 0;
-  if (String(promoCode || '').trim()) {
-    const promoCheck = validateFirstOrderPromo({
-      code: promoCode,
-      memberId,
-      email: contact.email,
-      phone: cleanPhone,
-      subtotalAfterPair: pairPricing.subtotal,
-      clientPriorOrderUsed: Boolean(clientPriorOrderUsed),
-    });
-    if (!promoCheck.valid) {
-      return res.status(400).json({
-        success: false,
-        field: 'promoCode',
-        alreadyUsed: Boolean(promoCheck.alreadyUsed),
-        error: promoCheck.error,
-      });
-    }
-    appliedPromoCode = promoCheck.code || MEMBER_PROMO_CODE;
-    promoDiscount = promoCheck.discountAmount;
-  }
-
-  const discountedSubtotalAfterPromo = Math.max(0, pairPricing.subtotal - promoDiscount);
-
-  // Validate shipping method & charge (Free Delivery when transferring to Bank Account)
-  const selectedShipping = SHIPPING_METHODS[shippingMethodId] || SHIPPING_METHODS.standard;
-  const shippingCharge = isBankTransfer ? 0 : selectedShipping.charge;
-  const codFee = 0;
-
-  const grandTotal = discountedSubtotalAfterPromo + shippingCharge;
-
-  // Generate unique branded order number (e.g. BH-26-84920)
-  const randomSuffix = Math.floor(10000 + Math.random() * 90000);
-  const orderNumber = `BH-26-${randomSuffix}`;
-  const orderId = `ord_${Date.now()}_${randomSuffix}`;
-  const primaryMatchedMember = findMemberByIdentity({
-    memberId,
-    email: contact.email,
-    phone: cleanPhone,
-  });
-
-  const newOrder = {
-    id: orderId,
-    orderNumber,
-    memberId: memberId || primaryMatchedMember?.id || undefined,
-    createdAt: new Date().toISOString(),
-    customer: {
-      email: String(contact.email).trim(),
-      phone: cleanPhone,
-      marketingConsent: Boolean(marketingConsent),
-    },
-    delivery: {
-      country: 'Pakistan',
-      firstName: String(delivery.firstName).trim(),
-      lastName: String(delivery.lastName).trim(),
-      address: String(delivery.address).trim(),
-      apartment: delivery.apartment ? String(delivery.apartment).trim() : '',
-      city: String(delivery.city).trim(),
-      province: String(delivery.province).trim(),
-      postalCode: delivery.postalCode ? String(delivery.postalCode).trim() : '',
-      landmark: delivery.landmark ? String(delivery.landmark).trim() : '',
-      instructions: delivery.instructions ? String(delivery.instructions).trim() : '',
-    },
-    items: validatedItems,
-    shippingMethod: {
-      id: selectedShipping.id,
-      name: isBankTransfer ? 'Free Delivery (Bank Transfer)' : selectedShipping.name,
-      charge: shippingCharge,
-      estimate: selectedShipping.estimate,
-    },
-    payment: isBankTransfer
-      ? {
-          method: 'bank_transfer',
-          methodName: 'Transfer to Bank account - Free Delivery',
-          status: 'pending_verification',
-          statusLabel: 'Send transfer screenshot to 03310266534',
-          accountNumber: '01210113983722',
-          accountTitle: 'Meezan Bank - Hassan Ahmed',
-          confirmationPhone: '03310266534',
-          charge: 0,
-          codFee: 0,
-        }
-      : {
-          method: 'cod',
-          methodName: 'Cash on Delivery (COD)',
-          status: 'pending_delivery',
-          statusLabel: 'Payment due on delivery',
-          charge: codFee,
-          codFee,
+    if (!contact || !contact.email || !contact.phone) {
+      return {
+        status: 400,
+        payload: {
+          success: false,
+          error: 'Please provide both email address and phone number.',
         },
-    pricing: {
-      currency: 'PKR',
-      rawSubtotal: pairPricing.rawSubtotal,
-      pairCount: pairPricing.pairCount,
-      pairDiscount: pairPricing.pairDiscount,
-      promoCode: appliedPromoCode || undefined,
-      promoDiscount,
-      subtotalAfterPair: pairPricing.subtotal,
-      subtotal: discountedSubtotalAfterPromo,
-      shippingCharge,
-      codFee,
-      total: grandTotal,
-      formattedRawSubtotal: `PKR ${pairPricing.rawSubtotal.toLocaleString()}`,
-      formattedPairDiscount: `PKR ${pairPricing.pairDiscount.toLocaleString()}`,
-      formattedPromoDiscount: `PKR ${promoDiscount.toLocaleString()}`,
-      formattedSubtotal: `PKR ${discountedSubtotalAfterPromo.toLocaleString()}`,
-      formattedShippingCharge: `PKR ${shippingCharge.toLocaleString()}`,
-      formattedCodFee: `PKR ${codFee.toLocaleString()}`,
-      formattedTotal: `PKR ${grandTotal.toLocaleString()}`,
-    },
-  };
+      };
+    }
 
-  console.log(`[BAD HABIT] Order placed successfully: ${orderNumber} for PKR ${grandTotal.toLocaleString()} (${newOrder.customer.email})`);
+    const normEmail = normalizeEmail(contact.email);
+    if (!isValidEmail(normEmail)) {
+      return {
+        status: 400,
+        payload: {
+          success: false,
+          field: 'email',
+          error: 'Please enter a valid email address.',
+        },
+      };
+    }
 
-  // Send transactional order emails & optional automation webhook in parallel
-  const host = req.get('x-forwarded-host') || req.get('host');
-  const proto = req.get('x-forwarded-proto') || req.protocol || 'https';
-  const reqOrigin = host ? `${proto}://${host}` : '';
-  const {
-    storeNotification,
-    automationNotification,
-    customerNotification,
-    webhookSent,
-  } = await sendOrderNotifications(newOrder, sendOrderSummaryToEmail !== false, reqOrigin);
+    const normPhone = normalizePhoneToE164(contact.phone);
+    if (!normPhone || !isValidPhoneNumber(normPhone)) {
+      return {
+        status: 400,
+        payload: {
+          success: false,
+          field: 'phone',
+          error: 'Please enter a valid Pakistani mobile number (e.g. 03001234567 or +923001234567).',
+        },
+      };
+    }
 
-  const enrichedOrder = {
-    ...newOrder,
-    notifications: {
-      storeEmailSent: storeNotification.sent,
-      customerEmailSent: Boolean(customerNotification?.sent),
-      automationEmailSent: Boolean(automationNotification?.sent),
+    if (!delivery || !delivery.firstName || !delivery.lastName || !delivery.address || !delivery.city || !delivery.province) {
+      return {
+        status: 400,
+        payload: {
+          success: false,
+          error: 'Please fill in all required delivery fields (first name, last name, street address, city, and province).',
+        },
+      };
+    }
+
+    if (delivery.country && delivery.country !== 'Pakistan') {
+      return {
+        status: 400,
+        payload: {
+          success: false,
+          field: 'country',
+          error: 'Delivery is currently available exclusively within Pakistan.',
+        },
+      };
+    }
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return {
+        status: 400,
+        payload: {
+          success: false,
+          error: 'Cannot place an order with an empty shopping bag.',
+        },
+      };
+    }
+
+    const validatedItems: {
+      productId: string;
+      name: string;
+      size: string;
+      quantity: number;
+      unitPrice: number;
+      lineTotal: number;
+      image: string;
+    }[] = [];
+    for (const item of items) {
+      const product = CATALOG_ITEMS.find((p) => p.id === item?.productId) as
+        | ((typeof CATALOG_ITEMS)[number] & { soldOut?: boolean })
+        | undefined;
+      if (!product) {
+        return {
+          status: 400,
+          payload: {
+            success: false,
+            error: `Unrecognized product item ${item?.productId}.`,
+          },
+        };
+      }
+      if (product.soldOut || product.stock <= 0) {
+        return {
+          status: 400,
+          payload: {
+            success: false,
+            error: `${product.name} is currently Sold Out.`,
+          },
+        };
+      }
+      if (!VALID_SIZES.includes(item?.size)) {
+        return {
+          status: 400,
+          payload: {
+            success: false,
+            error: `Size ${item?.size} is unavailable for ${product.name}.`,
+          },
+        };
+      }
+
+      const qty = Math.max(1, Math.min(Number(item?.quantity) || 1, product.stock));
+      const lineTotal = product.price * qty;
+
+      validatedItems.push({
+        productId: product.id,
+        name: product.name,
+        size: item.size,
+        quantity: qty,
+        unitPrice: product.price,
+        lineTotal,
+        image: item.image,
+      });
+    }
+
+    if (paymentMethod !== 'cod' && paymentMethod !== 'bank_transfer') {
+      return {
+        status: 400,
+        payload: {
+          success: false,
+          error: 'Unsupported payment method selected.',
+        },
+      };
+    }
+
+    const isBankTransfer = paymentMethod === 'bank_transfer';
+    const pairPricing = calculateServerPairPricing(validatedItems);
+
+    // Atomic store lock protects promo redemption, order recording, and member order counts
+    const lockStep = await withStoreLock(async () => {
+      let appliedPromoCode = '';
+      let promoDiscount = 0;
+
+      if (String(promoCode || '').trim()) {
+        const promoCheck = await validateFirstOrderPromoAsync({
+          code: promoCode,
+          memberId,
+          email: normEmail,
+          phone: normPhone,
+          subtotalAfterPair: pairPricing.subtotal,
+          clientPriorOrderUsed: Boolean(clientPriorOrderUsed),
+          persistFlagIfUsed: true,
+        });
+        if (!promoCheck.valid) {
+          return {
+            ok: false as const,
+            errorStatus: 400,
+            errorPayload: {
+              success: false,
+              field: 'promoCode',
+              alreadyUsed: Boolean(promoCheck.alreadyUsed),
+              error: promoCheck.error,
+            },
+          };
+        }
+        appliedPromoCode = promoCheck.code || MEMBER_PROMO_CODE;
+        promoDiscount = promoCheck.discountAmount;
+      }
+
+      const discountedSubtotalAfterPromo = Math.max(0, pairPricing.subtotal - promoDiscount);
+      const selectedShipping = SHIPPING_METHODS[shippingMethodId] || SHIPPING_METHODS.standard;
+      const shippingCharge = isBankTransfer ? 0 : selectedShipping.charge;
+      const codFee = 0;
+      const grandTotal = discountedSubtotalAfterPromo + shippingCharge;
+
+      const randomSuffix = Math.floor(10000 + Math.random() * 90000);
+      const orderNumber = `BH-26-${randomSuffix}`;
+      const orderId = `ord_${Date.now()}_${randomSuffix}`;
+      const members = await readMembersAsync();
+      const primaryMatchedMember = findMemberByIdentityInList(members, {
+        memberId,
+        email: normEmail,
+        phone: normPhone,
+      });
+
+      const newOrder = {
+        id: orderId,
+        orderNumber,
+        memberId: memberId || primaryMatchedMember?.id || undefined,
+        createdAt: new Date().toISOString(),
+        customer: {
+          email: normEmail,
+          phone: normPhone,
+          marketingConsent: Boolean(marketingConsent),
+        },
+        delivery: {
+          country: 'Pakistan',
+          firstName: String(delivery.firstName).trim(),
+          lastName: String(delivery.lastName).trim(),
+          address: String(delivery.address).trim(),
+          apartment: delivery.apartment ? String(delivery.apartment).trim() : '',
+          city: String(delivery.city).trim(),
+          province: String(delivery.province).trim(),
+          postalCode: delivery.postalCode ? String(delivery.postalCode).trim() : '',
+          landmark: delivery.landmark ? String(delivery.landmark).trim() : '',
+          instructions: delivery.instructions ? String(delivery.instructions).trim() : '',
+        },
+        items: validatedItems,
+        shippingMethod: {
+          id: selectedShipping.id,
+          name: isBankTransfer ? 'Free Delivery (Bank Transfer)' : selectedShipping.name,
+          charge: shippingCharge,
+          estimate: selectedShipping.estimate,
+        },
+        payment: isBankTransfer
+          ? {
+              method: 'bank_transfer',
+              methodName: 'Transfer to Bank account - Free Delivery',
+              status: 'pending_verification',
+              statusLabel: 'Send transfer screenshot to 03310266534',
+              accountNumber: '01210113983722',
+              accountTitle: 'Meezan Bank - Hassan Ahmed',
+              confirmationPhone: '03310266534',
+              charge: 0,
+              codFee: 0,
+            }
+          : {
+              method: 'cod',
+              methodName: 'Cash on Delivery (COD)',
+              status: 'pending_delivery',
+              statusLabel: 'Payment due on delivery',
+              charge: codFee,
+              codFee,
+            },
+        pricing: {
+          currency: 'PKR',
+          rawSubtotal: pairPricing.rawSubtotal,
+          pairCount: pairPricing.pairCount,
+          pairDiscount: pairPricing.pairDiscount,
+          promoCode: appliedPromoCode || undefined,
+          promoDiscount,
+          subtotalAfterPair: pairPricing.subtotal,
+          subtotal: discountedSubtotalAfterPromo,
+          shippingCharge,
+          codFee,
+          total: grandTotal,
+          formattedRawSubtotal: `PKR ${pairPricing.rawSubtotal.toLocaleString()}`,
+          formattedPairDiscount: `PKR ${pairPricing.pairDiscount.toLocaleString()}`,
+          formattedPromoDiscount: `PKR ${promoDiscount.toLocaleString()}`,
+          formattedSubtotal: `PKR ${discountedSubtotalAfterPromo.toLocaleString()}`,
+          formattedShippingCharge: `PKR ${shippingCharge.toLocaleString()}`,
+          formattedCodFee: `PKR ${codFee.toLocaleString()}`,
+          formattedTotal: `PKR ${grandTotal.toLocaleString()}`,
+        },
+      };
+
+      await saveOrderAsync(newOrder);
+
+      const matchedMembers = findAllMatchingMembersInList(members, {
+        memberId,
+        email: newOrder.customer.email,
+        phone: newOrder.customer.phone,
+      });
+      const nowIso = new Date().toISOString();
+      let returnedMember: any = null;
+      for (const matched of matchedMembers) {
+        matched.orderCount = Number(matched.orderCount || 0) + 1;
+        matched.firstOrderDiscountUsed = true;
+        matched.firstOrderNumber = matched.firstOrderNumber || orderNumber;
+        matched.updatedAt = nowIso;
+        const saved = await upsertMemberRecordAsync(matched);
+        if (!returnedMember || (memberId && saved.id === memberId)) {
+          returnedMember = saved;
+        }
+      }
+
+      return { ok: true as const, newOrder, returnedMember };
+    });
+
+    if (!lockStep.ok) {
+      return {
+        status: lockStep.errorStatus,
+        payload: lockStep.errorPayload,
+      };
+    }
+
+    const { newOrder, returnedMember } = lockStep;
+    console.log(
+      `[BAD HABIT] Order placed successfully: ${newOrder.orderNumber} for PKR ${newOrder.pricing.total.toLocaleString()} (${newOrder.customer.email})`
+    );
+
+    const host = req.get('x-forwarded-host') || req.get('host');
+    const proto = req.get('x-forwarded-proto') || req.protocol || 'https';
+    const reqOrigin = host ? `${proto}://${host}` : '';
+    const {
+      storeNotification,
+      automationNotification,
+      customerNotification,
       webhookSent,
-      provider: customerNotification?.provider || storeNotification.provider,
-      storeResult: storeNotification,
-      customerResult: customerNotification,
-    },
+    } = await sendOrderNotifications(newOrder, sendOrderSummaryToEmail !== false, reqOrigin);
+
+    const enrichedOrder = {
+      ...newOrder,
+      notifications: {
+        storeEmailSent: storeNotification.sent,
+        customerEmailSent: Boolean(customerNotification?.sent),
+        automationEmailSent: Boolean(automationNotification?.sent),
+        webhookSent,
+        provider: customerNotification?.provider || storeNotification.provider,
+        storeResult: storeNotification,
+        customerResult: customerNotification,
+      },
+    };
+
+    await withStoreLock(async () => {
+      await saveOrderAsync(enrichedOrder);
+    });
+
+    if (idempotencyKey) {
+      setCachedIdempotentOrder(idempotencyKey, enrichedOrder);
+    }
+
+    return {
+      status: 201,
+      payload: {
+        success: true,
+        order: enrichedOrder,
+        member: returnedMember,
+        emailNotification: storeNotification,
+        customerEmailNotification: customerNotification,
+        automationNotification,
+        webhookSent,
+      },
+    };
   };
 
-  // Store enriched order safely
-  saveOrder(enrichedOrder);
-
-  // Mark ALL matching member profiles with order completion so 10% first-order discount cannot be reused
-  const matchedMembers = findAllMatchingMembers({
-    memberId,
-    email: newOrder.customer.email,
-    phone: newOrder.customer.phone,
-  });
-  const nowIso = new Date().toISOString();
-  for (const matched of matchedMembers) {
-    matched.orderCount = Number(matched.orderCount || 0) + 1;
-    matched.firstOrderDiscountUsed = true;
-    matched.firstOrderNumber = matched.firstOrderNumber || orderNumber;
-    matched.updatedAt = nowIso;
-    upsertMemberRecord(matched);
-  }
-  const returnedMember =
-    findMemberByIdentity({
-      memberId,
-      email: newOrder.customer.email,
-      phone: newOrder.customer.phone,
-    }) ||
-    matchedMembers[0] ||
-    null;
-
-  // Save in idempotency cache
+  const execution = processOrder();
   if (idempotencyKey) {
-    idempotencyCache.set(idempotencyKey, enrichedOrder);
+    idempotencyInFlight.set(idempotencyKey, execution);
   }
 
-  res.status(201).json({
-    success: true,
-    order: enrichedOrder,
-    member: returnedMember,
-    emailNotification: storeNotification,
-    customerEmailNotification: customerNotification,
-    automationNotification,
-    webhookSent,
-  });
+  try {
+    const result = await execution;
+    return res.status(result.status).json(result.payload);
+  } catch (err: any) {
+    console.error('[BAD HABIT] /orders/create error:', err?.message || err);
+    return res.status(500).json({ success: false, error: 'Unable to complete order right now. Please try again.' });
+  } finally {
+    if (idempotencyKey) {
+      idempotencyInFlight.delete(idempotencyKey);
+    }
+  }
 });
 
 // 4. GET /api/orders/:orderNumber: Retrieve order for confirmation and verification
-apiRouter.get('/orders/:orderNumber', (req, res) => {
-  const { orderNumber } = req.params;
-  const orders = readOrders();
-  const order = orders.find((o: any) => o.orderNumber === orderNumber || o.id === orderNumber);
-  if (!order) {
-    return res.status(404).json({ success: false, error: 'Order not found.' });
+apiRouter.get('/orders/:orderNumber', async (req, res) => {
+  try {
+    const { orderNumber } = req.params;
+    const orders = await readOrdersAsync();
+    const order = orders.find((o: any) => o.orderNumber === orderNumber || o.id === orderNumber);
+    if (!order) {
+      return res.status(404).json({ success: false, error: 'Order not found.' });
+    }
+    return res.json({ success: true, order });
+  } catch {
+    return res.status(500).json({ success: false, error: 'Unable to look up order.' });
   }
-  res.json({ success: true, order });
+});
+
+// Global Express JSON & route error handler
+apiRouter.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  if (err?.type === 'entity.parse.failed') {
+    return res.status(400).json({ success: false, error: 'Invalid JSON request payload.' });
+  }
+  console.error('[BAD HABIT] API middleware error:', err?.message || err);
+  return res.status(500).json({ success: false, error: 'Internal server error.' });
 });
 
 export function createApiApp() {
   const app = express();
   app.use(compression({ threshold: 1024 }));
-  app.use(express.json());
+  app.use(express.json({ limit: '1mb' }));
   app.get('/healthz', (_req, res) => {
     res.status(200).json({
       status: 'ok',
@@ -2201,18 +2609,30 @@ export function createApiApp() {
     });
   });
   app.use('/api', apiRouter);
+  app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    if (err?.type === 'entity.parse.failed') {
+      return res.status(400).json({ success: false, error: 'Invalid JSON request payload.' });
+    }
+    return res.status(500).json({ success: false, error: 'Internal server error.' });
+  });
   return app;
 }
 
 // Standalone Express instance exported as default for Vercel Serverless Functions
 const vercelApp = express();
 vercelApp.use(compression({ threshold: 1024 }));
-vercelApp.use(express.json());
+vercelApp.use(express.json({ limit: '1mb' }));
 vercelApp.use('/api', apiRouter);
 // Fallback mount in case Vercel rewrites strip the /api prefix
 vercelApp.use('/', apiRouter);
 vercelApp.use((_req, res) => {
   res.status(404).json({ success: false, error: 'API endpoint not found.' });
+});
+vercelApp.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  if (err?.type === 'entity.parse.failed') {
+    return res.status(400).json({ success: false, error: 'Invalid JSON request payload.' });
+  }
+  return res.status(500).json({ success: false, error: 'Internal server error.' });
 });
 
 export default vercelApp;

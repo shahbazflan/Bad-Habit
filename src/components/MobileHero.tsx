@@ -1,6 +1,8 @@
 import React from 'react';
 import { MobileHeader } from './MobileHeader';
 import { HeroCloudOffer } from './HeroCloudOffer';
+import { CleanPlatePicture } from './CleanPlatePicture';
+import { HERO_LOGO_URL, HERO_MODEL_URL, getResponsiveSrcSet } from '../data/products';
 
 interface MobileHeroProps {
   onExplore: () => void;
@@ -34,10 +36,10 @@ export const MobileHero: React.FC<MobileHeroProps> = ({
       aria-label="BAD HABIT Mobile Runway Hero"
     >
       {/* 1. LAYER: Authentic Keyblue Architectural Runway Background (matching Desktop) */}
-      <img
-        src="/clean_plate.jpg"
+      <CleanPlatePicture
         alt="BAD HABIT architectural runway"
         className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none z-0"
+        sizes="100vw"
         loading="eager"
         decoding="async"
         fetchPriority="high"
@@ -68,11 +70,16 @@ export const MobileHero: React.FC<MobileHeroProps> = ({
       >
         <div className="w-[88vw] max-w-[420px] aspect-[1774/887] relative flex items-center justify-center opacity-85">
           <img
-            src="/bad_habit_transparent.webp"
+            src={HERO_LOGO_URL}
+            srcSet={getResponsiveSrcSet(HERO_LOGO_URL)}
+            sizes="(max-width: 480px) 88vw, 420px"
+            width={1000}
+            height={500}
             alt="BAD HABIT"
             className="w-full h-full object-contain select-none pointer-events-none"
             loading="eager"
             decoding="async"
+            fetchPriority="high"
           />
         </div>
       </div>
@@ -148,7 +155,11 @@ export const MobileHero: React.FC<MobileHeroProps> = ({
 
         {/* Model Cutout Image (Foreground Hero) */}
         <img
-          src="/assets/aistudio/hero_mobile_model_cutout.webp"
+          src={HERO_MODEL_URL}
+          srcSet={getResponsiveSrcSet(HERO_MODEL_URL)}
+          sizes="(max-width: 480px) 210px, 240px"
+          width={375}
+          height={1116}
           alt="BAD HABIT Model"
           className="relative z-[2] w-full h-full object-contain object-bottom select-none pointer-events-none"
           loading="eager"

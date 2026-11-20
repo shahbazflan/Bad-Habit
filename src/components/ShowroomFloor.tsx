@@ -15,6 +15,7 @@
 
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import {
+  PRODUCTS,
   MAIN_COLLECTION,
   HOODIE_PRODUCTS,
   SHIRT_PRODUCTS,
@@ -29,7 +30,15 @@ import { ColorSwatchRail } from './ColorSwatchRail';
 import { useCart } from '../context/CartContext';
 import { useMember } from '../context/MemberContext';
 import { BrandLogo } from './BrandLogo';
-import { preloadCategoryImages, preloadProductDetailImages } from '../utils/preloadImages';
+import { CleanPlatePicture } from './CleanPlatePicture';
+import { SmartImage } from './SmartImage';
+import { ErrorBoundary } from './ErrorBoundary';
+import {
+  preloadCategoryImages,
+  preloadProductDetailImages,
+  preloadNextCarouselPage,
+  preloadNextGalleryItem,
+} from '../utils/preloadImages';
 
 const PairStudio = lazy(() =>
   import('./PairStudio').then((m) => ({ default: m.PairStudio }))
@@ -80,6 +89,15 @@ export function ShowroomFloor({
   const touchStartY = useRef<number | null>(null);
   const prevColorGroupRef = useRef<string | null>(null);
   const pairReturnProductRef = useRef<Product | null>(null);
+  const addedTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (addedTimerRef.current !== null) {
+        window.clearTimeout(addedTimerRef.current);
+      }
+    };
+  }, []);
 
   const activeProducts =
     activeSection === 'hoodies'
@@ -122,7 +140,6 @@ export function ShowroomFloor({
       setSelectedImageIndex(0);
       return;
     }
-    preloadProductDetailImages(selectedProduct);
     if (selectedProduct.category === 'Trousers' || selectedProduct.category === 'Shirts') {
       void import('./SizeGuideModal');
     }
@@ -137,6 +154,24 @@ export function ShowroomFloor({
     setAddedToCart(false);
     setIsSizeGuideOpen(false);
   }, [selectedProduct, activeGallery.length]);
+
+  // Smart preloading: only preload immediate next gallery item when detail reveal is open
+  useEffect(() => {
+    if (selectedProduct && activeGallery.length > 1) {
+      preloadNextGalleryItem(activeGallery, selectedImageIndex);
+    }
+  }, [selectedProduct, activeGallery, selectedImageIndex]);
+
+  // Smart preloading: only preload the immediate next carousel page when Showroom is in view
+  useEffect(() => {
+    if (
+      isFullyInView &&
+      !selectedProduct &&
+      (activeSection === 'trousers' || activeSection === 'hoodies' || activeSection === 'shirts')
+    ) {
+      preloadNextCarouselPage(activeProducts, currentPage, itemsPerPage);
+    }
+  }, [isFullyInView, selectedProduct, activeSection, activeProducts, currentPage, itemsPerPage]);
 
   // Sync mobile index when selectedProduct changes
   useEffect(() => {
@@ -187,7 +222,7 @@ export function ShowroomFloor({
 
   const handleSelectCategory = (cat: 'categories' | 'trousers' | 'hoodies' | 'shirts' | 'pair') => {
     if (cat !== 'categories') {
-      preloadCategoryImages(cat);
+      preloadCategoryImages(cat, PRODUCTS);
     }
     if (cat === 'pair') {
       setPairSeedShirt(null);
@@ -202,7 +237,7 @@ export function ShowroomFloor({
   };
 
   const handleOpenPairWithProduct = (product: Product) => {
-    preloadCategoryImages('pair');
+    preloadCategoryImages('pair', PRODUCTS);
     pairReturnProductRef.current = product;
     if (product.category === 'Shirts') {
       setPairSeedShirt(product);
@@ -222,7 +257,7 @@ export function ShowroomFloor({
   };
 
   const handleCategoryTileClick = (cat: CategoryItem) => {
-    preloadCategoryImages(cat.id);
+    preloadCategoryImages(cat.id, PRODUCTS);
     if (cat.id === 'trousers') {
       setActiveSection('trousers');
       setSelectedProduct(null);
@@ -335,7 +370,13 @@ export function ShowroomFloor({
       size: selectedSize as 'S' | 'M' | 'L' | 'XL',
       image: selectedProduct.image,
     });
-    setTimeout(() => setAddedToCart(false), 2400);
+    if (addedTimerRef.current !== null) {
+      window.clearTimeout(addedTimerRef.current);
+    }
+    addedTimerRef.current = window.setTimeout(() => {
+      addedTimerRef.current = null;
+      setAddedToCart(false);
+    }, 2400);
   };
 
   const isRevealed = Boolean(selectedProduct);
@@ -355,13 +396,13 @@ export function ShowroomFloor({
       aria-label="BAD HABIT Lower Architectural Showroom"
     >
       {/* 1. ARCHITECTURAL SHOWROOM BACKGROUND (Keyblue Runway Sky & White Floor) */}
-      <img
-        src={withAssetVersion('/clean_plate.jpg')}
+      <CleanPlatePicture
         alt="Architectural Showroom with sky and white floor"
         className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none z-[1]"
-        loading="eager"
+        sizes="100vw"
+        loading={isFullyInView ? 'eager' : 'lazy'}
         decoding="async"
-        fetchPriority="high"
+        fetchPriority={isFullyInView ? 'high' : 'low'}
       />
 
       {/* Daylight Atmosphere matching keyblue theme */}
@@ -612,17 +653,25 @@ export function ShowroomFloor({
 
                 {/* Live Magnum BOXY Shirt + Classic Brown Trousers Showcase */}
                 <div className="absolute inset-x-1 top-[86px] lg:top-[104px] bottom-[66px] flex items-center justify-center -space-x-3 pointer-events-none">
-                  <img
+                  <SmartImage
                     src={(SHIRT_PRODUCTS.find((p) => p.id === 'BH-S05') || SHIRT_PRODUCTS[5]).image}
                     alt="Magnum BOXY shirt pairing"
                     className="relative z-10 h-[86%] w-auto max-w-[54%] object-contain transition-transform duration-350 group-hover:scale-105"
+                    sizes="(max-width: 1024px) 180px, 240px"
+                    showSkeleton={false}
+                    loading={isFullyInView ? 'eager' : 'lazy'}
                     decoding="async"
+                    fetchPriority={isFullyInView ? 'auto' : 'low'}
                   />
-                  <img
+                  <SmartImage
                     src={(MAIN_COLLECTION.find((p) => p.id === 'BH-T10') || MAIN_COLLECTION[4]).image}
                     alt="Classic Brown Trousers pairing"
                     className="h-[92%] w-auto max-w-[54%] object-contain transition-transform duration-350 group-hover:scale-105"
+                    sizes="(max-width: 1024px) 180px, 240px"
+                    showSkeleton={false}
+                    loading={isFullyInView ? 'eager' : 'lazy'}
                     decoding="async"
+                    fetchPriority={isFullyInView ? 'auto' : 'low'}
                   />
                 </div>
 
@@ -655,11 +704,15 @@ export function ShowroomFloor({
                 aria-label="Shop Trousers Category"
               >
                 <div className="absolute inset-0 pointer-events-none">
-                  <img
+                  <SmartImage
                     src={withAssetVersion('/assets/categories/category_trousers_hd.webp')}
                     alt="BAD HABIT Trousers"
                     className="w-full h-full object-cover object-[center_top] select-none transition-transform duration-350 ease-out group-hover:scale-[1.03] origin-bottom motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                    sizes="(max-width: 1024px) 24vw, 410px"
+                    skeletonClassName="inset-2 rounded-xl"
+                    loading={isFullyInView ? 'eager' : 'lazy'}
                     decoding="async"
+                    fetchPriority={isFullyInView ? 'auto' : 'low'}
                   />
                 </div>
                 <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black/80 via-black/35 to-transparent pointer-events-none" />
@@ -685,11 +738,15 @@ export function ShowroomFloor({
                 aria-label="Shop Shirts Category"
               >
                 <div className="absolute inset-0 pt-3 px-1 flex items-end justify-center pointer-events-none">
-                  <img
+                  <SmartImage
                     src={withAssetVersion('/assets/categories/category_shirts_v3.webp')}
                     alt="BAD HABIT Shirts"
                     className="h-full w-full object-contain object-bottom select-none transition-transform duration-350 ease-out group-hover:scale-[1.03] origin-bottom motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                    sizes="(max-width: 1024px) 24vw, 410px"
+                    skeletonClassName="inset-2 rounded-xl"
+                    loading={isFullyInView ? 'eager' : 'lazy'}
                     decoding="async"
+                    fetchPriority={isFullyInView ? 'auto' : 'low'}
                   />
                 </div>
                 <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black/80 via-black/35 to-transparent pointer-events-none" />
@@ -714,12 +771,16 @@ export function ShowroomFloor({
                 aria-label="Shop Hoodies & Sweatshirts Category"
               >
                 <div className="absolute inset-x-0 top-3 bottom-0 overflow-hidden pointer-events-none">
-                  <div className="w-full h-full scale-[1.07] origin-[46%_0%] transition-transform duration-350 ease-out group-hover:scale-[1.10] motion-reduce:transition-none motion-reduce:group-hover:scale-[1.07]">
-                    <img
+                  <div className="relative w-full h-full scale-[1.07] origin-[46%_0%] transition-transform duration-350 ease-out group-hover:scale-[1.10] motion-reduce:transition-none motion-reduce:group-hover:scale-[1.07]">
+                    <SmartImage
                       src={withAssetVersion('/assets/categories/category_hoodies_v4.webp')}
                       alt="BAD HABIT Hoodies & Sweatshirts"
                       className="w-full h-full object-cover object-[46%_top] select-none"
+                      sizes="(max-width: 1024px) 24vw, 410px"
+                      skeletonClassName="inset-2 rounded-xl"
+                      loading={isFullyInView ? 'eager' : 'lazy'}
                       decoding="async"
+                      fetchPriority={isFullyInView ? 'auto' : 'low'}
                     />
                   </div>
                 </div>
@@ -743,31 +804,33 @@ export function ShowroomFloor({
         {/* DESKTOP MAKE A PAIR STUDIO */}
         {activeSection === 'pair' && !isRevealed && (
           <div className="absolute inset-0 z-25 pointer-events-auto">
-            <Suspense fallback={null}>
-              <PairStudio
-                initialTop={pairSeedShirt}
-                initialTrouser={pairSeedTrouser}
-                initialMode={pairInitialMode}
-                isDesktopShowroom={true}
-                backLabel={pairReturnProductRef.current ? 'Back to Article' : 'Back to Categories'}
-                onBack={() => {
-                  if (pairReturnProductRef.current) {
-                    const p = pairReturnProductRef.current;
-                    pairReturnProductRef.current = null;
-                    setSelectedProduct(p);
-                    setActiveSection(
-                      p.category === 'Shirts'
-                        ? 'shirts'
-                        : p.category === 'Hoodies'
-                        ? 'hoodies'
-                        : 'trousers'
-                    );
-                  } else {
-                    setActiveSection('categories');
-                  }
-                }}
-              />
-            </Suspense>
+            <ErrorBoundary compact sectionName="Make a Pair Studio">
+              <Suspense fallback={null}>
+                <PairStudio
+                  initialTop={pairSeedShirt}
+                  initialTrouser={pairSeedTrouser}
+                  initialMode={pairInitialMode}
+                  isDesktopShowroom={true}
+                  backLabel={pairReturnProductRef.current ? 'Back to Article' : 'Back to Categories'}
+                  onBack={() => {
+                    if (pairReturnProductRef.current) {
+                      const p = pairReturnProductRef.current;
+                      pairReturnProductRef.current = null;
+                      setSelectedProduct(p);
+                      setActiveSection(
+                        p.category === 'Shirts'
+                          ? 'shirts'
+                          : p.category === 'Hoodies'
+                          ? 'hoodies'
+                          : 'trousers'
+                      );
+                    } else {
+                      setActiveSection('categories');
+                    }
+                  }}
+                />
+              </Suspense>
+            </ErrorBoundary>
           </div>
         )}
 
@@ -862,15 +925,17 @@ export function ShowroomFloor({
                                   product.category === 'Shirts' ? 'p-0' : 'p-1'
                                 }`}
                               >
-                                <img
+                                <SmartImage
                                   src={product.image}
                                   alt={product.name}
                                   className={`${getGarmentCardFrame(product.id).desktopCardImgClass} h-full object-contain select-none transition-transform duration-300 group-hover:scale-[1.03] ${
                                     product.soldOut ? 'opacity-85' : ''
                                   }`}
-                                  loading={isCurrentPage ? 'eager' : 'lazy'}
-                                  decoding={isCurrentPage ? 'sync' : 'async'}
-                                  fetchPriority={isCurrentPage ? 'high' : 'low'}
+                                  sizes="(max-width: 1024px) 220px, 275px"
+                                  skeletonClassName="inset-4 rounded-2xl"
+                                  loading={isCurrentPage && isFullyInView ? 'eager' : 'lazy'}
+                                  decoding="async"
+                                  fetchPriority={isCurrentPage && isFullyInView ? 'high' : 'low'}
                                 />
                               </div>
 
@@ -882,6 +947,11 @@ export function ShowroomFloor({
                               <span className="font-display text-xs sm:text-[13px] font-semibold text-slate-800 tracking-tight text-center max-w-[220px] leading-tight px-1 drop-shadow-[0_1px_2px_rgba(255,255,255,0.35)]">
                                 {product.name}
                               </span>
+                              {product.subtitle && (
+                                <span className="text-[10.5px] font-sans font-medium text-slate-700/85 tracking-tight text-center leading-tight mt-0.5 px-1">
+                                  {product.subtitle}
+                                </span>
+                              )}
 
                               <div className="flex items-center justify-center gap-1.5 mt-1.5">
                                 <div className="showroom-glass-capsule w-[144px] sm:w-[162px] h-[40px] px-4 cursor-pointer shadow-[0_6px_20px_rgba(7,27,45,0.12)]">
@@ -987,6 +1057,11 @@ export function ShowroomFloor({
                 <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight leading-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.35)]">
                   {selectedProduct.name}
                 </h2>
+                {selectedProduct.subtitle && (
+                  <span className="text-xs font-sans text-cyan-100/95 mt-0.5 block drop-shadow-[0_1px_4px_rgba(4,24,43,0.55)]">
+                    {selectedProduct.subtitle}
+                  </span>
+                )}
                 <span className="text-xs font-display text-white/95 mt-1 block drop-shadow-[0_1px_4px_rgba(4,24,43,0.55)]">
                   {selectedProduct.color}
                 </span>
@@ -1067,14 +1142,16 @@ export function ShowroomFloor({
                   </button>
                 )}
 
-                <img
-                  src={currentGarmentImage}
+                <SmartImage
+                  src={currentGarmentImage || selectedProduct.image}
                   alt={`${selectedProduct.name} ${activeGallery[selectedImageIndex]?.label || 'garment view'}`}
                   className={`${
                     selectedImageIndex <= 1
                       ? getShirtDetailImageClass(selectedProduct.id, selectedImageIndex === 1, 'desktop')
                       : 'w-full h-full'
-                  } object-contain select-none transition-opacity duration-150`}
+                  } object-contain select-none`}
+                  sizes="(max-width: 1024px) 42vw, 540px"
+                  skeletonClassName="inset-6 rounded-2xl"
                   loading="eager"
                   decoding="async"
                   fetchPriority="high"
@@ -1248,14 +1325,23 @@ export function ShowroomFloor({
                       key={idx}
                       type="button"
                       onClick={() => setSelectedImageIndex(idx)}
-                      className={`w-12 h-12 rounded-xl p-0.5 overflow-hidden transition-all cursor-pointer ${
+                      className={`relative w-12 h-12 rounded-xl p-0.5 overflow-hidden transition-all cursor-pointer ${
                         selectedImageIndex === idx
                           ? 'bg-white/40 border border-white scale-105'
                           : 'opacity-60 hover:opacity-100 hover:bg-white/20'
                       }`}
                       title={img.label}
                     >
-                      <img src={img.src} alt={img.label} className="w-full h-full object-contain" decoding="async" />
+                      <SmartImage
+                        src={img.src}
+                        alt={img.label}
+                        className="w-full h-full object-contain"
+                        sizes="48px"
+                        skeletonClassName="inset-1 rounded-lg"
+                        loading="lazy"
+                        decoding="async"
+                        fetchPriority="low"
+                      />
                     </button>
                   ))}
                 </div>
@@ -1333,13 +1419,17 @@ export function ShowroomFloor({
             <div
               className={`relative w-full h-[40vh] max-h-[360px] flex items-center justify-center ${getGarmentCardFrame(currentMobileProduct.id).mobileGridPaddingClass}`}
             >
-              <img
+              <SmartImage
                 src={currentMobileProduct.image}
                 alt={currentMobileProduct.name}
                 className={`${getGarmentCardFrame(currentMobileProduct.id).mobileGridImgClass} h-full object-contain select-none active:scale-98 transition-transform ${
                   currentMobileProduct.soldOut ? 'opacity-85' : ''
                 }`}
+                sizes="280px"
+                skeletonClassName="inset-4 rounded-2xl"
                 loading="eager"
+                decoding="async"
+                fetchPriority="high"
               />
             </div>
 
@@ -1347,6 +1437,11 @@ export function ShowroomFloor({
               <h3 className="font-display text-base font-bold text-slate-900 tracking-tight drop-shadow-[0_1px_2px_rgba(255,255,255,0.85)]">
                 {currentMobileProduct.name}
               </h3>
+              {currentMobileProduct.subtitle && (
+                <span className="text-[11px] font-sans font-medium text-slate-800/85 tracking-tight mt-0.5">
+                  {currentMobileProduct.subtitle}
+                </span>
+              )}
 
               <div className="showroom-mobile-price-capsule px-6 py-2 mt-2 shadow-[0_6px_20px_rgba(7,27,45,0.2)]">
                 <span className="font-display text-sm font-bold text-white tracking-tight whitespace-nowrap drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
@@ -1425,16 +1520,20 @@ export function ShowroomFloor({
                   </button>
                 )}
 
-                <div className="h-[38vh] max-h-[350px] w-full max-w-[300px] flex items-center justify-center">
-                  <img
-                    src={currentGarmentImage}
+                <div className="relative h-[38vh] max-h-[350px] w-full max-w-[300px] flex items-center justify-center">
+                  <SmartImage
+                    src={currentGarmentImage || selectedProduct.image}
                     alt={`${selectedProduct.name} ${activeGallery[selectedImageIndex]?.label || 'garment view'}`}
                     className={`${
                       selectedImageIndex <= 1
                         ? getShirtDetailImageClass(selectedProduct.id, selectedImageIndex === 1, 'mobile')
                         : 'w-full h-full'
                     } object-contain object-center select-none`}
+                    sizes="300px"
+                    skeletonClassName="inset-4 rounded-2xl"
                     loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
                   />
                 </div>
 
@@ -1505,13 +1604,22 @@ export function ShowroomFloor({
                     key={idx}
                     type="button"
                     onClick={() => setSelectedImageIndex(idx)}
-                    className={`w-12 h-12 rounded-xl p-1 overflow-hidden transition-all cursor-pointer ${
+                    className={`relative w-12 h-12 rounded-xl p-1 overflow-hidden transition-all cursor-pointer ${
                       selectedImageIndex === idx
                         ? 'bg-white/40 border border-white scale-105'
                         : 'bg-white/10 opacity-70'
                     }`}
                   >
-                    <img src={img.src} alt={img.label} className="w-full h-full object-contain" />
+                    <SmartImage
+                      src={img.src}
+                      alt={img.label}
+                      className="w-full h-full object-contain"
+                      sizes="48px"
+                      skeletonClassName="inset-1 rounded-lg"
+                      loading="lazy"
+                      decoding="async"
+                      fetchPriority="low"
+                    />
                   </button>
                 ))}
               </div>
@@ -1528,6 +1636,11 @@ export function ShowroomFloor({
               <h2 className="font-display text-2xl font-bold text-white tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.45)]">
                 {selectedProduct.name}
               </h2>
+              {selectedProduct.subtitle && (
+                <span className="text-xs font-sans text-white/85 tracking-tight">
+                  {selectedProduct.subtitle}
+                </span>
+              )}
 
               <p className="text-xs text-white/80 font-normal leading-relaxed text-center px-4">
                 {selectedProduct.fabric}

@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useCart } from '../context/CartContext';
 import { useMember } from '../context/MemberContext';
+import { getProductSubtitle } from '../data/products';
+import { normalizePhoneToE164, isValidPhoneNumber } from '../utils/phone';
 import { BrandLogo } from './BrandLogo';
 import { PolicyModal, PolicyType } from './PolicyModal';
+import { CleanPlatePicture } from './CleanPlatePicture';
+import { SmartImage } from './SmartImage';
 
 export const CheckoutView: React.FC = () => {
   const {
@@ -74,6 +78,19 @@ export const CheckoutView: React.FC = () => {
   // Idempotency token to prevent duplicate double-clicks on a single checkout submit
   const generateIdempotencyKey = () => `idemp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
   const idempotencyKeyRef = useRef<string>(generateIdempotencyKey());
+  const isSubmittingRef = useRef<boolean>(false);
+  const promoAbortRef = useRef<AbortController | null>(null);
+  const orderAbortRef = useRef<AbortController | null>(null);
+  const mountedRef = useRef<boolean>(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      promoAbortRef.current?.abort();
+      orderAbortRef.current?.abort();
+    };
+  }, []);
 
   // Field refs for error autofocus
   const emailRef = useRef<HTMLInputElement>(null);
@@ -129,6 +146,9 @@ export const CheckoutView: React.FC = () => {
         setPromoError('Code BH-DETECTED applies to your first order only and has already been used for this account.');
         return;
       }
+      promoAbortRef.current?.abort();
+      const controller = new AbortController();
+      promoAbortRef.current = controller;
       setIsValidatingPromo(true);
       setPromoError(null);
       setPromoStatus(null);
@@ -136,16 +156,18 @@ export const CheckoutView: React.FC = () => {
         const res = await fetch('/api/promo/validate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
           body: JSON.stringify({
             code: cleaned,
             memberId: member?.id,
             email: effectiveEmail,
-            phone: effectivePhone,
+            phone: normalizePhoneToE164(effectivePhone) || effectivePhone,
             items,
             clientPriorOrderUsed: hasUsedFirstOrder,
           }),
         });
         const data = await res.json().catch(() => null);
+        if (!mountedRef.current) return;
         if (!res.ok || !data?.valid) {
           setAppliedPromoCode('');
           setPromoDiscount(0);
@@ -156,7 +178,7 @@ export const CheckoutView: React.FC = () => {
           if (data?.alreadyUsed) {
             recordOrderedIdentity({
               email: effectiveEmail,
-              phone: effectivePhone,
+              phone: normalizePhoneToE164(effectivePhone) || effectivePhone,
               memberId: member?.id,
             });
           }
@@ -166,10 +188,15 @@ export const CheckoutView: React.FC = () => {
         setPromoInput(data.code || 'BH-DETECTED');
         setPromoDiscount(Number(data.discountAmount) || 0);
         setPromoStatus(data.message || '10% first-order discount applied!');
-      } catch {
-        setPromoError('Could not verify promo code right now. Please try again.');
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') return;
+        if (mountedRef.current) {
+          setPromoError('Could not verify promo code right now. Please try again.');
+        }
       } finally {
-        setIsValidatingPromo(false);
+        if (mountedRef.current) {
+          setIsValidatingPromo(false);
+        }
       }
     },
     [member, effectiveEmail, effectivePhone, hasUsedFirstOrder, items, recordOrderedIdentity]
@@ -236,11 +263,8 @@ export const CheckoutView: React.FC = () => {
 
     if (!phone.trim()) {
       errors.phone = 'Mobile number is required for courier delivery.';
-    } else {
-      const cleaned = phone.replace(/[\s\-\(\)]/g, '');
-      if (!/^(?:\+92|0092|92)?0?3[0-9]{9}$/.test(cleaned)) {
-        errors.phone = 'Enter a valid Pakistani mobile number (e.g. 0300 1234567 or +92 300 1234567).';
-      }
+    } else if (!isValidPhoneNumber(phone)) {
+      errors.phone = 'Enter a valid mobile number (e.g. 0300 1234567 or +92 300 1234567).';
     }
 
     if (!firstName.trim()) errors.firstName = 'First name is required.';
@@ -276,6 +300,7 @@ export const CheckoutView: React.FC = () => {
 
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingRef.current) return;
     setSubmissionError(null);
 
     if (items.length === 0) {
@@ -290,7 +315,12 @@ export const CheckoutView: React.FC = () => {
       return;
     }
 
+    const normalizedPhone = normalizePhoneToE164(phone) || phone.trim();
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
+    orderAbortRef.current?.abort();
+    const controller = new AbortController();
+    orderAbortRef.current = controller;
 
     try {
       const orderPayload = {
@@ -304,7 +334,7 @@ export const CheckoutView: React.FC = () => {
         clientPriorOrderUsed: hasUsedFirstOrder,
         customer: {
           email: email.trim(),
-          phone: phone.trim(),
+          phone: normalizedPhone,
           marketingConsent,
         },
         delivery: {
@@ -355,9 +385,11 @@ export const CheckoutView: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderPayload),
+        signal: controller.signal,
       });
 
       const rawText = await res.text();
+      if (!mountedRef.current) return;
       let data: any = null;
       try {
         data = rawText ? JSON.parse(rawText) : null;
@@ -491,10 +523,16 @@ export const CheckoutView: React.FC = () => {
       clearCart();
       setIsCheckoutOpen(false);
     } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
       const message = err instanceof Error ? err.message : 'A network error occurred. Please try again.';
-      setSubmissionError(message);
+      if (mountedRef.current) {
+        setSubmissionError(message);
+      }
     } finally {
-      setIsSubmitting(false);
+      isSubmittingRef.current = false;
+      if (mountedRef.current) {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -516,10 +554,12 @@ export const CheckoutView: React.FC = () => {
     >
       {/* Universal Website Background: Architectural Runway & Sky (Pristine sky blue continuing from previous pages) */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <img
-          src="/clean_plate.jpg"
+        <CleanPlatePicture
           alt="BAD HABIT architectural background"
           className="w-full h-full object-cover object-center pointer-events-none"
+          sizes="100vw"
+          loading="eager"
+          decoding="async"
         />
       </div>
 
@@ -575,11 +615,24 @@ export const CheckoutView: React.FC = () => {
                 ) : (
                   items.map((item) => (
                     <div key={`${item.productId}-${item.size}`} className="py-3 flex items-center gap-3">
-                      <div className="w-12 h-14 shrink-0 bg-white/[0.08] rounded-xl border border-white/15 p-1 flex items-center justify-center overflow-hidden">
-                        <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
+                      <div className="relative w-12 h-14 shrink-0 bg-white/[0.08] rounded-xl border border-white/15 p-1 flex items-center justify-center overflow-hidden">
+                        <SmartImage
+                          src={item.image}
+                          alt={item.name}
+                          className="w-full h-full object-contain"
+                          sizes="56px"
+                          skeletonClassName="inset-1 rounded-lg"
+                          loading="lazy"
+                          decoding="async"
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-display text-xs font-bold text-white truncate">{item.name}</p>
+                        {getProductSubtitle(item.productId) && (
+                          <p className="text-[10.5px] font-sans text-white/70 truncate">
+                            {getProductSubtitle(item.productId)}
+                          </p>
+                        )}
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-[11px] text-white/70 font-display">Size {item.size} ·</span>
                           {/* Quantity +/- controls */}
@@ -1292,13 +1345,26 @@ export const CheckoutView: React.FC = () => {
                     const lineTotal = item.price * item.quantity;
                     return (
                       <div key={`${item.productId}-${item.size}`} className="py-4 first:pt-0 flex items-center gap-4">
-                        <div className="w-16 h-18 shrink-0 bg-white/[0.08] rounded-2xl border border-white/15 p-2 flex items-center justify-center overflow-hidden">
-                          <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
+                        <div className="relative w-16 h-18 shrink-0 bg-white/[0.08] rounded-2xl border border-white/15 p-2 flex items-center justify-center overflow-hidden">
+                          <SmartImage
+                            src={item.image}
+                            alt={item.name}
+                            className="w-full h-full object-contain"
+                            sizes="64px"
+                            skeletonClassName="inset-1 rounded-xl"
+                            loading="lazy"
+                            decoding="async"
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-display text-sm font-bold text-white tracking-tight truncate">
                             {item.name}
                           </p>
+                          {getProductSubtitle(item.productId) && (
+                            <p className="text-[11px] font-sans text-white/70 truncate">
+                              {getProductSubtitle(item.productId)}
+                            </p>
+                          )}
                           <div className="flex items-center gap-2 mt-1">
                             <span className="text-xs font-display text-white/70">
                               Size {item.size} ·

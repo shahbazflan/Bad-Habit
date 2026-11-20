@@ -18,6 +18,7 @@ export type ColorGroup =
 export interface Product {
   id: string;
   name: string;
+  subtitle?: string;
   category: 'Trousers' | 'Hoodies' | 'Shirts';
   subCollection?: 'Tailored' | 'Streetwear';
   color: string;
@@ -33,14 +34,82 @@ export interface Product {
   soldOut?: boolean;
 }
 
+export const HERO_PLATE_URL = '/clean_plate.jpg?v=opt26';
+export const HERO_PLATE_WEBP_800 = '/clean_plate_800.webp?v=opt26';
+export const HERO_PLATE_WEBP_1376 = '/clean_plate_1376.webp?v=opt26';
+export const HERO_PLATE_AVIF_800 = '/clean_plate_800.avif?v=opt26';
+export const HERO_PLATE_AVIF_1376 = '/clean_plate_1376.avif?v=opt26';
+export const HERO_LOGO_URL = '/bad_habit_transparent.webp?v=opt26';
+export const HERO_MODEL_URL = '/assets/aistudio/hero_mobile_model_cutout.webp?v=opt26';
+
 export const ASSET_CACHE_VERSION =
-  typeof __ASSET_VERSION__ !== 'undefined' ? __ASSET_VERSION__ : '20261119-v5';
+  typeof __ASSET_VERSION__ !== 'undefined' ? __ASSET_VERSION__ : '20261120-v6';
 
 export function withAssetVersion(assetPath: string): string {
   if (!assetPath || assetPath.startsWith('http') || assetPath.includes('?')) {
     return assetPath;
   }
   return `${assetPath}?v=${ASSET_CACHE_VERSION}`;
+}
+
+/**
+ * Maps an active studio WebP URL to its pre-generated lightweight `_sm.webp`
+ * responsive variant (400px-560px) while preserving any query cache key.
+ */
+export function getSmallVariantUrl(url: string): string {
+  if (!url) return url;
+  const qIdx = url.indexOf('?');
+  const base = qIdx >= 0 ? url.slice(0, qIdx) : url;
+  const query = qIdx >= 0 ? url.slice(qIdx) : '';
+
+  if (base.endsWith('_sm.webp') || !base.endsWith('.webp')) {
+    return url;
+  }
+
+  const isEligible =
+    base.endsWith('_v2.webp') ||
+    base.startsWith('/assets/hoodies/') ||
+    base.startsWith('/assets/trousers_v2/') ||
+    base.startsWith('/assets/shirts/') ||
+    base.startsWith('/assets/categories/category_trousers_hd') ||
+    base.startsWith('/assets/categories/category_shirts_v3') ||
+    base.startsWith('/assets/categories/category_hoodies_v4') ||
+    base.startsWith('/assets/size_guides/') ||
+    base === '/bad_habit_transparent.webp' ||
+    base === '/assets/aistudio/hero_mobile_model_cutout.webp';
+
+  if (!isEligible) return url;
+  return `${base.replace(/\.webp$/, '_sm.webp')}${query}`;
+}
+
+/**
+ * Generates an accurate width-descriptor `srcSet` string matched to the
+ * pre-generated WebP widths so mobile/thumbnail slots download 10-25 KB WebPs.
+ */
+export function getResponsiveSrcSet(url: string): string | undefined {
+  if (!url) return undefined;
+  const smUrl = getSmallVariantUrl(url);
+  if (smUrl === url) return undefined;
+
+  const qIdx = url.indexOf('?');
+  const base = qIdx >= 0 ? url.slice(0, qIdx) : url;
+
+  if (base === '/bad_habit_transparent.webp') {
+    return `${smUrl} 560w, ${url} 1000w`;
+  }
+  if (base === '/assets/aistudio/hero_mobile_model_cutout.webp') {
+    return `${smUrl} 240w, ${url} 375w`;
+  }
+  if (base.startsWith('/assets/categories/')) {
+    return `${smUrl} 400w, ${url} 740w`;
+  }
+  if (base.startsWith('/assets/size_guides/')) {
+    return `${smUrl} 480w, ${url} 900w`;
+  }
+  if (base.endsWith('_v2.webp')) {
+    return `${smUrl} 440w, ${url} 900w`;
+  }
+  return `${smUrl} 400w, ${url} 720w`;
 }
 
 const RAW_PRODUCTS: Product[] = [
@@ -55,8 +124,8 @@ const RAW_PRODUCTS: Product[] = [
     color: 'Midnight Blue',
     colorHex: '#2a384c',
     colorGroup: 'trousers-tailored',
-    image: '/assets/trousers_v2/midnight_blue_front_only.webp',
-    backImage: '/assets/trousers_v2/midnight_blue_back_only.webp',
+    image: '/assets/trousers_v2/midnight_blue_front_only_v2.webp',
+    backImage: '/assets/trousers_v2/midnight_blue_back_only_v2.webp',
     frontAndBackImage: '/assets/trousers_v2/midnight_blue_trousers_transparent_poster-1_fb454bd2.webp',
     detailImages: [
       '/assets/trousers_v2/midnight_blue_trousers_detail_poster-2_d6eee5c8.webp',
@@ -72,8 +141,8 @@ const RAW_PRODUCTS: Product[] = [
     color: 'Ivory',
     colorHex: '#e8e0d7',
     colorGroup: 'trousers-tailored',
-    image: '/assets/trousers_v2/ivory_trousers_front_only.webp',
-    backImage: '/assets/trousers_v2/ivory_trousers_back_only.webp',
+    image: '/assets/trousers_v2/ivory_trousers_front_only_v2.webp',
+    backImage: '/assets/trousers_v2/ivory_trousers_back_only_v2.webp',
     frontAndBackImage: '/assets/trousers_v2/white_typography_on_transparent_fashion_carousel-14_5936d425.webp',
     detailImages: [
       '/assets/trousers_v2/transparent_fashion_slide_with_white_typography-16_e57d3a87.webp',
@@ -89,8 +158,8 @@ const RAW_PRODUCTS: Product[] = [
     color: 'Sage Green',
     colorHex: '#9fa392',
     colorGroup: 'trousers-tailored',
-    image: '/assets/trousers_v2/sage_trousers_front_only.webp',
-    backImage: '/assets/trousers_v2/sage_trousers_back_only.webp',
+    image: '/assets/trousers_v2/sage_trousers_front_only_v2.webp',
+    backImage: '/assets/trousers_v2/sage_trousers_back_only_v2.webp',
     frontAndBackImage: '/assets/trousers_v2/sage_trousers_poster_with_white_typography-6_754f145e.webp',
     detailImages: [
       '/assets/trousers_v2/sage_trousers_macro_details_poster-8_229092bc.webp',
@@ -107,8 +176,8 @@ const RAW_PRODUCTS: Product[] = [
     color: 'Stone',
     colorHex: '#d4c5b8',
     colorGroup: 'trousers-tailored',
-    image: '/assets/trousers_v2/stone_trousers_front_only.webp',
-    backImage: '/assets/trousers_v2/stone_trousers_back_only.webp',
+    image: '/assets/trousers_v2/stone_trousers_front_only_v2.webp',
+    backImage: '/assets/trousers_v2/stone_trousers_back_only_v2.webp',
     frontAndBackImage: '/assets/trousers_v2/stone_trousers_poster_with_white_typography-11_142a391c.webp',
     detailImages: [
       '/assets/trousers_v2/stone_trousers_detail_poster-9_2b5e0113.webp',
@@ -124,8 +193,8 @@ const RAW_PRODUCTS: Product[] = [
     color: 'Classic Brown',
     colorHex: '#cbb396',
     colorGroup: 'trousers-tailored',
-    image: '/assets/trousers_v2/classic_brown_front_only.webp',
-    backImage: '/assets/trousers_v2/classic_brown_back_only.webp',
+    image: '/assets/trousers_v2/classic_brown_front_only_v2.webp',
+    backImage: '/assets/trousers_v2/classic_brown_back_only_v2.webp',
     frontAndBackImage: '/assets/trousers_v2/transparent_fashion_slide_with_white_typography-4_ae58e102.webp',
     detailImages: [
       '/assets/trousers_v2/transparent_fashion_carousel_with_white_typography-2_33cfcc84.webp',
@@ -146,8 +215,8 @@ const RAW_PRODUCTS: Product[] = [
     color: 'Deep Charcoal',
     colorHex: '#2a2d34',
     colorGroup: 'trousers-streetwear',
-    image: '/assets/trousers_v2/deep_charcoal_front_only.webp',
-    backImage: '/assets/trousers_v2/deep_charcoal_back_only.webp',
+    image: '/assets/trousers_v2/deep_charcoal_front_only_v2.webp',
+    backImage: '/assets/trousers_v2/deep_charcoal_back_only_v2.webp',
     frontAndBackImage: '/assets/trousers_v2/transparent_bad_habit_fashion_catalog_slide-6_9517fe91.webp',
     detailImages: [
       '/assets/trousers_v2/white_typography_on_a_transparent_fashion_slide-5_287bf00d.webp',
@@ -163,8 +232,8 @@ const RAW_PRODUCTS: Product[] = [
     color: 'Ash Grey',
     colorHex: '#bcbabb',
     colorGroup: 'trousers-streetwear',
-    image: '/assets/trousers_v2/ash_baggy_front_only.webp',
-    backImage: '/assets/trousers_v2/ash_baggy_back_only.webp',
+    image: '/assets/trousers_v2/ash_baggy_front_only_v2.webp',
+    backImage: '/assets/trousers_v2/ash_baggy_back_only_v2.webp',
     frontAndBackImage: '/assets/trousers_v2/ash-baggy-trousers-front-and-back-white-transparent_ad7ed4a3.webp',
     detailImages: [
       '/assets/trousers_v2/ash-baggy-trousers-the-details-21-white-transparent_ad7e3eb9.webp',
@@ -180,8 +249,8 @@ const RAW_PRODUCTS: Product[] = [
     color: 'Chocolate Brown',
     colorHex: '#574a44',
     colorGroup: 'trousers-streetwear',
-    image: '/assets/trousers_v2/chocolate_balloon_front_only.webp',
-    backImage: '/assets/trousers_v2/chocolate_balloon_back_only.webp',
+    image: '/assets/trousers_v2/chocolate_balloon_front_only_v2.webp',
+    backImage: '/assets/trousers_v2/chocolate_balloon_back_only_v2.webp',
     price: 'PKR 7,999',
     fabric: 'Volumetric structured heavy-loopback cotton in rich chocolate brown with tapered balloon silhouette, elasticated drawcord waistband, and dual rear patch pockets',
     soldOut: true,
@@ -323,73 +392,79 @@ const RAW_PRODUCTS: Product[] = [
   // ==========================================
   {
     id: 'BH-S05',
-    backImage: '/assets/aistudio/MAGNUM_BOXY_BACK__1cb29815.png',
+    backImage: '/assets/shirts/magnum_boxy_back_v2.webp',
     name: 'Magnum BOXY',
+    subtitle: 'Rough Cuban collar',
     category: 'Shirts',
     color: 'Black',
     colorHex: '#222020',
     colorGroup: 'shirts',
-    image: '/assets/aistudio/MAGNUM_BOXY_FRONT__36e853c5.png',
+    image: '/assets/shirts/magnum_boxy_front_v2.webp',
     price: 'PKR 4,999',
     fabric: 'Deep black heavyweight matte poplin with structured collar stand, tonal buttons, and architectural straight boxy hem',
   },
   {
     id: 'BH-S06',
-    backImage: '/assets/aistudio/ROUGH_BOXY_BACK__fa79a522.png',
+    backImage: '/assets/shirts/rough_boxy_back_v2.webp',
     name: 'Rough BOXY',
+    subtitle: 'Rough Cuban collar',
     category: 'Shirts',
     color: 'Rough Olive',
     colorHex: '#796e63',
     colorGroup: 'shirts',
-    image: '/assets/aistudio/ROUGH_BOXY_FRONT__a3520722.png',
+    image: '/assets/shirts/rough_boxy_front_v2.webp',
     price: 'PKR 4,999',
     fabric: 'Crisp textured European poplin with original branded labels, wide camp collar, and relaxed boxy tailoring',
   },
   {
     id: 'BH-S04',
-    backImage: '/assets/aistudio/MAROON_BOXY_BACK__47a2506e.png',
+    backImage: '/assets/shirts/maroon_boxy_back_v2.webp',
     name: 'Maroon BOXY',
+    subtitle: 'Rough Cuban collar',
     category: 'Shirts',
     color: 'Maroon',
     colorHex: '#5a3330',
     colorGroup: 'shirts',
-    image: '/assets/aistudio/MAROON_BOXY_FRONT__dce5cb1c.png',
+    image: '/assets/shirts/maroon_boxy_front_v2.webp',
     price: 'PKR 4,999',
     fabric: 'Rich maroon garment-washed poplin with unstructured camp collar, clean tonal stitching, and breathable boxy fit',
   },
   {
     id: 'BH-S03',
-    backImage: '/assets/aistudio/ESPRESSO_BOXYFRONT_.png_0d972f00.png',
+    backImage: '/assets/shirts/espresso_boxy_back_v2.webp',
     name: 'Espresso BOXY',
+    subtitle: 'Rough Cuban collar',
     category: 'Shirts',
     color: 'Espresso',
     colorHex: '#3c2e28',
     colorGroup: 'shirts',
-    image: '/assets/aistudio/ESPRESSO_BOXY_BACK__44ecc503.png',
+    image: '/assets/shirts/espresso_boxy_front_v2.webp',
     price: 'PKR 4,999',
     fabric: 'Ultra-smooth washed mulberry silk blend with fluid drape, tonal buttons, and architectural boxy camp collar',
   },
   {
     id: 'BH-S02',
-    backImage: '/assets/aistudio/IVORY_BOXY_BACK_.png_ad8d8614.png',
+    backImage: '/assets/shirts/cream_boxy_back_v2.webp',
     name: 'Cream BOXY',
+    subtitle: 'Rough Cuban collar',
     category: 'Shirts',
     color: 'Cream',
     colorHex: '#dacfc2',
     colorGroup: 'shirts',
-    image: '/assets/aistudio/IVORY_BOXY_front_png_8c2431ce',
+    image: '/assets/shirts/cream_boxy_front_v2.webp',
     price: 'PKR 4,999',
     fabric: 'Premium textured slub cotton in warm cream with open cuban collar, dropped shoulder drape, and boxy tailoring',
   },
   {
     id: 'BH-S01',
-    backImage: '/assets/aistudio/FOAM_BOXY_BACK__8356e984.png',
+    backImage: '/assets/shirts/foam_boxy_back_v2.webp',
     name: 'Foam BOXY',
+    subtitle: 'Rough Cuban collar',
     category: 'Shirts',
     color: 'Foam White',
     colorHex: '#e8e6e4',
     colorGroup: 'shirts',
-    image: '/assets/aistudio/FOAM_BOXY_FRONT__348b6797.png',
+    image: '/assets/shirts/foam_boxy_front_v2.webp',
     price: 'PKR 4,999',
     fabric: '100% lightweight European poplin cotton with relaxed camp collar, mother-of-pearl buttons, and structured boxy hem',
   },
@@ -416,6 +491,15 @@ export const SHIRT_PRODUCTS = PRODUCTS.filter((p) => p.category === 'Shirts');
 
 export function getColorVariants(product: Product): Product[] {
   return PRODUCTS.filter((p) => p.colorGroup === product.colorGroup);
+}
+
+const SUBTITLE_BY_PRODUCT_ID = new Map<string, string>(
+  RAW_PRODUCTS.filter((p) => p.subtitle).map((p) => [p.id, p.subtitle as string])
+);
+
+export function getProductSubtitle(productId?: string | null): string | undefined {
+  if (!productId) return undefined;
+  return SUBTITLE_BY_PRODUCT_ID.get(productId);
 }
 
 export interface ShirtCardFrame {

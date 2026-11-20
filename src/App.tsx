@@ -64,15 +64,47 @@ function MainRouter() {
 
   return (
     <Suspense fallback={null}>
-      {isMobile ? <MobileExperience /> : <DesktopShowroomExperience />}
+      {isMobile ? (
+        <ErrorBoundary sectionName="Mobile Showroom">
+          <MobileExperience />
+        </ErrorBoundary>
+      ) : (
+        <ErrorBoundary sectionName="Desktop Showroom">
+          <DesktopShowroomExperience />
+        </ErrorBoundary>
+      )}
 
       {/* On-demand Cart & Checkout Overlay Chunks */}
-      {!isMobile && recentlyAddedItem && <AddToCartModal />}
-      {!isMobile && isBagOpen && <ShoppingBagDrawer />}
-      {isMemberModalOpen && <MemberAuthModal />}
-      {isWishlistOpen && <WishlistDrawer />}
-      {isCheckoutOpen && <CheckoutView />}
-      {confirmedOrder && <OrderConfirmationView />}
+      {!isMobile && recentlyAddedItem && (
+        <ErrorBoundary compact sectionName="Added to Bag">
+          <AddToCartModal />
+        </ErrorBoundary>
+      )}
+      {!isMobile && isBagOpen && (
+        <ErrorBoundary compact sectionName="Shopping Bag">
+          <ShoppingBagDrawer />
+        </ErrorBoundary>
+      )}
+      {isMemberModalOpen && (
+        <ErrorBoundary compact sectionName="Member Pass">
+          <MemberAuthModal />
+        </ErrorBoundary>
+      )}
+      {isWishlistOpen && (
+        <ErrorBoundary compact sectionName="Wishlist">
+          <WishlistDrawer />
+        </ErrorBoundary>
+      )}
+      {isCheckoutOpen && (
+        <ErrorBoundary sectionName="Checkout">
+          <CheckoutView />
+        </ErrorBoundary>
+      )}
+      {confirmedOrder && (
+        <ErrorBoundary sectionName="Order Confirmation">
+          <OrderConfirmationView />
+        </ErrorBoundary>
+      )}
 
       {wishlistNotice && (
         <div

@@ -2,7 +2,7 @@
   "entities": {
     "UserPrivateProfile": {
       "title": "UserPrivateProfile",
-      "description": "Authenticated customer membership profile including PII (email, phone) and first-order BH-DETECTED promo state.",
+      "description": "Authenticated customer membership profile including PII (email, E.164 phone) and first-order BH-DETECTED promo state.",
       "type": "object",
       "properties": {
         "uid": {
@@ -20,7 +20,14 @@
         "phone": {
           "type": "string",
           "maxLength": 32,
-          "description": "Member Pakistani mobile phone number."
+          "pattern": "^\\+[1-9][0-9]{7,14}$",
+          "description": "Member E.164 mobile phone number (e.g. +923001234567)."
+        },
+        "phoneKey": {
+          "type": "string",
+          "maxLength": 32,
+          "pattern": "^p_[0-9]{8,15}$",
+          "description": "Canonical phone registry document key (p_<digits>) enforcing one account per phone number."
         },
         "displayName": {
           "type": "string",
@@ -56,11 +63,34 @@
         "uid",
         "email",
         "phone",
+        "phoneKey",
         "promoCode",
         "firstOrderDiscountUsed",
         "orderCount",
         "createdAt",
         "updatedAt"
+      ]
+    },
+    "PhoneRegistryEntry": {
+      "title": "PhoneRegistryEntry",
+      "description": "Zero-PII uniqueness lock mapping a canonical E.164 phone key to a single owning Firebase Auth UID.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owning Firebase Auth UID."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when phone lock was claimed."
+        }
+      },
+      "required": [
+        "uid",
+        "createdAt"
       ]
     },
     "WishlistItem": {
@@ -121,6 +151,10 @@
     "/users/{userId}/private/{docId}": {
       "schema": { "$ref": "#/entities/UserPrivateProfile" },
       "description": "Isolated private PII and membership state document (docId: info) owned by userId."
+    },
+    "/phoneRegistry/{phoneKey}": {
+      "schema": { "$ref": "#/entities/PhoneRegistryEntry" },
+      "description": "Atomic unique index enforcing strictly one account per normalized E.164 phone number."
     },
     "/users/{userId}/wishlist/{productId}": {
       "schema": { "$ref": "#/entities/WishlistItem" },

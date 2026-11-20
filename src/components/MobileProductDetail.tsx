@@ -1,10 +1,11 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Product, getColorVariants, getShirtDetailImageClass } from '../data/products';
 import { useCart } from '../context/CartContext';
 import { useMember } from '../context/MemberContext';
 import { CategoryId } from './MobileCategorySection';
 import { ColorSwatchRail } from './ColorSwatchRail';
-import { preloadProductDetailImages } from '../utils/preloadImages';
+import { preloadNextGalleryItem } from '../utils/preloadImages';
+import { SmartImage } from './SmartImage';
 
 const SizeGuideModal = lazy(() =>
   import('./SizeGuideModal').then((m) => ({ default: m.SizeGuideModal }))
@@ -46,6 +47,15 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
   const [addedSuccess, setAddedSuccess] = useState(false);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const savedInWishlist = isInWishlist(product.id);
+  const addedSuccessTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (addedSuccessTimerRef.current !== null) {
+        window.clearTimeout(addedSuccessTimerRef.current);
+      }
+    };
+  }, []);
 
   const colorVariants = React.useMemo(() => getColorVariants(product), [product]);
 
@@ -70,9 +80,8 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
     return list;
   }, [product]);
 
-  // Clamp gallery index, reset feedback, and immediately pre-decode all angles & variants
+  // Clamp gallery index and reset state when switching products
   useEffect(() => {
-    preloadProductDetailImages(product);
     if (product.category === 'Trousers' || product.category === 'Shirts') {
       void import('./SizeGuideModal');
     }
@@ -84,6 +93,11 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
     setAddedSuccess(false);
     setIsSizeGuideOpen(false);
   }, [product, galleryImages.length]);
+
+  // Smart preloading: only warm the immediate next slide when on fast connections
+  useEffect(() => {
+    preloadNextGalleryItem(galleryImages, activeImageIndex);
+  }, [galleryImages, activeImageIndex]);
 
   const currentImage = galleryImages[activeImageIndex]?.src || product.image;
 
@@ -105,7 +119,11 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
 
     if (success) {
       setAddedSuccess(true);
-      setTimeout(() => {
+      if (addedSuccessTimerRef.current !== null) {
+        window.clearTimeout(addedSuccessTimerRef.current);
+      }
+      addedSuccessTimerRef.current = window.setTimeout(() => {
+        addedSuccessTimerRef.current = null;
         setAddedSuccess(false);
       }, 2500);
     }
@@ -143,14 +161,16 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
       {/* 2. Centered Garment Display + Column of Color Dots Beside It */}
       <div className="relative w-full flex flex-col items-center justify-center">
         <div className="relative w-full h-[52vh] sm:h-[58vh] min-h-[340px] max-h-[540px] flex items-center justify-center pl-4 pr-12">
-          <img
+          <SmartImage
             src={currentImage}
             alt={`${product.name} ${galleryImages[activeImageIndex]?.label || 'garment view'}`}
             className={`${
               activeImageIndex <= 1
                 ? getShirtDetailImageClass(product.id, activeImageIndex === 1, 'mobile')
                 : 'w-full h-full'
-            } object-contain object-center select-none transition-opacity duration-150`}
+            } object-contain object-center select-none`}
+            sizes="(max-width: 640px) 84vw, 480px"
+            skeletonClassName="inset-6 rounded-2xl"
             loading="eager"
             decoding="async"
             fetchPriority="high"
@@ -256,11 +276,15 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
                 }`}
                 aria-label={`View ${img.label}`}
               >
-                <img
+                <SmartImage
                   src={img.src}
                   alt={img.label}
                   className="w-full h-full object-contain"
+                  sizes="56px"
+                  skeletonClassName="inset-1 rounded-lg"
+                  loading="lazy"
                   decoding="async"
+                  fetchPriority="low"
                 />
               </button>
             );
@@ -270,10 +294,15 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
 
       {/* 4. Translucent Frosted Details Card in Normal Flow */}
       <div className="w-full rounded-2xl bg-white/[0.12] border border-white/20 backdrop-blur-xl p-3.5 sm:p-4 flex flex-col items-center text-center mt-2 shadow-[0_8px_32px_rgba(4,24,43,0.3)]">
-        {/* Product Name + Color */}
+        {/* Product Name + Subtitle + Color */}
         <h2 className="font-display text-base sm:text-lg font-bold tracking-tight text-white">
           {product.name}
         </h2>
+        {product.subtitle && (
+          <span className="text-[11px] font-sans text-white/80 tracking-tight mt-0.5">
+            {product.subtitle}
+          </span>
+        )}
         <span className="text-[11px] font-sans text-white/80 mt-0.5">
           {product.color}
         </span>

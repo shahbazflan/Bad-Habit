@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { withAssetVersion } from '../data/products';
+import { SmartImage } from './SmartImage';
 
 interface SizeGuideModalProps {
   isOpen: boolean;
@@ -67,11 +68,13 @@ export const SizeGuideModal: React.FC<SizeGuideModalProps> = ({
         </div>
 
         {/* Size Guide Graphic */}
-        <div className="w-full rounded-xl overflow-hidden bg-slate-950/30 border border-white/15">
-          <img
+        <div className="relative w-full min-h-[260px] rounded-xl overflow-hidden bg-slate-950/30 border border-white/15 flex items-center justify-center">
+          <SmartImage
             src={asset.src}
             alt={asset.title}
             className="w-full max-h-[76vh] object-contain mx-auto select-none"
+            sizes="(max-width: 480px) 92vw, 440px"
+            skeletonClassName="inset-3 rounded-xl"
             loading="eager"
             decoding="async"
           />

@@ -3,6 +3,7 @@ import { Product, getGarmentCardFrame } from '../data/products';
 import { CategoryId } from './MobileCategorySection';
 import { preloadProductDetailImages } from '../utils/preloadImages';
 import { useMember } from '../context/MemberContext';
+import { SmartImage } from './SmartImage';
 
 interface MobileProductGridProps {
   categoryId: CategoryId;
@@ -111,14 +112,16 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
         <div
           className={`w-full h-72 sm:h-76 flex items-center justify-center relative overflow-hidden ${frame.mobileGridPaddingClass}`}
         >
-          <img
+          <SmartImage
             src={product.image}
             alt={product.name}
             className={`${frame.mobileGridImgClass} h-full object-contain object-center select-none transition-transform duration-150 group-hover:scale-[1.02] ${
               product.soldOut ? 'opacity-85' : ''
             }`}
-            loading={index < 4 ? 'eager' : 'lazy'}
-            fetchPriority={index < 2 ? 'high' : 'auto'}
+            sizes="(max-width: 639px) 88vw, 44vw"
+            skeletonClassName="inset-3 rounded-2xl"
+            loading={index < 2 ? 'eager' : 'lazy'}
+            fetchPriority={index < 2 ? 'high' : 'low'}
             decoding="async"
           />
         </div>
@@ -128,6 +131,11 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
           <h3 className="font-display text-sm sm:text-[15px] font-semibold text-white tracking-tight leading-snug line-clamp-2 flex items-center justify-center drop-shadow-[0_1px_4px_rgba(4,24,43,0.45)]">
             {product.name}
           </h3>
+          {product.subtitle && (
+            <p className="text-[11px] font-sans text-white/75 tracking-tight leading-tight mt-0.5 truncate">
+              {product.subtitle}
+            </p>
+          )}
 
           {/* Price Capsule & Sold Out State */}
           <div className="mt-1.5 flex items-center justify-center gap-2 flex-wrap">

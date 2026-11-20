@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useMember } from '../context/MemberContext';
+import { isValidPhoneNumber, normalizePhoneToE164 } from '../utils/phone';
 
 export const MemberAuthModal: React.FC = () => {
   const {
@@ -13,6 +14,7 @@ export const MemberAuthModal: React.FC = () => {
     pendingWishlistProduct,
     clearPendingWishlistProduct,
     loginOrRegister,
+    updateMemberProfile,
     logoutMember,
   } = useMember();
 
@@ -22,9 +24,43 @@ export const MemberAuthModal: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
 
+  // Signed-in contact edit state (enforces 1-phone-per-account on profile updates)
+  const [isEditingContact, setIsEditingContact] = useState(false);
+  const [editPhone, setEditPhone] = useState('');
+  const [editName, setEditName] = useState('');
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editSuccess, setEditSuccess] = useState<string | null>(null);
+
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) {
+        clearTimeout(copyTimerRef.current);
+        copyTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setIsMemberModalOpen(false);
+    setIsEditingContact(false);
+    setEditError(null);
+    setEditSuccess(null);
+    clearJustRegistered();
+    clearPendingWishlistProduct();
+  }, [setIsMemberModalOpen, clearJustRegistered, clearPendingWishlistProduct]);
+
   useEffect(() => {
     if (!isMemberModalOpen) return;
     setErrorMsg(null);
+    setEditError(null);
+    setEditSuccess(null);
+    setIsEditingContact(false);
+    if (member) {
+      setEditPhone(member.phone || '');
+      setEditName(member.displayName || '');
+    }
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         handleClose();
@@ -32,35 +68,71 @@ export const MemberAuthModal: React.FC = () => {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMemberModalOpen]);
+  }, [isMemberModalOpen, member, handleClose]);
 
   if (!isMemberModalOpen) return null;
-
-  const handleClose = () => {
-    setIsMemberModalOpen(false);
-    clearJustRegistered();
-    clearPendingWishlistProduct();
-  };
 
   const handleCopyCode = async () => {
     try {
       await navigator.clipboard.writeText('BH-DETECTED');
-      setCopiedCode(true);
-      setTimeout(() => setCopiedCode(false), 2000);
     } catch {
-      setCopiedCode(true);
-      setTimeout(() => setCopiedCode(false), 2000);
+      // Clipboard API fallback ignored cleanly
     }
+    setCopiedCode(true);
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    copyTimerRef.current = setTimeout(() => {
+      setCopiedCode(false);
+      copyTimerRef.current = null;
+    }, 2000);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
-    const result = await loginOrRegister({ email, phone, displayName });
+    const cleanedEmail = email.trim().toLowerCase();
+    const e164Phone = normalizePhoneToE164(phone);
+
+    if (!cleanedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanedEmail)) {
+      setErrorMsg('Please enter a valid email address.');
+      return;
+    }
+    if (!isValidPhoneNumber(e164Phone)) {
+      setErrorMsg('Please enter a valid mobile number (e.g. 0300 1234567 or +92 300 1234567).');
+      return;
+    }
+
+    const result = await loginOrRegister({
+      email: cleanedEmail,
+      phone: e164Phone,
+      displayName: displayName.trim(),
+    });
     if (!result.ok) {
       setErrorMsg(result.error || 'Could not complete sign in.');
     }
+  };
+
+  const handleSaveProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditError(null);
+    setEditSuccess(null);
+
+    const e164Phone = normalizePhoneToE164(editPhone);
+    if (!isValidPhoneNumber(e164Phone)) {
+      setEditError('Please enter a valid mobile number (e.g. 0300 1234567 or +92 300 1234567).');
+      return;
+    }
+
+    const result = await updateMemberProfile({
+      phone: e164Phone,
+      displayName: editName.trim(),
+    });
+    if (!result.ok) {
+      setEditError(result.error || 'Could not update profile.');
+      return;
+    }
+
+    setEditSuccess('Contact details updated.');
+    setIsEditingContact(false);
   };
 
   const isFirstOrderAvailable = member ? !member.firstOrderDiscountUsed && member.orderCount === 0 : true;
@@ -146,20 +218,97 @@ export const MemberAuthModal: React.FC = () => {
               </div>
 
               {/* Member Identity Card */}
-              <div className="rounded-2xl bg-white/[0.10] border border-white/20 p-4 space-y-2 text-xs font-display">
+              <div className="rounded-2xl bg-white/[0.10] border border-white/20 p-4 space-y-2.5 text-xs font-display">
                 <div className="flex items-center justify-between text-white/80">
                   <span className="uppercase tracking-wider text-[10px] text-white/60">Email</span>
-                  <span className="font-semibold text-white">{member.email}</span>
+                  <span className="font-semibold text-white truncate ml-2">{member.email}</span>
                 </div>
-                <div className="flex items-center justify-between text-white/80">
-                  <span className="uppercase tracking-wider text-[10px] text-white/60">Phone</span>
-                  <span className="font-semibold text-white">{member.phone}</span>
-                </div>
-                {member.displayName && (
-                  <div className="flex items-center justify-between text-white/80">
-                    <span className="uppercase tracking-wider text-[10px] text-white/60">Name</span>
-                    <span className="font-semibold text-white">{member.displayName}</span>
-                  </div>
+
+                {!isEditingContact ? (
+                  <>
+                    <div className="flex items-center justify-between text-white/80">
+                      <span className="uppercase tracking-wider text-[10px] text-white/60">Phone</span>
+                      <span className="font-semibold text-white">{member.phone}</span>
+                    </div>
+                    {member.displayName && (
+                      <div className="flex items-center justify-between text-white/80">
+                        <span className="uppercase tracking-wider text-[10px] text-white/60">Name</span>
+                        <span className="font-semibold text-white">{member.displayName}</span>
+                      </div>
+                    )}
+                    {editSuccess && (
+                      <p className="text-[11px] text-emerald-200 font-display pt-1">{editSuccess}</p>
+                    )}
+                    <div className="pt-1 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditPhone(member.phone || '');
+                          setEditName(member.displayName || '');
+                          setEditError(null);
+                          setEditSuccess(null);
+                          setIsEditingContact(true);
+                        }}
+                        className="text-[11px] font-mono uppercase tracking-wider text-cyan-200 hover:text-white underline cursor-pointer"
+                      >
+                        Update Phone / Name
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <form onSubmit={handleSaveProfileUpdate} className="space-y-2.5 pt-1 border-t border-white/15">
+                    {editError && (
+                      <div className="p-2.5 rounded-xl bg-red-950/75 border border-red-400/45 text-red-200 text-[11px] font-display">
+                        {editError}
+                      </div>
+                    )}
+                    <div>
+                      <label htmlFor="member-edit-phone" className="block text-[10px] font-display uppercase tracking-wider text-white/75 mb-1">
+                        Phone Number
+                      </label>
+                      <input
+                        id="member-edit-phone"
+                        type="tel"
+                        required
+                        value={editPhone}
+                        onChange={(e) => setEditPhone(e.target.value)}
+                        placeholder="+923001234567"
+                        className="w-full px-3.5 py-2 rounded-xl bg-black/35 focus:bg-black/50 text-white placeholder:text-white/50 border border-white/25 focus:border-white/65 focus:outline-none text-xs font-display"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="member-edit-name" className="block text-[10px] font-display uppercase tracking-wider text-white/75 mb-1">
+                        Full Name
+                      </label>
+                      <input
+                        id="member-edit-name"
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        placeholder="Optional display name"
+                        className="w-full px-3.5 py-2 rounded-xl bg-black/35 focus:bg-black/50 text-white placeholder:text-white/50 border border-white/25 focus:border-white/65 focus:outline-none text-xs font-display"
+                      />
+                    </div>
+                    <div className="flex items-center justify-end gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditingContact(false);
+                          setEditError(null);
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/85 text-[11px] font-mono uppercase cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="px-3.5 py-1.5 rounded-lg bg-white text-slate-900 font-display text-[11px] font-bold uppercase tracking-wider hover:bg-white/90 cursor-pointer disabled:opacity-50"
+                      >
+                        {isLoading ? 'Saving…' : 'Save'}
+                      </button>
+                    </div>
+                  </form>
                 )}
               </div>
 

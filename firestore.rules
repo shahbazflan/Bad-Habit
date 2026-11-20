@@ -12,6 +12,10 @@ service cloud.firestore {
       return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
+    function isValidPhoneKey(phoneKey) {
+      return phoneKey is string && phoneKey.size() >= 10 && phoneKey.size() <= 32 && phoneKey.matches('^p_[0-9]{8,15}$');
+    }
+
     function incoming() {
       return request.resource.data;
     }
@@ -37,6 +41,7 @@ service cloud.firestore {
           'uid',
           'email',
           'phone',
+          'phoneKey',
           'promoCode',
           'firstOrderDiscountUsed',
           'orderCount',
@@ -47,6 +52,7 @@ service cloud.firestore {
           'uid',
           'email',
           'phone',
+          'phoneKey',
           'displayName',
           'promoCode',
           'firstOrderDiscountUsed',
@@ -62,8 +68,11 @@ service cloud.firestore {
         && data.email.size() >= 3
         && data.email.size() <= 200
         && data.phone is string
-        && data.phone.size() >= 7
+        && data.phone.size() >= 9
         && data.phone.size() <= 32
+        && data.phone.matches('^\\+[1-9][0-9]{7,14}$')
+        && data.phoneKey is string
+        && isValidPhoneKey(data.phoneKey)
         && (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100))
         && data.promoCode == 'BH-DETECTED'
         && data.firstOrderDiscountUsed is bool
@@ -72,6 +81,15 @@ service cloud.firestore {
         && data.orderCount <= 10000
         && data.createdAt is timestamp
         && data.updatedAt is timestamp;
+    }
+
+    function isValidPhoneRegistry(data) {
+      return data.keys().hasAll(['uid', 'createdAt'])
+        && data.keys().hasOnly(['uid', 'createdAt'])
+        && data.uid is string
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && data.createdAt is timestamp;
     }
 
     function isValidWishlistItem(data, userId, productId) {
@@ -115,6 +133,22 @@ service cloud.firestore {
         && data.addedAt is timestamp;
     }
 
+    // Atomic one-account-per-phone uniqueness registry (zero PII stored here)
+    match /phoneRegistry/{phoneKey} {
+      allow get: if isValidPhoneKey(phoneKey) && isSignedIn();
+      allow list: if false;
+      allow create: if isValidPhoneKey(phoneKey)
+        && isVerifiedUser()
+        && isValidPhoneRegistry(incoming())
+        && incoming().createdAt == request.time
+        && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)/private/info).data.phoneKey == phoneKey;
+      allow update: if false;
+      allow delete: if isValidPhoneKey(phoneKey)
+        && isVerifiedUser()
+        && existing().uid == request.auth.uid
+        && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)/private/info).data.phoneKey != phoneKey;
+    }
+
     // Member private PII profile (isolated document under users/{userId}/private/info)
     match /users/{userId}/private/{docId} {
       allow get: if isValidId(userId) && isValidId(docId) && docId == 'info' && isOwner(userId);
@@ -128,7 +162,8 @@ service cloud.firestore {
         && incoming().firstOrderDiscountUsed == false
         && incoming().orderCount == 0
         && incoming().createdAt == request.time
-        && incoming().updatedAt == request.time;
+        && incoming().updatedAt == request.time
+        && getAfter(/databases/$(database)/documents/phoneRegistry/$(incoming().phoneKey)).data.uid == request.auth.uid;
       allow update: if isValidId(userId)
         && isValidId(docId)
         && docId == 'info'
@@ -140,10 +175,11 @@ service cloud.firestore {
         && incoming().createdAt == existing().createdAt
         && incoming().updatedAt == request.time
         && (
-          // Action: Update contact details
-          (incoming().diff(existing()).affectedKeys().hasOnly(['phone', 'displayName', 'updatedAt'])
+          // Action: Update contact details (must hold atomic lock on phoneKey)
+          (incoming().diff(existing()).affectedKeys().hasOnly(['phone', 'phoneKey', 'displayName', 'updatedAt'])
             && incoming().firstOrderDiscountUsed == existing().firstOrderDiscountUsed
-            && incoming().orderCount == existing().orderCount)
+            && incoming().orderCount == existing().orderCount
+            && getAfter(/databases/$(database)/documents/phoneRegistry/$(incoming().phoneKey)).data.uid == request.auth.uid)
           ||
           // Action: Record completed order (terminal lock prevents un-marking firstOrderDiscountUsed)
           (incoming().diff(existing()).affectedKeys().hasOnly(['firstOrderDiscountUsed', 'orderCount', 'updatedAt'])

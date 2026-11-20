@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useMember } from '../context/MemberContext';
 import { useCart } from '../context/CartContext';
-import { PRODUCTS } from '../data/products';
+import { PRODUCTS, getProductSubtitle } from '../data/products';
+import { SmartImage } from './SmartImage';
 
 const SIZES = ['S', 'M', 'L', 'XL'] as const;
 
@@ -19,6 +20,15 @@ export const WishlistDrawer: React.FC = () => {
 
   const [sizeById, setSizeById] = useState<Record<string, 'S' | 'M' | 'L' | 'XL'>>({});
   const [addedId, setAddedId] = useState<string | null>(null);
+  const addedTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (addedTimerRef.current !== null) {
+        window.clearTimeout(addedTimerRef.current);
+      }
+    };
+  }, []);
 
   if (!isWishlistOpen) return null;
 
@@ -42,7 +52,13 @@ export const WishlistDrawer: React.FC = () => {
     });
     if (ok) {
       setAddedId(productId);
-      setTimeout(() => setAddedId(null), 1800);
+      if (addedTimerRef.current !== null) {
+        window.clearTimeout(addedTimerRef.current);
+      }
+      addedTimerRef.current = window.setTimeout(() => {
+        addedTimerRef.current = null;
+        setAddedId(null);
+      }, 1800);
     }
   };
 
@@ -138,11 +154,15 @@ export const WishlistDrawer: React.FC = () => {
                   key={item.productId}
                   className="rounded-2xl bg-white/[0.10] border border-white/20 p-3.5 flex gap-3.5 items-center shadow-sm"
                 >
-                  <div className="w-20 h-24 shrink-0 rounded-xl bg-white/[0.08] border border-white/15 p-1.5 flex items-center justify-center overflow-hidden">
-                    <img
+                  <div className="relative w-20 h-24 shrink-0 rounded-xl bg-white/[0.08] border border-white/15 p-1.5 flex items-center justify-center overflow-hidden">
+                    <SmartImage
                       src={catalogItem?.image || item.image}
                       alt={item.name}
                       className="w-full h-full object-contain"
+                      sizes="80px"
+                      skeletonClassName="inset-1 rounded-xl"
+                      loading="lazy"
+                      decoding="async"
                     />
                   </div>
 
@@ -155,6 +175,11 @@ export const WishlistDrawer: React.FC = () => {
                         <h4 className="font-display text-sm font-bold text-white truncate">
                           {item.name}
                         </h4>
+                        {(catalogItem?.subtitle || getProductSubtitle(item.productId)) && (
+                          <span className="text-[11px] font-sans text-white/75 block truncate">
+                            {catalogItem?.subtitle || getProductSubtitle(item.productId)}
+                          </span>
+                        )}
                         <span className="text-xs font-mono font-semibold text-white/90 block mt-0.5">
                           {isSoldOut ? `${item.price} · SOLD OUT` : item.price}
                         </span>
