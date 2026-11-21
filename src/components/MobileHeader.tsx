@@ -36,7 +36,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   return (
     <>
       <header
-        className={`${transparent ? 'sticky' : 'fixed'} top-0 left-0 right-0 z-40 w-full transition-colors duration-200 select-none ${
+        className={`${transparent ? 'relative' : 'fixed top-0 left-0 right-0'} z-40 w-full transition-colors duration-200 select-none ${
           transparent
             ? 'bg-gradient-to-b from-black/30 via-black/10 to-transparent'
             : 'bg-[#557c9e]/85 backdrop-blur-md border-b border-white/15'
@@ -77,14 +77,12 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
           <button
             type="button"
             onClick={() => setIsMemberModalOpen(true)}
-            className={`h-8 px-2.5 rounded-full border backdrop-blur-md text-[10px] font-display font-bold tracking-wide flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer ${
-              member
-                ? 'bg-white/25 border-white/45 text-white'
-                : 'bg-white/15 border-white/35 text-white'
+            className={`glass-capsule h-8 px-2.5 rounded-full text-[11px] font-grotesk font-bold tracking-wide flex items-center gap-1 transition-all active:scale-95 cursor-pointer text-white ${
+              member ? 'border-white' : 'border-white/85'
             }`}
             aria-label={member ? 'Member pass' : 'Member login'}
           >
-            <svg className="w-3.5 h-3.5 text-cyan-200 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <svg className="w-3 h-3 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
             </svg>
             <span>Member</span>
@@ -110,7 +108,9 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
               />
             </svg>
             {wishlistCount > 0 && (
-              <span className="absolute top-1.5 right-1 min-w-[14px] h-[14px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-mono font-bold flex items-center justify-center shadow-sm">
+              <span
+                className="absolute top-1 right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-rose-500 text-white text-[11px] font-grotesk font-bold flex items-center justify-center shadow-sm"
+              >
                 {wishlistCount}
               </span>
             )}
@@ -136,7 +136,9 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
               />
             </svg>
             {cartCount > 0 && (
-              <span className="absolute top-1.5 right-1 min-w-[15px] h-[15px] px-1 rounded-full bg-white text-black text-[9px] font-mono font-bold flex items-center justify-center shadow-sm">
+              <span
+                className="absolute top-1 right-0.5 min-w-[15px] h-[15px] px-1 rounded-full bg-sky-900/75 border border-white/55 text-white text-[10.5px] font-grotesk font-bold flex items-center justify-center shadow-sm"
+              >
                 {cartCount}
               </span>
             )}

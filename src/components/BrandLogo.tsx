@@ -32,9 +32,9 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
         BAD HABIT
       </span>
       <span
-        className={`font-display font-semibold uppercase text-white/85 leading-none drop-shadow-[0_1px_6px_rgba(4,24,43,0.35)] ${
+        className={`font-display font-semibold uppercase text-white/85 leading-none whitespace-nowrap drop-shadow-[0_1px_6px_rgba(4,24,43,0.35)] ${
           compact
-            ? 'text-[8px] sm:text-[9px] tracking-[0.22em] mt-1'
+            ? 'text-[7.5px] min-[390px]:text-[8px] sm:text-[9px] tracking-[0.14em] sm:tracking-[0.20em] mt-1'
             : 'text-[9px] sm:text-[10px] tracking-[0.26em] mt-1.5'
         }`}
       >

@@ -112,7 +112,7 @@ export const ShoppingBagDrawer: React.FC = () => {
             <span className="font-display text-lg font-black tracking-[0.08em] uppercase text-white">
               Shopping Bag
             </span>
-            <span className="text-xs font-mono text-white bg-white/20 border border-white/30 px-2.5 py-0.5 rounded-full">
+            <span className="glass-capsule text-[12.5px] font-grotesk font-bold text-white px-2 py-0.5">
               {items.reduce((s, it) => s + it.quantity, 0)} articles
             </span>
           </div>
@@ -154,7 +154,7 @@ export const ShoppingBagDrawer: React.FC = () => {
               <button
                 type="button"
                 onClick={handleContinueShopping}
-                className="selected-reveal-capsule px-6 py-2.5 text-xs font-semibold text-white tracking-wider"
+                className="selected-reveal-capsule px-5 py-2 text-[13px] font-grotesk font-semibold text-white tracking-wider cursor-pointer"
               >
                 Browse Collection
               </button>
@@ -217,22 +217,22 @@ export const ShoppingBagDrawer: React.FC = () => {
 
                     {/* Quantity controls & Line Total */}
                     <div className="flex items-center justify-between mt-3">
-                      <div className="flex items-center p-0.5 rounded-full bg-white/10 border border-white/15">
+                      <div className="glass-capsule flex items-center p-0.5 rounded-full font-grotesk">
                         <button
                           type="button"
                           onClick={() => updateQuantity(item.productId, item.size, item.quantity - 1)}
-                          className="w-7 h-7 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                          className="w-6 h-6 rounded-full flex items-center justify-center text-white hover:bg-white/15 transition-colors cursor-pointer font-grotesk text-[13.5px] font-bold"
                           aria-label="Decrease quantity"
                         >
                           -
                         </button>
-                        <span className="w-8 text-center text-xs font-mono font-bold text-white">
+                        <span className="w-7 text-center text-[13px] font-grotesk font-bold text-white">
                           {item.quantity}
                         </span>
                         <button
                           type="button"
                           onClick={() => updateQuantity(item.productId, item.size, item.quantity + 1)}
-                          className="w-7 h-7 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                          className="w-6 h-6 rounded-full flex items-center justify-center text-white hover:bg-white/15 transition-colors cursor-pointer font-grotesk text-[13.5px] font-bold"
                           aria-label="Increase quantity"
                         >
                           +
@@ -307,11 +307,11 @@ export const ShoppingBagDrawer: React.FC = () => {
                 type="button"
                 onClick={handleProceedToCheckout}
                 disabled={validating}
-                className="w-full py-4 px-6 rounded-full bg-white text-slate-900 font-display text-sm font-bold tracking-wider hover:bg-white/90 transition-all cursor-pointer shadow-[0_10px_30px_rgba(4,24,43,0.25)] active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2 uppercase"
+                className="selected-reveal-capsule w-full py-3.5 px-5 rounded-full text-white font-grotesk text-[15px] font-bold tracking-wider transition-all cursor-pointer active:scale-98 disabled:opacity-50 flex items-center justify-center gap-1.5 uppercase"
               >
                 <span>{validating ? 'Verifying bag…' : 'Checkout'}</span>
                 {!validating && (
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
                 )}

@@ -32,24 +32,26 @@ export const MobileHero: React.FC<MobileHeroProps> = ({
 }) => {
   return (
     <section
-      className="relative w-full h-[100svh] min-h-[580px] overflow-hidden select-none flex flex-col justify-between"
+      className="relative w-full h-[100svh] min-h-[580px] overflow-hidden select-none flex flex-col justify-end"
       aria-label="BAD HABIT Mobile Runway Hero"
     >
       {/* 1. LAYER: Authentic Keyblue Architectural Runway Background (matching Desktop) */}
-      <CleanPlatePicture
-        alt="BAD HABIT architectural runway"
-        className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none z-0"
-        sizes="100vw"
-        loading="eager"
-        decoding="async"
-        fetchPriority="high"
-      />
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <CleanPlatePicture
+          alt="BAD HABIT architectural runway"
+          className="w-full h-full object-cover object-center pointer-events-none"
+          sizes="100vw"
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
+        />
+      </div>
 
       {/* Subtle Keyblue ambient gradient overlay for depth */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#244b70]/18 via-transparent to-[#0e273f]/20 pointer-events-none z-[1]" />
 
-      {/* 2. LAYER: Header (Menu, Bag) */}
-      <div className="relative z-30 w-full">
+      {/* 2. LAYER: Top Header pinned strictly at top-0 (Menu, Logo, Member, Wishlist, Bag) */}
+      <div className="absolute top-0 left-0 right-0 z-30 w-full">
         <MobileHeader
           onOpenMenu={onOpenMenu}
           onOpenBag={onOpenBag}
@@ -173,11 +175,11 @@ export const MobileHero: React.FC<MobileHeroProps> = ({
         <button
           type="button"
           onClick={onExplore}
-          className="w-full sm:max-w-xs py-3.5 px-6 rounded-full bg-white/[0.18] hover:bg-white/[0.28] active:scale-[0.98] border border-white/50 backdrop-blur-md text-white font-medium text-sm sm:text-base tracking-tight flex items-center justify-center gap-2.5 shadow-[0_8px_24px_rgba(4,24,43,0.3)] transition-all cursor-pointer outline-none"
+          className="glass-capsule glass-capsule-hover w-full sm:max-w-[288px] py-3 px-5 rounded-full text-white font-grotesk font-semibold text-[15px] sm:text-[16.5px] tracking-tight flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(4,24,43,0.3)] active:scale-[0.98] transition-all cursor-pointer outline-none"
           aria-label="Explore collection — scroll to categories"
         >
           <span>Explore collection</span>
-          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
           </svg>
         </button>

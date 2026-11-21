@@ -48,7 +48,7 @@ export const AddToCartModal: React.FC = () => {
       aria-label="Item added to shopping bag"
     >
       {/* Compact Glass Modal Panel */}
-      <div className="relative w-full max-w-sm rounded-3xl p-6 glass-capsule bg-[#0c1e30]/85 border border-white/35 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.45)] text-white select-none">
+      <div className="relative w-full max-w-sm rounded-3xl p-6 bg-[#0c1e30]/90 border border-white/35 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.45)] text-white select-none">
         {/* Visible Close Button */}
         <button
           type="button"
@@ -109,7 +109,7 @@ export const AddToCartModal: React.FC = () => {
           <button
             type="button"
             onClick={handleCheckout}
-            className="selected-reveal-capsule w-full py-3 px-4 text-sm font-bold tracking-wide text-white transition-all cursor-pointer outline-none shadow-[0_6px_20px_rgba(7,27,45,0.3)] active:scale-98"
+            className="selected-reveal-capsule w-full py-2.5 px-3.5 text-[15px] font-grotesk font-bold tracking-wide text-white transition-all cursor-pointer outline-none shadow-[0_6px_20px_rgba(4,15,34,0.3)] active:scale-98"
           >
             Checkout
           </button>
@@ -118,7 +118,7 @@ export const AddToCartModal: React.FC = () => {
           <button
             type="button"
             onClick={handleViewBag}
-            className="w-full py-2.5 px-4 rounded-full text-xs font-mono font-medium tracking-wider text-white/90 bg-white/10 hover:bg-white/20 border border-white/20 transition-all cursor-pointer outline-none"
+            className="glass-capsule glass-capsule-hover w-full py-2 px-3.5 rounded-full text-[13px] font-grotesk font-semibold tracking-wider text-white transition-all cursor-pointer outline-none"
           >
             View shopping bag
           </button>

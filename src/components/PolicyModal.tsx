@@ -100,7 +100,7 @@ export const PolicyModal: React.FC<PolicyModalProps> = ({ type, onClose }) => {
           <button
             type="button"
             onClick={onClose}
-            className="selected-reveal-capsule px-6 py-2.5 text-xs font-semibold text-white tracking-wider"
+            className="selected-reveal-capsule font-grotesk px-5 py-2 text-[13px] font-semibold text-white tracking-wider cursor-pointer"
           >
             I understand
           </button>

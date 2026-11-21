@@ -429,14 +429,14 @@ export function ShowroomFloor({
           </div>
 
           {/* Top-Right Desktop Actions: Member, Wishlist, Bag (Runway L1/L2 Removed) */}
-          <div className="hidden md:flex pointer-events-auto items-center gap-2.5">
+          <div className="hidden md:flex pointer-events-auto items-center gap-2">
             <button
               type="button"
               onClick={() => setIsMemberModalOpen(true)}
-              className="glass-capsule glass-capsule-hover px-4 py-2 rounded-full flex items-center gap-2 text-xs font-display font-semibold text-white cursor-pointer transition-all shadow-sm"
+              className="glass-capsule glass-capsule-hover px-3.5 py-1.5 rounded-full flex items-center gap-1.5 text-[13px] font-grotesk font-semibold text-white cursor-pointer transition-all shadow-sm"
               aria-label={member ? 'View member pass' : 'Become a member for 10% off first order'}
             >
-              <svg className="w-3.5 h-3.5 text-cyan-200 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <svg className="w-3.5 h-3.5 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
               </svg>
               <span>
@@ -447,7 +447,7 @@ export function ShowroomFloor({
             <button
               type="button"
               onClick={() => setIsWishlistOpen(true)}
-              className="glass-capsule glass-capsule-hover px-3.5 py-2 rounded-full flex items-center gap-1.5 text-xs font-mono text-white cursor-pointer transition-all shadow-sm"
+              className="glass-capsule glass-capsule-hover px-3.5 py-1.5 rounded-full flex items-center gap-1.5 text-[13px] font-grotesk font-semibold text-white cursor-pointer transition-all shadow-sm"
               aria-label={`Wishlist (${wishlistCount} items)`}
             >
               <svg
@@ -466,10 +466,10 @@ export function ShowroomFloor({
               <button
                 type="button"
                 onClick={() => setIsBagOpen(true)}
-                className="glass-capsule px-3.5 py-2 rounded-full flex items-center gap-2 text-xs font-mono text-cyan-300 border border-cyan-400/30 animate-in fade-in cursor-pointer hover:bg-white/20 transition-all shadow-sm"
+                className="glass-capsule glass-capsule-hover px-3.5 py-1.5 rounded-full flex items-center gap-1.5 text-[13px] font-grotesk font-semibold text-white animate-in fade-in cursor-pointer transition-all shadow-sm"
                 aria-label={`Open shopping bag (${cartCount} items)`}
               >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
                 <span>BAG ({cartCount})</span>
@@ -478,14 +478,14 @@ export function ShowroomFloor({
           </div>
 
           {/* Right: Mobile Controls (Member, Wishlist, Bag — L1/L2 Removed) */}
-          <div className="flex md:hidden pointer-events-auto items-center gap-2">
+          <div className="flex md:hidden pointer-events-auto items-center gap-1.5">
             <button
               type="button"
               onClick={() => setIsMemberModalOpen(true)}
-              className="glass-capsule px-2.5 py-1 rounded-full flex items-center gap-1.5 text-[11px] font-display font-semibold text-white cursor-pointer shadow-sm"
+              className="glass-capsule px-2.5 py-1 rounded-full flex items-center gap-1 text-[12px] font-grotesk font-semibold text-white cursor-pointer shadow-sm"
               aria-label={member ? 'Member pass' : 'Member login'}
             >
-              <svg className="w-3.5 h-3.5 text-cyan-200 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <svg className="w-3 h-3 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
               </svg>
               <span>Member</span>
@@ -494,7 +494,7 @@ export function ShowroomFloor({
             <button
               type="button"
               onClick={() => setIsWishlistOpen(true)}
-              className="glass-capsule px-2.5 py-1 rounded-full flex items-center gap-1 text-[11px] font-mono text-white cursor-pointer shadow-sm"
+              className="glass-capsule px-2.5 py-1 rounded-full flex items-center gap-1 text-[12px] font-grotesk font-semibold text-white cursor-pointer shadow-sm"
               aria-label="Wishlist"
             >
               <svg
@@ -513,10 +513,10 @@ export function ShowroomFloor({
               <button
                 type="button"
                 onClick={() => setIsBagOpen(true)}
-                className="glass-capsule px-2.5 py-1 rounded-full flex items-center gap-1.5 text-[11px] font-mono text-cyan-300 border border-cyan-400/30 cursor-pointer shadow-sm"
+                className="glass-capsule px-2.5 py-1 rounded-full flex items-center gap-1 text-[12px] font-grotesk font-semibold text-white cursor-pointer shadow-sm"
                 aria-label={`Open shopping bag (${cartCount} items)`}
               >
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
                 <span>({cartCount})</span>
@@ -530,18 +530,18 @@ export function ShowroomFloor({
           <div className="hidden md:flex w-full justify-start px-5 sm:px-8 lg:px-10 mt-3 pointer-events-none">
             <nav
               aria-label="Showroom categories"
-              className="pointer-events-auto glass-capsule p-1.5 rounded-full flex items-center gap-1.5 select-none shadow-[0_12px_34px_rgba(4,24,43,0.28)] border border-white/35 bg-slate-950/25 backdrop-blur-xl"
+              className="pointer-events-auto glass-capsule p-1 rounded-full flex items-center gap-1 select-none shadow-[0_12px_34px_rgba(4,24,43,0.22)] backdrop-blur-xl"
             >
               <button
                 type="button"
                 onClick={() => handleSelectCategory('categories')}
-                className={`px-4 lg:px-5 py-2 lg:py-2.5 rounded-full text-[13px] lg:text-[15px] font-semibold tracking-tight transition-all cursor-pointer flex items-center gap-2 ${
+                className={`px-3 lg:px-4 py-1.5 lg:py-2 rounded-full font-grotesk text-[13px] lg:text-[15px] font-semibold tracking-tight whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeSection === 'categories'
-                    ? 'bg-white text-slate-900 font-bold shadow-md'
-                    : 'text-white/90 hover:text-white hover:bg-white/15'
+                    ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white font-bold shadow-sm'
+                    : 'text-white/80 hover:text-white hover:bg-white/15'
                 }`}
               >
-                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.1">
+                <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.1">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
                 </svg>
                 <span>Categories</span>
@@ -550,15 +550,15 @@ export function ShowroomFloor({
               <button
                 type="button"
                 onClick={() => handleSelectCategory('pair')}
-                className={`px-4 lg:px-5 py-2 lg:py-2.5 rounded-full text-[13px] lg:text-[15px] font-semibold tracking-tight transition-all cursor-pointer flex items-center gap-2 ${
+                className={`px-3 lg:px-4 py-1.5 lg:py-2 rounded-full font-grotesk text-[13px] lg:text-[15px] font-semibold tracking-tight whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeSection === 'pair'
-                    ? 'bg-white text-slate-900 font-bold shadow-md'
-                    : 'text-cyan-50 hover:text-white hover:bg-white/15'
+                    ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white font-bold shadow-sm'
+                    : 'text-white/80 hover:text-white hover:bg-white/15'
                 }`}
               >
-                <span className={`w-2 h-2 rounded-full ${activeSection === 'pair' ? 'bg-sky-500' : 'bg-cyan-300'}`} />
+                <span className={`w-1.5 h-1.5 rounded-full ${activeSection === 'pair' ? 'bg-white' : 'bg-white/60'}`} />
                 <span>Make a pair</span>
-                <span className="text-[10px] lg:text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-400/35 border border-cyan-200/60">
+                <span className="text-[12px] lg:text-[14px] font-grotesk font-extrabold px-2.5 lg:px-3 py-0.5 rounded-full bg-white/25 backdrop-blur-md text-white border border-white/75">
                   15% OFF
                 </span>
               </button>
@@ -566,43 +566,43 @@ export function ShowroomFloor({
               <button
                 type="button"
                 onClick={() => handleSelectCategory('trousers')}
-                className={`px-4 lg:px-5 py-2 lg:py-2.5 rounded-full text-[13px] lg:text-[15px] font-semibold tracking-tight transition-all cursor-pointer flex items-center gap-2 ${
+                className={`px-3 lg:px-4 py-1.5 lg:py-2 rounded-full font-grotesk text-[13px] lg:text-[15px] font-semibold tracking-tight whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeSection === 'trousers'
-                    ? 'bg-white text-slate-900 font-bold shadow-md'
-                    : 'text-white/90 hover:text-white hover:bg-white/15'
+                    ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white font-bold shadow-sm'
+                    : 'text-white/80 hover:text-white hover:bg-white/15'
                 }`}
               >
-                <span className={`w-2 h-2 rounded-full ${activeSection === 'trousers' ? 'bg-cyan-500' : 'bg-cyan-300'}`} />
+                <span className={`w-1.5 h-1.5 rounded-full ${activeSection === 'trousers' ? 'bg-white' : 'bg-cyan-300'}`} />
                 <span>Trousers</span>
-                <span className="text-xs font-mono opacity-75">({MAIN_COLLECTION.length})</span>
+                <span className="text-[12.5px] font-grotesk opacity-85">({MAIN_COLLECTION.length})</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleSelectCategory('shirts')}
-                className={`px-4 lg:px-5 py-2 lg:py-2.5 rounded-full text-[13px] lg:text-[15px] font-semibold tracking-tight transition-all cursor-pointer flex items-center gap-2 ${
+                className={`px-3 lg:px-4 py-1.5 lg:py-2 rounded-full font-grotesk text-[13px] lg:text-[15px] font-semibold tracking-tight whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeSection === 'shirts'
-                    ? 'bg-white text-slate-900 font-bold shadow-md'
-                    : 'text-white/90 hover:text-white hover:bg-white/15'
+                    ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white font-bold shadow-sm'
+                    : 'text-white/80 hover:text-white hover:bg-white/15'
                 }`}
               >
-                <span className={`w-2 h-2 rounded-full ${activeSection === 'shirts' ? 'bg-emerald-500' : 'bg-emerald-300'}`} />
+                <span className={`w-1.5 h-1.5 rounded-full ${activeSection === 'shirts' ? 'bg-white' : 'bg-emerald-300'}`} />
                 <span>Shirts</span>
-                <span className="text-xs font-mono opacity-75">({SHIRT_PRODUCTS.length})</span>
+                <span className="text-[12.5px] font-grotesk opacity-85">({SHIRT_PRODUCTS.length})</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleSelectCategory('hoodies')}
-                className={`px-4 lg:px-5 py-2 lg:py-2.5 rounded-full text-[13px] lg:text-[15px] font-semibold tracking-tight transition-all cursor-pointer flex items-center gap-2 ${
+                className={`px-3 lg:px-4 py-1.5 lg:py-2 rounded-full font-grotesk text-[13px] lg:text-[15px] font-semibold tracking-tight whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeSection === 'hoodies'
-                    ? 'bg-white text-slate-900 font-bold shadow-md'
-                    : 'text-white/90 hover:text-white hover:bg-white/15'
+                    ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white font-bold shadow-sm'
+                    : 'text-white/80 hover:text-white hover:bg-white/15'
                 }`}
               >
-                <span className={`w-2 h-2 rounded-full ${activeSection === 'hoodies' ? 'bg-indigo-500' : 'bg-indigo-300'}`} />
+                <span className={`w-1.5 h-1.5 rounded-full ${activeSection === 'hoodies' ? 'bg-white' : 'bg-indigo-300'}`} />
                 <span>Hoodies & Sweatshirts</span>
-                <span className="text-xs font-mono opacity-75">({HOODIE_PRODUCTS.length})</span>
+                <span className="text-[12.5px] font-grotesk opacity-85">({HOODIE_PRODUCTS.length})</span>
               </button>
             </nav>
           </div>
@@ -913,7 +913,7 @@ export function ShowroomFloor({
 
                               {product.soldOut && (
                                 <div className="absolute top-1 right-2 z-30">
-                                  <span className="px-3 py-1 rounded-full bg-red-600/95 border border-white/50 text-white font-display font-black text-[10px] tracking-[0.16em] uppercase shadow-[0_4px_16px_rgba(220,38,38,0.45)]">
+                                  <span className="px-3 py-1 rounded-full bg-red-600/95 border border-white/50 text-white font-grotesk font-black text-[12px] tracking-[0.14em] uppercase shadow-[0_4px_16px_rgba(220,38,38,0.45)]">
                                     SOLD OUT
                                   </span>
                                 </div>
@@ -954,12 +954,12 @@ export function ShowroomFloor({
                               )}
 
                               <div className="flex items-center justify-center gap-1.5 mt-1.5">
-                                <div className="showroom-glass-capsule w-[144px] sm:w-[162px] h-[40px] px-4 cursor-pointer shadow-[0_6px_20px_rgba(7,27,45,0.12)]">
-                                  <span className="absolute inset-x-2 top-[2.5px] h-[45%] rounded-full bg-gradient-to-b from-white/80 via-white/20 to-transparent pointer-events-none" />
-                                  <span className="absolute inset-x-3.5 bottom-[2px] h-[30%] rounded-full bg-gradient-to-t from-white/40 to-transparent pointer-events-none opacity-50" />
+                                <div className="showroom-glass-capsule w-[144px] sm:w-[164px] h-[40px] px-3.5 cursor-pointer shadow-[0_6px_20px_rgba(4,15,34,0.16)]">
+                                  <span className="absolute inset-x-2 top-[2px] h-[40%] rounded-full bg-gradient-to-b from-white/55 via-white/20 to-transparent pointer-events-none" />
+                                  <span className="absolute inset-x-3.5 bottom-[2px] h-[25%] rounded-full bg-gradient-to-t from-blue-200/30 to-transparent pointer-events-none opacity-60" />
                                   <span
-                                    className={`relative z-10 font-display text-sm sm:text-base font-bold text-[#0f172a] tracking-tight whitespace-nowrap ${
-                                      product.soldOut ? 'line-through opacity-65' : ''
+                                    className={`relative z-10 font-grotesk text-[15px] sm:text-[16.5px] font-bold text-white tracking-tight whitespace-nowrap ${
+                                      product.soldOut ? 'line-through opacity-55' : ''
                                     }`}
                                   >
                                     {product.price}
@@ -992,10 +992,10 @@ export function ShowroomFloor({
                   <button
                     type="button"
                     onClick={handlePrevDesktop}
-                    className="glass-capsule glass-capsule-hover w-11 h-11 sm:w-13 sm:h-13 rounded-full flex items-center justify-center text-white/90 hover:text-white transition-all cursor-pointer outline-none shadow-[0_8px_24px_rgba(0,0,0,0.3)] active:scale-95"
+                    className="glass-capsule glass-capsule-hover w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white transition-all cursor-pointer outline-none shadow-[0_8px_24px_rgba(4,24,43,0.18)] active:scale-95"
                     aria-label="Previous page"
                   >
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                    <svg className="w-4.5 h-4.5 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
@@ -1005,10 +1005,10 @@ export function ShowroomFloor({
                   <button
                     type="button"
                     onClick={handleNextDesktop}
-                    className="glass-capsule glass-capsule-hover w-11 h-11 sm:w-13 sm:h-13 rounded-full flex items-center justify-center text-white/90 hover:text-white transition-all cursor-pointer outline-none shadow-[0_8px_24px_rgba(0,0,0,0.3)] active:scale-95"
+                    className="glass-capsule glass-capsule-hover w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white transition-all cursor-pointer outline-none shadow-[0_8px_24px_rgba(4,24,43,0.18)] active:scale-95"
                     aria-label="Next page"
                   >
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                    <svg className="w-4.5 h-4.5 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
@@ -1044,11 +1044,11 @@ export function ShowroomFloor({
             {/* Left: Product Information & Multi-View Angle Selector */}
             <div className="absolute left-6 sm:left-12 md:left-16 lg:left-24 top-[48%] -translate-y-1/2 z-35 flex flex-col items-start gap-4 select-none pointer-events-auto max-w-[300px] sm:max-w-[340px]">
               {selectedProduct.soldOut ? (
-                <span className="px-4 py-1 rounded-full bg-red-600/95 border border-white/50 text-white text-xs font-display font-black tracking-[0.18em] uppercase shadow-md">
+                <span className="px-4 py-1 rounded-full bg-red-600/95 border border-white/50 text-white text-[14.5px] font-grotesk font-black tracking-[0.16em] uppercase shadow-md">
                   SOLD OUT
                 </span>
               ) : selectedProduct.subCollection === 'Streetwear' ? (
-                <span className="px-3.5 py-1 rounded-full bg-slate-900/50 border border-white/25 text-white/90 text-xs font-mono font-medium tracking-wider uppercase">
+                <span className="glass-capsule px-3 py-0.5 rounded-full text-white text-[13px] font-grotesk font-semibold tracking-wider uppercase">
                   Streetwear
                 </span>
               ) : null}
@@ -1072,17 +1072,17 @@ export function ShowroomFloor({
               </p>
 
               <div className="flex items-center gap-3 flex-wrap">
-                <div className="selected-reveal-capsule min-w-[190px] sm:min-w-[210px] px-7 py-3 bg-gradient-to-r from-sky-400/30 via-cyan-300/40 to-sky-400/30 border border-cyan-200/60 shadow-[0_0_24px_rgba(56,189,248,0.35)]">
+                <div className="selected-reveal-capsule min-w-[180px] sm:min-w-[198px] px-6 py-2.5">
                   <span
-                    className={`font-display text-lg sm:text-xl font-black tracking-wider whitespace-nowrap drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] ${
-                      selectedProduct.soldOut ? 'text-white/75 line-through' : 'text-white'
+                    className={`font-grotesk text-[18.5px] sm:text-[20px] font-black tracking-wider whitespace-nowrap ${
+                      selectedProduct.soldOut ? 'text-white/55 line-through' : 'text-white'
                     }`}
                   >
                     {selectedProduct.price}
                   </span>
                 </div>
                 {selectedProduct.soldOut && (
-                  <span className="px-4 py-2 rounded-full bg-red-600/95 border border-white/50 text-white font-display font-black text-xs tracking-[0.18em] uppercase shadow-lg">
+                  <span className="px-3.5 py-1.5 rounded-full bg-red-600/95 border border-white/50 text-white font-grotesk font-black text-[13px] tracking-[0.16em] uppercase shadow-lg">
                     SOLD OUT
                   </span>
                 )}
@@ -1100,10 +1100,10 @@ export function ShowroomFloor({
                         key={idx}
                         type="button"
                         onClick={() => setSelectedImageIndex(idx)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-mono transition-all cursor-pointer ${
+                        className={`px-3 py-1 rounded-full text-[13px] font-grotesk font-semibold transition-all cursor-pointer ${
                           selectedImageIndex === idx
-                            ? 'bg-white text-slate-900 font-bold shadow-sm'
-                            : 'bg-slate-900/45 hover:bg-slate-900/65 text-white border border-white/30 backdrop-blur-md shadow-sm'
+                            ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white font-bold shadow-md'
+                            : 'glass-capsule glass-capsule-hover text-white/85 shadow-sm'
                         }`}
                       >
                         {img.label}
@@ -1116,7 +1116,7 @@ export function ShowroomFloor({
               <button
                 type="button"
                 onClick={() => setSelectedProduct(null)}
-                className="selected-reveal-capsule min-w-[190px] sm:min-w-[210px] px-6 py-2.5 text-xs sm:text-sm font-semibold tracking-wide text-white hover:text-white transition-all cursor-pointer outline-none shadow-[0_6px_20px_rgba(7,27,45,0.15)] active:scale-95 mt-2"
+                className="selected-reveal-capsule min-w-[180px] sm:min-w-[198px] px-5 py-2 text-[13px] sm:text-[15px] font-grotesk font-semibold tracking-wide text-white transition-all cursor-pointer outline-none shadow-[0_6px_20px_rgba(4,15,34,0.18)] active:scale-95 mt-2"
                 aria-label="Return to list"
               >
                 Back to Collection
@@ -1131,10 +1131,10 @@ export function ShowroomFloor({
                   <button
                     type="button"
                     onClick={() => setIsSizeGuideOpen(true)}
-                    className="absolute top-2 right-2 z-35 px-3 py-1 rounded-full bg-slate-900/55 hover:bg-slate-900/75 active:scale-95 border border-white/25 backdrop-blur-md text-[11px] font-mono text-white/95 inline-flex items-center gap-1.5 shadow-md transition-all cursor-pointer outline-none"
+                    className="glass-capsule glass-capsule-hover absolute top-2 right-2 z-35 px-3 py-0.5 rounded-full text-[12px] font-grotesk font-semibold text-white inline-flex items-center gap-1 shadow-md transition-all cursor-pointer outline-none"
                     aria-label={`Open ${selectedProduct.category.toLowerCase()} size guide`}
                   >
-                    <svg className="w-3.5 h-3.5 text-cyan-200 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <svg className="w-3 h-3 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 8.25V15.75C3 16.9926 4.00736 18 5.25 18H18.75C19.9926 18 21 16.9926 21 15.75V8.25C21 7.00736 19.9926 6 18.75 6H5.25C4.00736 6 3 7.00736 3 8.25Z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 6V10M12 6V11.5M16.5 6V10" />
                     </svg>
@@ -1171,14 +1171,14 @@ export function ShowroomFloor({
 
               {/* Front / Back / Details Garment View Switcher Pill */}
               <div className="mt-3 flex items-center gap-2">
-                <div className="p-1 rounded-full bg-slate-900/40 border border-white/25 backdrop-blur-md flex items-center gap-1 shadow-lg">
+                <div className="glass-capsule p-0.5 rounded-full flex items-center gap-0.5 shadow-lg">
                   <button
                     type="button"
                     onClick={() => setSelectedImageIndex(0)}
-                    className={`px-4 py-1.5 rounded-full text-xs font-mono font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                    className={`px-3.5 py-1 rounded-full text-[13px] font-grotesk font-bold tracking-wider uppercase transition-all cursor-pointer ${
                       selectedImageIndex === 0
-                        ? 'bg-white text-slate-950 shadow-md scale-105'
-                        : 'text-white/75 hover:text-white hover:bg-white/10'
+                        ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-md scale-105'
+                        : 'text-white/80 hover:text-white hover:bg-white/15'
                     }`}
                   >
                     Front
@@ -1186,10 +1186,10 @@ export function ShowroomFloor({
                   <button
                     type="button"
                     onClick={() => setSelectedImageIndex(1)}
-                    className={`px-4 py-1.5 rounded-full text-xs font-mono font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                    className={`px-3.5 py-1 rounded-full text-[13px] font-grotesk font-bold tracking-wider uppercase transition-all cursor-pointer ${
                       selectedImageIndex === 1
-                        ? 'bg-white text-slate-950 shadow-md scale-105'
-                        : 'text-white/75 hover:text-white hover:bg-white/10'
+                        ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-md scale-105'
+                        : 'text-white/80 hover:text-white hover:bg-white/15'
                     }`}
                   >
                     Back
@@ -1203,10 +1203,10 @@ export function ShowroomFloor({
                         key={detailIdx}
                         type="button"
                         onClick={() => setSelectedImageIndex(detailIdx)}
-                        className={`px-4 py-1.5 rounded-full text-xs font-mono font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                        className={`px-3.5 py-1 rounded-full text-[13px] font-grotesk font-bold tracking-wider uppercase transition-all cursor-pointer ${
                           selectedImageIndex === detailIdx
-                            ? 'bg-white text-slate-950 shadow-md scale-105'
-                            : 'text-white/75 hover:text-white hover:bg-white/10'
+                            ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-md scale-105'
+                            : 'text-white/80 hover:text-white hover:bg-white/15'
                         }`}
                       >
                         {detailLabel}
@@ -1231,10 +1231,10 @@ export function ShowroomFloor({
                   type="button"
                   onClick={handleAddToCart}
                   disabled={isAdding || !selectedSize || selectedProduct.soldOut}
-                  className={`selected-reveal-capsule min-w-[200px] sm:min-w-[220px] px-8 py-3.5 text-sm sm:text-base font-semibold tracking-wide transition-all outline-none shadow-[0_8px_24px_rgba(7,27,45,0.2)] ${
+                  className={`min-w-[184px] sm:min-w-[202px] px-7 py-3 text-[15px] sm:text-[16.5px] font-grotesk font-semibold tracking-wide transition-all outline-none shadow-[0_8px_24px_rgba(4,15,34,0.22)] ${
                     selectedProduct.soldOut
-                      ? 'bg-red-950/65 border-red-300/45 text-red-100 font-display font-black tracking-[0.18em] uppercase cursor-not-allowed'
-                      : 'text-white hover:text-white cursor-pointer active:scale-95 disabled:opacity-50'
+                      ? 'rounded-full border backdrop-blur-md bg-red-950/65 border-red-300/45 text-red-100 font-black tracking-[0.18em] uppercase cursor-not-allowed'
+                      : 'selected-reveal-capsule text-white cursor-pointer active:scale-95 disabled:opacity-50'
                   }`}
                   aria-label={
                     selectedProduct.soldOut
@@ -1251,19 +1251,19 @@ export function ShowroomFloor({
                     : 'Add to cart'}
                 </button>
 
-                <div className="flex items-center gap-1.5 p-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-sm">
+                <div className="glass-capsule flex items-center gap-1 p-0.5 rounded-full shadow-sm">
                   {(['S', 'M', 'L', 'XL'] as const).map((size) => (
                     <button
                       key={size}
                       type="button"
                       disabled={selectedProduct.soldOut}
                       onClick={() => setSelectedSize(size)}
-                      className={`w-8 h-8 rounded-full text-xs font-mono font-medium transition-all ${
+                      className={`w-8 h-8 rounded-full text-[13px] font-grotesk font-semibold transition-all ${
                         selectedProduct.soldOut
                           ? 'text-white/35 cursor-not-allowed'
                           : selectedSize === size
-                          ? 'bg-white text-slate-900 font-bold shadow-sm cursor-pointer'
-                          : 'text-white/70 hover:text-white hover:bg-white/10 cursor-pointer'
+                          ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white font-bold shadow-sm cursor-pointer'
+                          : 'text-white/80 hover:text-white hover:bg-white/15 cursor-pointer'
                       }`}
                       aria-label={`Select size ${size}`}
                     >
@@ -1279,14 +1279,14 @@ export function ShowroomFloor({
                   <button
                     type="button"
                     onClick={() => handleOpenPairWithProduct(selectedProduct)}
-                    className="min-w-[200px] sm:min-w-[220px] mt-1 px-5 py-2.5 rounded-full bg-gradient-to-r from-sky-400/30 via-cyan-300/35 to-sky-400/30 hover:from-sky-400/45 hover:to-cyan-300/50 border border-cyan-200/60 backdrop-blur-md text-white font-display text-xs font-bold tracking-wide flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(56,189,248,0.28)] active:scale-95 transition-all cursor-pointer outline-none"
+                    className="selected-reveal-capsule min-w-[184px] sm:min-w-[202px] mt-1 px-4.5 py-2 text-white font-grotesk text-[13px] font-bold tracking-wide flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer outline-none"
                   >
                     <span>
                       {selectedProduct.category === 'Shirts' || selectedProduct.category === 'Hoodies'
                         ? 'Pair it with Trousers'
                         : 'Pair it with A shirt'}
                     </span>
-                    <span className="px-2 py-0.5 rounded-full bg-white text-slate-950 font-black text-[9px] tracking-wider uppercase">
+                    <span className="px-2 py-0.5 rounded-full bg-white/25 backdrop-blur-md text-white border border-white/75 font-grotesk font-black text-[11.5px] tracking-wider uppercase">
                       15% OFF
                     </span>
                   </button>
@@ -1296,14 +1296,12 @@ export function ShowroomFloor({
                 <button
                   type="button"
                   onClick={() => void toggleWishlist(selectedProduct)}
-                  className={`min-w-[200px] sm:min-w-[220px] mt-1 px-5 py-2.5 rounded-full border backdrop-blur-md font-display text-xs font-bold tracking-wide flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-all cursor-pointer outline-none ${
-                    isInWishlist(selectedProduct.id)
-                      ? 'bg-white/90 border-white text-rose-600'
-                      : 'bg-slate-900/45 hover:bg-slate-900/65 border-white/30 text-white'
+                  className={`glass-capsule glass-capsule-hover min-w-[184px] sm:min-w-[202px] mt-1 px-4.5 py-2 rounded-full font-grotesk text-[13px] font-bold tracking-wide text-white flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer outline-none ${
+                    isInWishlist(selectedProduct.id) ? 'border-rose-300/80' : ''
                   }`}
                 >
                   <svg
-                    className="w-4 h-4 shrink-0"
+                    className={`w-3.5 h-3.5 shrink-0 ${isInWishlist(selectedProduct.id) ? 'text-rose-400' : 'text-white'}`}
                     fill={isInWishlist(selectedProduct.id) ? 'currentColor' : 'none'}
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -1361,15 +1359,15 @@ export function ShowroomFloor({
           onTouchEnd={handleTouchEnd}
         >
           {/* Category Switcher */}
-          <div className="shrink-0 mb-1 z-25 flex items-center gap-2">
-            <div className="glass-capsule p-1 rounded-full flex items-center gap-1 shadow-sm">
+          <div className="shrink-0 mb-1 z-25 flex items-center gap-1.5">
+            <div className="glass-capsule p-0.5 rounded-full flex items-center gap-0.5 shadow-sm">
               <button
                 type="button"
                 onClick={() => handleSelectCategory('trousers')}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-2.5 py-0.5 rounded-full font-grotesk text-[12.5px] font-semibold transition-all cursor-pointer flex items-center gap-1 ${
                   activeSection === 'trousers' || activeSection === 'categories'
-                    ? 'bg-white text-slate-900 font-bold shadow-sm'
-                    : 'text-white/75 hover:text-white'
+                    ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white font-bold shadow-sm'
+                    : 'text-white/80 hover:text-white'
                 }`}
               >
                 <span>Trousers</span>
@@ -1377,10 +1375,10 @@ export function ShowroomFloor({
               <button
                 type="button"
                 onClick={() => handleSelectCategory('shirts')}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-2.5 py-0.5 rounded-full font-grotesk text-[12.5px] font-semibold transition-all cursor-pointer flex items-center gap-1 ${
                   activeSection === 'shirts'
-                    ? 'bg-white text-slate-900 font-bold shadow-sm'
-                    : 'text-white/75 hover:text-white'
+                    ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white font-bold shadow-sm'
+                    : 'text-white/80 hover:text-white'
                 }`}
               >
                 <span>Shirts</span>
@@ -1388,17 +1386,17 @@ export function ShowroomFloor({
               <button
                 type="button"
                 onClick={() => handleSelectCategory('hoodies')}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-2.5 py-0.5 rounded-full font-grotesk text-[12.5px] font-semibold transition-all cursor-pointer flex items-center gap-1 ${
                   activeSection === 'hoodies'
-                    ? 'bg-white text-slate-900 font-bold shadow-sm'
-                    : 'text-white/75 hover:text-white'
+                    ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white font-bold shadow-sm'
+                    : 'text-white/80 hover:text-white'
                 }`}
               >
                 <span>Hoodies</span>
               </button>
             </div>
 
-            <div className="glass-capsule px-2.5 py-1 rounded-full text-[11px] font-mono text-white/80 shadow-sm">
+            <div className="glass-capsule px-2.5 py-0.5 rounded-full text-[12px] font-grotesk font-semibold text-white shadow-sm">
               {mobileIndex + 1} / {activeProducts.length}
             </div>
           </div>
@@ -1410,7 +1408,7 @@ export function ShowroomFloor({
           >
             {currentMobileProduct.soldOut && (
               <div className="mb-2">
-                <span className="px-3.5 py-1 rounded-full bg-red-600/95 text-white text-[10px] font-display font-black tracking-[0.16em] uppercase border border-white/50 shadow-sm">
+                <span className="px-3.5 py-1 rounded-full bg-red-600/95 text-white text-[12px] font-grotesk font-black tracking-[0.14em] uppercase border border-white/50 shadow-sm">
                   SOLD OUT
                 </span>
               </div>
@@ -1443,8 +1441,8 @@ export function ShowroomFloor({
                 </span>
               )}
 
-              <div className="showroom-mobile-price-capsule px-6 py-2 mt-2 shadow-[0_6px_20px_rgba(7,27,45,0.2)]">
-                <span className="font-display text-sm font-bold text-white tracking-tight whitespace-nowrap drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
+              <div className="showroom-mobile-price-capsule px-5 py-1.5 mt-2 shadow-[0_6px_20px_rgba(4,15,34,0.16)]">
+                <span className="font-grotesk text-[15px] font-bold text-white tracking-tight whitespace-nowrap">
                   {currentMobileProduct.soldOut ? `${currentMobileProduct.price} · SOLD OUT` : currentMobileProduct.price}
                 </span>
               </div>
@@ -1471,10 +1469,10 @@ export function ShowroomFloor({
             <button
               type="button"
               onClick={handlePrevMobile}
-              className="glass-capsule w-11 h-11 rounded-full flex items-center justify-center text-white/90 active:scale-90 shadow-md cursor-pointer"
+              className="glass-capsule w-10 h-10 rounded-full flex items-center justify-center text-white active:scale-90 shadow-md cursor-pointer"
               aria-label="Previous article"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+              <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
@@ -1485,10 +1483,10 @@ export function ShowroomFloor({
             <button
               type="button"
               onClick={handleNextMobile}
-              className="glass-capsule w-11 h-11 rounded-full flex items-center justify-center text-white/90 active:scale-90 shadow-md cursor-pointer"
+              className="glass-capsule w-10 h-10 rounded-full flex items-center justify-center text-white active:scale-90 shadow-md cursor-pointer"
               aria-label="Next article"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+              <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </button>
@@ -1509,10 +1507,10 @@ export function ShowroomFloor({
                   <button
                     type="button"
                     onClick={() => setIsSizeGuideOpen(true)}
-                    className="absolute top-1 right-1 z-25 px-2.5 py-1 rounded-full bg-black/40 hover:bg-black/55 active:scale-95 border border-white/25 backdrop-blur-md text-[10px] font-mono text-white/95 inline-flex items-center gap-1 shadow-sm transition-all cursor-pointer outline-none"
+                    className="glass-capsule absolute top-1 right-1 z-25 px-2.5 py-0.5 rounded-full text-[11px] font-grotesk font-semibold text-white inline-flex items-center gap-1 shadow-sm transition-all cursor-pointer outline-none"
                     aria-label={`Open ${selectedProduct.category.toLowerCase()} size guide`}
                   >
-                    <svg className="w-3 h-3 text-cyan-200 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <svg className="w-3 h-3 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 8.25V15.75C3 16.9926 4.00736 18 5.25 18H18.75C19.9926 18 21 16.9926 21 15.75V8.25C21 7.00736 19.9926 6 18.75 6H5.25C4.00736 6 3 7.00736 3 8.25Z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 6V10M12 6V11.5M16.5 6V10" />
                     </svg>
@@ -1550,14 +1548,14 @@ export function ShowroomFloor({
 
               {/* Front / Back / Details Toggle Pill */}
               <div className="mt-2.5 flex items-center justify-center">
-                <div className="p-1 rounded-full bg-slate-900/50 border border-white/25 backdrop-blur-md flex items-center gap-1 shadow-md">
+                <div className="glass-capsule p-0.5 rounded-full flex items-center gap-0.5 shadow-md">
                   <button
                     type="button"
                     onClick={() => setSelectedImageIndex(0)}
-                    className={`px-4 py-1.5 rounded-full text-xs font-mono font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                    className={`px-3.5 py-1 rounded-full text-[13px] font-grotesk font-bold tracking-wider uppercase transition-all cursor-pointer ${
                       selectedImageIndex === 0
-                        ? 'bg-white text-slate-950 shadow-md scale-105'
-                        : 'text-white/75 hover:text-white'
+                        ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-md scale-105'
+                        : 'text-white/80 hover:text-white'
                     }`}
                   >
                     Front
@@ -1565,10 +1563,10 @@ export function ShowroomFloor({
                   <button
                     type="button"
                     onClick={() => setSelectedImageIndex(1)}
-                    className={`px-4 py-1.5 rounded-full text-xs font-mono font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                    className={`px-3.5 py-1 rounded-full text-[13px] font-grotesk font-bold tracking-wider uppercase transition-all cursor-pointer ${
                       selectedImageIndex === 1
-                        ? 'bg-white text-slate-950 shadow-md scale-105'
-                        : 'text-white/75 hover:text-white'
+                        ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-md scale-105'
+                        : 'text-white/80 hover:text-white'
                     }`}
                   >
                     Back
@@ -1582,10 +1580,10 @@ export function ShowroomFloor({
                         key={detailIdx}
                         type="button"
                         onClick={() => setSelectedImageIndex(detailIdx)}
-                        className={`px-4 py-1.5 rounded-full text-xs font-mono font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                        className={`px-3.5 py-1 rounded-full text-[13px] font-grotesk font-bold tracking-wider uppercase transition-all cursor-pointer ${
                           selectedImageIndex === detailIdx
-                            ? 'bg-white text-slate-950 shadow-md scale-105'
-                            : 'text-white/75 hover:text-white'
+                            ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-md scale-105'
+                            : 'text-white/80 hover:text-white'
                         }`}
                       >
                         {detailLabel}
@@ -1628,7 +1626,7 @@ export function ShowroomFloor({
             {/* Product details card */}
             <div className="flex flex-col items-center text-center space-y-2 pt-1 w-full">
               {selectedProduct.soldOut && (
-                <span className="px-3.5 py-1 rounded-full bg-red-600/95 border border-white/50 text-white text-xs font-display font-black tracking-[0.16em] uppercase">
+                <span className="px-3.5 py-1 rounded-full bg-red-600/95 border border-white/50 text-white text-[14.5px] font-grotesk font-black tracking-[0.14em] uppercase">
                   SOLD OUT
                 </span>
               )}
@@ -1646,8 +1644,8 @@ export function ShowroomFloor({
                 {selectedProduct.fabric}
               </p>
 
-              <div className="showroom-mobile-price-capsule px-6 py-2 shadow-md">
-                <span className="font-display text-sm font-bold text-white tracking-tight whitespace-nowrap">
+              <div className="showroom-mobile-price-capsule px-5 py-1.5 shadow-md">
+                <span className="font-grotesk text-[15px] font-bold text-white tracking-tight whitespace-nowrap">
                   {selectedProduct.soldOut ? `${selectedProduct.price} · SOLD OUT` : selectedProduct.price}
                 </span>
               </div>
@@ -1678,10 +1676,10 @@ export function ShowroomFloor({
                 type="button"
                 onClick={handleAddToCart}
                 disabled={isAdding || selectedProduct.soldOut}
-                className={`w-full py-3.5 px-6 rounded-full border backdrop-blur-md text-sm tracking-tight flex items-center justify-center gap-2 shadow-lg transition-all mt-2 ${
+                className={`w-full py-3 px-5 rounded-full border backdrop-blur-md text-[15px] font-grotesk font-semibold tracking-tight flex items-center justify-center gap-2 shadow-lg transition-all mt-2 ${
                   selectedProduct.soldOut
-                    ? 'bg-red-950/65 border-red-300/45 text-red-100 font-display font-black tracking-[0.16em] uppercase cursor-not-allowed'
-                    : 'bg-white/20 hover:bg-white/30 border-white/40 text-white font-medium cursor-pointer'
+                    ? 'bg-red-950/65 border-red-300/45 text-red-100 font-black tracking-[0.16em] uppercase cursor-not-allowed'
+                    : 'selected-reveal-capsule text-white cursor-pointer'
                 }`}
               >
                 {selectedProduct.soldOut ? 'SOLD OUT' : addedToCart ? 'Added to Bag ✓' : 'Add to cart'}
@@ -1693,14 +1691,14 @@ export function ShowroomFloor({
                 <button
                   type="button"
                   onClick={() => handleOpenPairWithProduct(selectedProduct)}
-                  className="w-full py-3 px-5 rounded-full bg-gradient-to-r from-sky-400/30 via-cyan-300/35 to-sky-400/30 border border-cyan-200/60 backdrop-blur-md text-white font-display text-xs font-bold tracking-wide flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
+                  className="selected-reveal-capsule w-full py-2.5 px-4.5 rounded-full text-white font-grotesk text-[13px] font-bold tracking-wide flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer"
                 >
                   <span>
                     {selectedProduct.category === 'Shirts' || selectedProduct.category === 'Hoodies'
                       ? 'Pair it with Trousers'
                       : 'Pair it with A shirt'}
                   </span>
-                  <span className="px-2 py-0.5 rounded-full bg-white text-slate-950 font-black text-[9px] uppercase">
+                  <span className="px-2 py-0.5 rounded-full bg-white/25 backdrop-blur-md text-white border border-white/75 font-grotesk font-black text-[11.5px] uppercase">
                     15% OFF
                   </span>
                 </button>
@@ -1709,7 +1707,7 @@ export function ShowroomFloor({
               <button
                 type="button"
                 onClick={() => setSelectedProduct(null)}
-                className="w-full py-2.5 px-6 rounded-full bg-white/10 border border-white/20 text-xs font-mono text-white/80 hover:text-white transition-all cursor-pointer"
+                className="glass-capsule glass-capsule-hover w-full py-2 px-5 rounded-full text-[13px] font-grotesk font-semibold text-white transition-all cursor-pointer"
               >
                 Back to Collection
               </button>
@@ -1738,14 +1736,14 @@ export function ShowroomFloor({
                   setCurationModalCategory(null);
                   setActiveSection('trousers');
                 }}
-                className="px-5 py-2.5 rounded-full bg-white text-slate-900 font-bold text-xs tracking-wider uppercase shadow-md hover:bg-white/90 cursor-pointer"
+                className="selected-reveal-capsule px-4.5 py-2 rounded-full text-white font-grotesk font-bold text-[13px] tracking-wider uppercase shadow-md cursor-pointer"
               >
                 Explore Trousers
               </button>
               <button
                 type="button"
                 onClick={() => setCurationModalCategory(null)}
-                className="px-5 py-2.5 rounded-full bg-white/10 border border-white/25 text-white text-xs font-mono hover:bg-white/20 cursor-pointer"
+                className="glass-capsule glass-capsule-hover px-4.5 py-2 rounded-full text-white font-grotesk font-semibold text-[13px] cursor-pointer"
               >
                 Close
               </button>

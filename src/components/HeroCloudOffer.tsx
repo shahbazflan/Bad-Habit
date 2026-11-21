@@ -24,8 +24,8 @@ export const HeroCloudOffer: React.FC<HeroCloudOfferProps> = ({
           className="flex items-center shrink-0"
         >
           <span
-            className={`font-condensed font-extrabold uppercase text-white tracking-[0.12em] whitespace-nowrap drop-shadow-[0_1px_4px_rgba(3,12,24,0.45)] ${
-              isMobile ? 'text-lg sm:text-xl' : 'text-xl md:text-2xl lg:text-[26px]'
+            className={`font-ribbon font-extrabold uppercase text-white tracking-[0.14em] whitespace-nowrap drop-shadow-[0_1px_4px_rgba(3,12,24,0.45)] ${
+              isMobile ? 'text-base sm:text-lg' : 'text-lg md:text-xl lg:text-2xl'
             }`}
           >
             FLAT 15% OFF

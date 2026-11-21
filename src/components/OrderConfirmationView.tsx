@@ -74,10 +74,10 @@ export const OrderConfirmationView: React.FC = () => {
         <button
           type="button"
           onClick={handleContinueShopping}
-          className="flex items-center gap-2 text-xs font-display text-white transition-all cursor-pointer outline-none bg-white/15 hover:bg-white/25 px-4 py-2 rounded-full border border-white/25 shadow-sm active:scale-95"
+          className="glass-capsule glass-capsule-hover flex items-center gap-1.5 text-[13px] font-grotesk font-semibold text-white transition-all cursor-pointer outline-none px-3.5 py-1.5 active:scale-95"
         >
           <span>Continue shopping</span>
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
           </svg>
         </button>
@@ -100,9 +100,9 @@ export const OrderConfirmationView: React.FC = () => {
           </p>
 
           {/* Order Reference Badge */}
-          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/15 border border-white/25 backdrop-blur-md mt-6 shadow-sm">
-            <span className="text-[11px] font-display text-white/70 uppercase tracking-widest">Order Number:</span>
-            <span className="font-display text-sm font-bold text-white tracking-wider">
+          <div className="glass-capsule font-grotesk inline-flex items-center gap-2 px-3.5 py-1.5 mt-6">
+            <span className="text-[12px] font-grotesk text-white/80 uppercase tracking-widest">Order Number:</span>
+            <span className="font-grotesk text-[15px] font-bold text-white tracking-wider">
               {confirmedOrder.orderNumber}
             </span>
           </div>
@@ -279,7 +279,7 @@ export const OrderConfirmationView: React.FC = () => {
             <button
               type="button"
               onClick={handleContinueShopping}
-              className="w-full sm:w-auto min-w-[240px] py-4 px-8 rounded-full bg-white text-slate-900 font-display text-sm font-bold tracking-wider hover:bg-white/90 transition-all cursor-pointer shadow-[0_10px_30px_rgba(4,24,43,0.2)] active:scale-95 uppercase"
+              className="w-full sm:w-auto min-w-[216px] py-3.5 px-7 selected-reveal-capsule text-white font-grotesk text-[15px] font-bold tracking-wider transition-all cursor-pointer active:scale-95 uppercase"
             >
               Continue shopping
             </button>

@@ -570,9 +570,9 @@ export const CheckoutView: React.FC = () => {
         <button
           type="button"
           onClick={handleReturnToBag}
-          className="flex items-center gap-2 text-xs font-display text-white hover:text-white transition-all cursor-pointer outline-none bg-white/15 hover:bg-white/25 px-4 py-2 rounded-full border border-white/25 shadow-sm active:scale-95"
+          className="glass-capsule glass-capsule-hover flex items-center gap-1.5 text-[13px] font-grotesk font-semibold text-white transition-all cursor-pointer outline-none px-3.5 py-1.5 active:scale-95"
         >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
           <span>Return to showroom</span>
@@ -636,22 +636,22 @@ export const CheckoutView: React.FC = () => {
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-[11px] text-white/70 font-display">Size {item.size} ·</span>
                           {/* Quantity +/- controls */}
-                          <div className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-full px-2 py-0.5">
+                          <div className="inline-flex items-center gap-1 glass-capsule font-grotesk px-2 py-0.5">
                             <button
                               type="button"
                               onClick={() => updateQuantity(item.productId, item.size, item.quantity - 1)}
-                              className="w-4 h-4 rounded-full hover:bg-white/20 text-white flex items-center justify-center text-xs font-display font-bold transition-all active:scale-90 cursor-pointer"
+                              className="w-4.5 h-4.5 rounded-full hover:bg-white/15 text-white flex items-center justify-center text-[13px] font-grotesk font-bold transition-all active:scale-90 cursor-pointer"
                               aria-label="Decrease quantity"
                             >
                               −
                             </button>
-                            <span className="text-[11px] font-display text-white font-semibold px-0.5">
+                            <span className="text-[12px] font-grotesk text-white font-semibold px-0.5">
                               Qty {item.quantity}
                             </span>
                             <button
                               type="button"
                               onClick={() => updateQuantity(item.productId, item.size, item.quantity + 1)}
-                              className="w-4 h-4 rounded-full hover:bg-white/20 text-white flex items-center justify-center text-xs font-display font-bold transition-all active:scale-90 cursor-pointer"
+                              className="w-4.5 h-4.5 rounded-full hover:bg-white/15 text-white flex items-center justify-center text-[13px] font-grotesk font-bold transition-all active:scale-90 cursor-pointer"
                               aria-label="Increase quantity"
                             >
                               +
@@ -680,7 +680,7 @@ export const CheckoutView: React.FC = () => {
                         setPromoInput('BH-DETECTED');
                         void validatePromoWithServer('BH-DETECTED');
                       }}
-                      className="text-[10px] font-mono font-bold text-white bg-cyan-400/25 hover:bg-cyan-400/35 border border-cyan-200/50 px-2 py-0.5 rounded-full cursor-pointer transition-colors"
+                      className="glass-capsule glass-capsule-hover text-[11px] font-grotesk font-bold text-white px-2.5 py-0.5 cursor-pointer transition-colors"
                     >
                       Use BH-DETECTED
                     </button>
@@ -1174,7 +1174,7 @@ export const CheckoutView: React.FC = () => {
                           <span className="font-display text-sm font-bold text-white tracking-tight">
                             Cash on Delivery (COD)
                           </span>
-                          <span className="text-[10px] font-display px-2 py-0.5 rounded-full bg-white/20 border border-white/30 text-white font-medium uppercase tracking-wider">
+                          <span className="glass-capsule text-[11px] font-grotesk px-2 py-0.5 text-white font-semibold uppercase tracking-wider">
                             Verified
                           </span>
                         </div>
@@ -1209,7 +1209,7 @@ export const CheckoutView: React.FC = () => {
                           <span className="font-display text-sm font-bold text-white tracking-tight">
                             Transfer to Bank account
                           </span>
-                          <span className="text-[10px] font-display px-2 py-0.5 rounded-full bg-emerald-400/25 border border-emerald-300/50 text-emerald-100 font-semibold uppercase tracking-wider">
+                          <span className="glass-capsule text-[11px] font-grotesk px-2 py-0.5 text-white font-semibold uppercase tracking-wider">
                             Free Delivery
                           </span>
                         </div>
@@ -1305,7 +1305,7 @@ export const CheckoutView: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting || items.length === 0}
-                  className="w-full py-4 px-8 text-base font-bold tracking-wider text-slate-900 bg-white hover:bg-white/95 transition-all cursor-pointer outline-none shadow-[0_8px_24px_rgba(4,24,43,0.25)] active:scale-98 disabled:opacity-50 uppercase font-display rounded-full"
+                  className="w-full py-3.5 px-7 text-[16.5px] font-bold tracking-wider text-white selected-reveal-capsule transition-all cursor-pointer outline-none active:scale-98 disabled:opacity-50 uppercase font-grotesk"
                 >
                   {isSubmitting ? 'Placing your order…' : 'Place order'}
                 </button>
@@ -1370,23 +1370,23 @@ export const CheckoutView: React.FC = () => {
                               Size {item.size} ·
                             </span>
                             {/* Quantity +/- Controls */}
-                            <div className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-full px-2 py-0.5">
+                            <div className="inline-flex items-center gap-1 glass-capsule font-grotesk px-2 py-0.5">
                               <button
                                 type="button"
                                 onClick={() => updateQuantity(item.productId, item.size, item.quantity - 1)}
-                                className="w-4 h-4 rounded-full hover:bg-white/20 text-white flex items-center justify-center text-xs font-display font-bold transition-all active:scale-90 cursor-pointer"
+                                className="w-4.5 h-4.5 rounded-full hover:bg-white/15 text-white flex items-center justify-center text-[13px] font-grotesk font-bold transition-all active:scale-90 cursor-pointer"
                                 title="Subtract 1 article"
                                 aria-label="Subtract 1 article"
                               >
                                 −
                               </button>
-                              <span className="text-xs font-display text-white font-semibold px-0.5">
+                              <span className="text-[13px] font-grotesk text-white font-semibold px-0.5">
                                 Qty {item.quantity}
                               </span>
                               <button
                                 type="button"
                                 onClick={() => updateQuantity(item.productId, item.size, item.quantity + 1)}
-                                className="w-4 h-4 rounded-full hover:bg-white/20 text-white flex items-center justify-center text-xs font-display font-bold transition-all active:scale-90 cursor-pointer"
+                                className="w-4.5 h-4.5 rounded-full hover:bg-white/15 text-white flex items-center justify-center text-[13px] font-grotesk font-bold transition-all active:scale-90 cursor-pointer"
                                 title="Add 1 article"
                                 aria-label="Add 1 article"
                               >
@@ -1417,7 +1417,7 @@ export const CheckoutView: React.FC = () => {
                         setPromoInput('BH-DETECTED');
                         void validatePromoWithServer('BH-DETECTED');
                       }}
-                      className="text-[11px] font-mono font-bold text-white bg-cyan-400/25 hover:bg-cyan-400/35 border border-cyan-200/50 px-2.5 py-0.5 rounded-full cursor-pointer transition-colors"
+                      className="glass-capsule glass-capsule-hover text-[12px] font-grotesk font-bold text-white px-2.5 py-0.5 cursor-pointer transition-colors"
                     >
                       Use BH-DETECTED
                     </button>

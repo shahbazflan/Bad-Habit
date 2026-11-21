@@ -320,9 +320,9 @@ export const MemberAuthModal: React.FC = () => {
                     handleClose();
                     setIsWishlistOpen(true);
                   }}
-                  className="w-full py-3.5 px-5 rounded-full bg-white text-slate-900 font-display text-sm font-bold tracking-wide uppercase hover:bg-white/90 transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg active:scale-98"
+                  className="w-full py-3 px-4.5 selected-reveal-capsule font-grotesk text-white text-[15px] font-bold tracking-wide uppercase transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98"
                 >
-                  <svg className="w-4 h-4 text-rose-500" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 text-rose-400" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                   </svg>
                   <span>Open My Wishlist ({member.wishlist?.length || 0})</span>
@@ -342,7 +342,7 @@ export const MemberAuthModal: React.FC = () => {
             <div className="space-y-4">
               {/* Offer Highlight Banner */}
               <div className="rounded-2xl bg-gradient-to-r from-cyan-400/25 via-sky-300/25 to-cyan-400/25 border border-cyan-200/45 p-4 text-center">
-                <span className="inline-block px-3 py-1 rounded-full bg-white text-slate-950 font-display font-black text-[10px] tracking-[0.16em] uppercase mb-2">
+                <span className="inline-block px-3 py-0.5 glass-capsule font-grotesk text-white font-black text-[11px] tracking-[0.16em] uppercase mb-2">
                   FLAT 10% OFF FIRST ORDER ONLY
                 </span>
                 <p className="text-xs sm:text-[13px] font-display text-white leading-relaxed">
@@ -406,7 +406,7 @@ export const MemberAuthModal: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3.5 px-6 rounded-full bg-white text-slate-900 font-display text-sm font-bold tracking-wider uppercase hover:bg-white/90 transition-all cursor-pointer shadow-[0_10px_28px_rgba(4,24,43,0.3)] active:scale-98 disabled:opacity-50"
+                  className="w-full py-3 px-5 selected-reveal-capsule font-grotesk text-white text-[15px] font-bold tracking-wider uppercase transition-all cursor-pointer active:scale-98 disabled:opacity-50"
                 >
                   {isLoading ? 'Activating Membership…' : 'JOIN AND GET A CODE'}
                 </button>

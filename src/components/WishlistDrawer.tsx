@@ -81,7 +81,7 @@ export const WishlistDrawer: React.FC = () => {
             <span className="font-display text-lg font-black tracking-[0.08em] uppercase text-white">
               Wishlist
             </span>
-            <span className="text-xs font-mono text-white bg-white/20 border border-white/30 px-2.5 py-0.5 rounded-full">
+            <span className="glass-capsule text-[13px] font-grotesk font-bold text-white px-2 py-0.5">
               {wishlist.length}
             </span>
           </div>
@@ -124,7 +124,7 @@ export const WishlistDrawer: React.FC = () => {
                 setIsWishlistOpen(false);
                 setIsMemberModalOpen(true);
               }}
-              className="px-3 py-1.5 rounded-full bg-white text-slate-900 font-display text-[10px] font-black uppercase tracking-wider shrink-0 hover:bg-white/90 transition-all cursor-pointer shadow-sm"
+              className="selected-reveal-capsule px-3 py-1 rounded-full text-white font-grotesk text-[11px] font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer shadow-sm"
             >
               Join
             </button>
@@ -220,7 +220,7 @@ export const WishlistDrawer: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleQuickAdd(item.productId)}
-                          className="px-3.5 py-1.5 rounded-full bg-white text-slate-900 font-display text-[11px] font-bold uppercase tracking-wider hover:bg-white/90 transition-all cursor-pointer active:scale-95"
+                          className="selected-reveal-capsule px-3 py-1 rounded-full text-white font-grotesk text-[12px] font-bold uppercase tracking-wider transition-all cursor-pointer active:scale-95"
                         >
                           {addedId === item.productId ? 'Added ✓' : 'Add to bag'}
                         </button>

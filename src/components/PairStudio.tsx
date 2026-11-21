@@ -230,9 +230,9 @@ export const PairStudio: React.FC<PairStudioProps> = ({
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/15 hover:bg-white/25 border border-white/35 text-[11px] font-display font-semibold tracking-[0.12em] uppercase text-white transition-all active:scale-95 cursor-pointer outline-none backdrop-blur-md shadow-sm"
+          className="glass-capsule glass-capsule-hover inline-flex items-center gap-1 px-3 py-1 rounded-full text-[12px] font-grotesk font-semibold tracking-[0.10em] uppercase text-white transition-all active:scale-95 cursor-pointer outline-none shadow-sm"
         >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+          <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
           <span>{backLabel}</span>
@@ -266,20 +266,20 @@ export const PairStudio: React.FC<PairStudioProps> = ({
             MAKE A PAIR
           </h1>
 
-          {/* Glowing 15% OFF Pill */}
-          <span className="mt-1.5 inline-flex items-center justify-center px-4 py-0.5 rounded-full bg-gradient-to-r from-[#06b6d4] via-[#0ea5e9] to-[#0284c7] border border-cyan-100/90 text-white font-display font-black text-[11px] tracking-[0.1em] uppercase shadow-[0_0_18px_rgba(14,165,233,0.65)]">
+          {/* 15% OFF Pill */}
+          <span className="glass-capsule mt-1.5 inline-flex items-center justify-center px-4.5 py-0.5 rounded-full text-white font-grotesk font-black text-[14px] tracking-[0.1em] uppercase">
             15% OFF
           </span>
 
           {/* Front / Back Segmented Glass Pill */}
-          <div className="mt-3 p-0.5 rounded-full bg-white/15 border border-white/55 backdrop-blur-md inline-flex items-center shadow-inner">
+          <div className="glass-capsule mt-2.5 p-0.5 rounded-full inline-flex items-center">
             <button
               type="button"
               onClick={() => setViewAngle('front')}
-              className={`px-6 py-1 rounded-full text-xs font-display font-bold tracking-wide transition-all cursor-pointer outline-none ${
+              className={`px-5 py-0.5 rounded-full text-[13px] font-grotesk font-bold tracking-wide transition-all cursor-pointer outline-none ${
                 viewAngle === 'front'
-                  ? 'bg-white/40 text-white shadow-[0_2px_10px_rgba(255,255,255,0.3)]'
-                  : 'text-white/85 hover:text-white'
+                  ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
+                  : 'text-white/80 hover:text-white'
               }`}
             >
               Front
@@ -287,10 +287,10 @@ export const PairStudio: React.FC<PairStudioProps> = ({
             <button
               type="button"
               onClick={() => setViewAngle('back')}
-              className={`px-6 py-1 rounded-full text-xs font-display font-bold tracking-wide transition-all cursor-pointer outline-none ${
+              className={`px-5 py-0.5 rounded-full text-[13px] font-grotesk font-bold tracking-wide transition-all cursor-pointer outline-none ${
                 viewAngle === 'back'
-                  ? 'bg-white/40 text-white shadow-[0_2px_10px_rgba(255,255,255,0.3)]'
-                  : 'text-white/85 hover:text-white'
+                  ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
+                  : 'text-white/80 hover:text-white'
               }`}
             >
               Back
@@ -347,7 +347,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
             aria-label={`Selected trousers: ${selectedTrouser.name}. Click to change trousers.`}
           >
             {isTrouserSoldOut && (
-              <span className="absolute top-8 left-1/2 -translate-x-1/2 z-20 px-3 py-0.5 rounded-full bg-red-600/95 border border-white/60 text-white font-display font-black text-[10px] tracking-[0.16em] uppercase shadow-md">
+              <span className="absolute top-8 left-1/2 -translate-x-1/2 z-20 px-3 py-0.5 rounded-full bg-red-600/95 border border-white/60 text-white font-grotesk font-black text-[12px] tracking-[0.14em] uppercase shadow-md">
                 SOLD OUT
               </span>
             )}
@@ -390,7 +390,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                 setOpenDropdown(null);
                 setDrawerTab(isWinterTop ? 'hoodies' : 'shirts');
               }}
-              className="py-2.5 px-3 rounded-full bg-gradient-to-b from-white/30 to-white/10 hover:from-white/40 hover:to-white/20 border border-white/55 text-white font-display font-semibold text-xs sm:text-[13px] tracking-wide shadow-[0_6px_16px_rgba(4,24,43,0.16),inset_0_1px_1px_rgba(255,255,255,0.65)] transition-all active:scale-[0.97] cursor-pointer outline-none truncate"
+              className="glass-capsule glass-capsule-hover py-2 px-2.5 rounded-full text-white font-grotesk font-semibold text-[13px] sm:text-[14px] tracking-wide transition-all active:scale-[0.97] cursor-pointer outline-none truncate"
             >
               {isWinterTop ? 'Change hoodie' : 'Change shirt'}
             </button>
@@ -401,7 +401,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                 setOpenDropdown(null);
                 setDrawerTab('trousers');
               }}
-              className="py-2.5 px-3 rounded-full bg-gradient-to-b from-white/30 to-white/10 hover:from-white/40 hover:to-white/20 border border-white/55 text-white font-display font-semibold text-xs sm:text-[13px] tracking-wide shadow-[0_6px_16px_rgba(4,24,43,0.16),inset_0_1px_1px_rgba(255,255,255,0.65)] transition-all active:scale-[0.97] cursor-pointer outline-none truncate"
+              className="glass-capsule glass-capsule-hover py-2 px-2.5 rounded-full text-white font-grotesk font-semibold text-[13px] sm:text-[14px] tracking-wide transition-all active:scale-[0.97] cursor-pointer outline-none truncate"
             >
               Change trousers
             </button>
@@ -416,7 +416,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                 onClick={() =>
                   setOpenDropdown((prev) => (prev === 'top' ? null : 'top'))
                 }
-                className="w-full py-2.5 px-4 rounded-full bg-gradient-to-b from-white/25 to-white/10 hover:from-white/35 hover:to-white/20 border border-white/50 text-white font-display text-xs sm:text-[13px] flex items-center justify-between shadow-[0_4px_14px_rgba(4,24,43,0.14),inset_0_1px_1px_rgba(255,255,255,0.55)] transition-all cursor-pointer outline-none"
+                className="glass-capsule glass-capsule-hover w-full py-2 px-3.5 rounded-full text-white font-grotesk text-[13px] sm:text-[14px] flex items-center justify-between transition-all cursor-pointer outline-none"
                 aria-expanded={openDropdown === 'top'}
                 aria-label={`Select ${topLabel} size`}
               >
@@ -424,7 +424,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                   {topLabelCap} size <strong className="text-white font-bold ml-1">{topSize}</strong>
                 </span>
                 <svg
-                  className={`w-3.5 h-3.5 shrink-0 text-white/90 transition-transform duration-200 ${
+                  className={`w-3.5 h-3.5 shrink-0 text-white transition-transform duration-200 ${
                     openDropdown === 'top' ? 'rotate-180' : ''
                   }`}
                   fill="none"
@@ -467,21 +467,21 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                 onClick={() =>
                   setOpenDropdown((prev) => (prev === 'trouser' ? null : 'trouser'))
                 }
-                className={`w-full py-2.5 px-4 rounded-full border text-white font-display text-xs sm:text-[13px] flex items-center justify-between shadow-[0_4px_14px_rgba(4,24,43,0.14),inset_0_1px_1px_rgba(255,255,255,0.55)] transition-all outline-none ${
+                className={`w-full py-2 px-3.5 rounded-full border font-grotesk text-[13px] sm:text-[14px] flex items-center justify-between transition-all outline-none ${
                   isTrouserSoldOut
-                    ? 'bg-white/10 border-white/25 text-white/50 cursor-not-allowed'
-                    : 'bg-gradient-to-b from-white/25 to-white/10 hover:from-white/35 hover:to-white/20 border-white/50 cursor-pointer'
+                    ? 'bg-white/15 border-white/30 text-white/45 cursor-not-allowed'
+                    : 'glass-capsule glass-capsule-hover text-white cursor-pointer'
                 }`}
                 aria-expanded={openDropdown === 'trouser'}
                 aria-label="Select trouser size"
               >
-                <span className="text-white/90 font-medium truncate">
-                  Trouser size <strong className="text-white font-bold ml-1">{trouserSize}</strong>
+                <span className={`font-medium truncate ${isTrouserSoldOut ? 'text-white/45' : 'text-white/90'}`}>
+                  Trouser size <strong className="font-bold ml-1 text-white">{trouserSize}</strong>
                 </span>
                 <svg
-                  className={`w-3.5 h-3.5 shrink-0 text-white/90 transition-transform duration-200 ${
-                    openDropdown === 'trouser' ? 'rotate-180' : ''
-                  }`}
+                  className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
+                    isTrouserSoldOut ? 'text-white/45' : 'text-white'
+                  } ${openDropdown === 'trouser' ? 'rotate-180' : ''}`}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -520,16 +520,16 @@ export const PairStudio: React.FC<PairStudioProps> = ({
             type="button"
             disabled={isAdding || isUnavailable}
             onClick={handleAddPair}
-            className={`w-full py-3.5 px-6 rounded-full border font-display text-sm sm:text-[15px] font-bold tracking-[0.06em] uppercase flex items-center justify-center gap-2.5 transition-all outline-none shadow-[0_10px_28px_rgba(4,24,43,0.24),inset_0_1px_1px_rgba(255,255,255,0.75)] ${
+            className={`w-full py-3 px-5 rounded-full border font-grotesk text-[15px] sm:text-[16px] font-bold tracking-[0.06em] uppercase flex items-center justify-center gap-2 transition-all outline-none ${
               isUnavailable
                 ? 'bg-red-950/60 border-red-300/50 text-red-100 cursor-not-allowed'
                 : pairAdded
-                ? 'bg-emerald-500/70 border-emerald-200 text-white cursor-pointer'
-                : 'bg-gradient-to-b from-white/35 via-white/20 to-white/10 hover:from-white/45 hover:to-white/20 border-white/65 text-white active:scale-[0.98] cursor-pointer'
+                ? 'bg-emerald-500/90 border-emerald-200 text-white cursor-pointer'
+                : 'selected-reveal-capsule text-white active:scale-[0.98] cursor-pointer'
             }`}
           >
             {!isUnavailable && !pairAdded && (
-              <svg className="w-4 h-4 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <svg className="w-3.5 h-3.5 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
             )}
@@ -590,15 +590,15 @@ export const PairStudio: React.FC<PairStudioProps> = ({
               {drawerHeading}
             </h2>
 
-            {/* Segmented Glossy Glass Pill Tabs: Shirts | Hoodies | Trousers */}
-            <div className="mt-3 mx-auto p-0.5 rounded-full bg-white/18 border border-white/55 backdrop-blur-md inline-flex items-center shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)]">
+            {/* Segmented Glass Pill Tabs: Shirts | Hoodies | Trousers */}
+            <div className="glass-capsule mt-2.5 mx-auto p-0.5 rounded-full inline-flex items-center">
               <button
                 type="button"
                 onClick={() => setDrawerTab('shirts')}
-                className={`px-4 sm:px-5 py-1.5 rounded-full text-xs sm:text-[13px] font-display font-bold tracking-wide transition-all cursor-pointer outline-none ${
+                className={`px-3.5 sm:px-4.5 py-1 rounded-full text-[13px] sm:text-[14px] font-grotesk font-bold tracking-wide transition-all cursor-pointer outline-none ${
                   drawerTab === 'shirts'
-                    ? 'bg-gradient-to-b from-white/60 via-white/38 to-white/20 border border-white/80 text-white shadow-[0_2px_12px_rgba(255,255,255,0.4),inset_0_1px_1px_rgba(255,255,255,0.9)]'
-                    : 'text-white/90 hover:text-white border border-transparent'
+                    ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
+                    : 'text-white/80 hover:text-white border border-transparent'
                 }`}
               >
                 Shirts
@@ -606,10 +606,10 @@ export const PairStudio: React.FC<PairStudioProps> = ({
               <button
                 type="button"
                 onClick={() => setDrawerTab('hoodies')}
-                className={`px-4 sm:px-5 py-1.5 rounded-full text-xs sm:text-[13px] font-display font-bold tracking-wide transition-all cursor-pointer outline-none ${
+                className={`px-3.5 sm:px-4.5 py-1 rounded-full text-[13px] sm:text-[14px] font-grotesk font-bold tracking-wide transition-all cursor-pointer outline-none ${
                   drawerTab === 'hoodies'
-                    ? 'bg-gradient-to-b from-white/60 via-white/38 to-white/20 border border-white/80 text-white shadow-[0_2px_12px_rgba(255,255,255,0.4),inset_0_1px_1px_rgba(255,255,255,0.9)]'
-                    : 'text-white/90 hover:text-white border border-transparent'
+                    ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
+                    : 'text-white/80 hover:text-white border border-transparent'
                 }`}
               >
                 Hoodies
@@ -617,10 +617,10 @@ export const PairStudio: React.FC<PairStudioProps> = ({
               <button
                 type="button"
                 onClick={() => setDrawerTab('trousers')}
-                className={`px-4 sm:px-5 py-1.5 rounded-full text-xs sm:text-[13px] font-display font-bold tracking-wide transition-all cursor-pointer outline-none ${
+                className={`px-3.5 sm:px-4.5 py-1 rounded-full text-[13px] sm:text-[14px] font-grotesk font-bold tracking-wide transition-all cursor-pointer outline-none ${
                   drawerTab === 'trousers'
-                    ? 'bg-gradient-to-b from-white/60 via-white/38 to-white/20 border border-white/80 text-white shadow-[0_2px_12px_rgba(255,255,255,0.4),inset_0_1px_1px_rgba(255,255,255,0.9)]'
-                    : 'text-white/90 hover:text-white border border-transparent'
+                    ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
+                    : 'text-white/80 hover:text-white border border-transparent'
                 }`}
               >
                 Trousers
@@ -767,7 +767,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                           )}
 
                           {trouser.soldOut && (
-                            <span className="absolute top-2 left-2 z-20 px-2 py-0.5 rounded-full bg-red-600/95 border border-white/60 text-[8.5px] font-display font-black uppercase tracking-wider text-white shadow">
+                            <span className="absolute top-2 left-2 z-20 px-2 py-0.5 rounded-full bg-red-600/95 border border-white/60 text-[11px] font-grotesk font-black uppercase tracking-wider text-white shadow">
                               SOLD OUT
                             </span>
                           )}
@@ -799,7 +799,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
             <button
               type="button"
               onClick={() => setDrawerTab(null)}
-              className="mt-3 w-full py-3.5 rounded-full bg-gradient-to-b from-white/38 via-white/22 to-sky-300/25 hover:from-white/48 hover:to-sky-300/35 border border-white/80 text-white font-display font-bold text-base tracking-wide shadow-[0_8px_24px_rgba(8,64,118,0.22),inset_0_1.5px_2px_rgba(255,255,255,0.85)] transition-all active:scale-[0.98] cursor-pointer outline-none shrink-0"
+              className="selected-reveal-capsule mt-3 w-full py-3 rounded-full text-white font-grotesk font-bold text-[16.5px] tracking-wide transition-all active:scale-[0.98] cursor-pointer outline-none shrink-0"
             >
               Done
             </button>

@@ -236,7 +236,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                       : 'Phone + Email signup for 10% off 1st order'}
                   </span>
                 </div>
-                <span className="px-2.5 py-1 rounded-full bg-white text-slate-950 font-mono text-[10px] font-bold shrink-0">
+                <span className="glass-capsule px-2.5 py-0.5 font-grotesk text-white text-[11px] font-bold shrink-0">
                   {member ? 'PASS' : 'JOIN'}
                 </span>
               </button>
@@ -260,7 +260,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                     Wishlist
                   </span>
                 </div>
-                <span className="font-sans text-xs font-bold text-white bg-white/20 border border-white/25 px-2.5 py-1 rounded-full">
+                <span className="glass-capsule font-grotesk text-[13px] font-bold text-white px-2 py-0.5">
                   ({wishlistCount})
                 </span>
               </button>
@@ -284,7 +284,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                     Shopping Bag
                   </span>
                 </div>
-                <span className="font-sans text-xs font-bold text-white bg-white/20 border border-white/25 px-2.5 py-1 rounded-full">
+                <span className="glass-capsule font-grotesk text-[13px] font-bold text-white px-2 py-0.5">
                   ({cartCount})
                 </span>
               </button>

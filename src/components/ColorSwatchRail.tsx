@@ -66,7 +66,7 @@ export const ColorSwatchRail: React.FC<ColorSwatchRailProps> = ({
             </span>
 
             {/* Desktop hover color label */}
-            <span className="hidden md:block pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute right-full mr-2.5 px-2.5 py-1 rounded-full bg-slate-950/85 border border-white/20 text-[11px] font-sans font-medium text-white whitespace-nowrap shadow-md">
+            <span className="hidden md:block pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute right-full mr-2.5 px-2.5 py-0.5 glass-capsule text-[12px] font-grotesk font-semibold text-white whitespace-nowrap shadow-md">
               {variant.color}
               {variant.soldOut ? ' · SOLD OUT' : ''}
             </span>

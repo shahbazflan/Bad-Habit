@@ -201,7 +201,7 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
           </div>
 
           {/* Bottom-Right Build Pair Pill */}
-          <div className="absolute bottom-3 right-3 sm:bottom-3.5 sm:right-3.5 z-20 inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/40 shadow-sm text-white text-[11px] font-mono font-medium pointer-events-none">
+          <div className="glass-capsule absolute bottom-3 right-3 sm:bottom-3.5 sm:right-3.5 z-20 inline-flex items-center gap-1 px-3 py-0.5 rounded-full shadow-sm text-white text-[12px] font-grotesk font-semibold pointer-events-none">
             <span>{pairCategory.count}</span>
             <svg
               className="w-3 h-3 text-white transition-transform group-hover:translate-x-0.5"
@@ -270,7 +270,7 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
                   {cat.label}
                 </h3>
 
-                <div className="inline-flex items-center justify-center gap-1 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md border border-white/40 shadow-sm text-white text-[10px] min-[390px]:text-[11px] font-mono font-medium whitespace-nowrap">
+                <div className="glass-capsule inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded-full shadow-sm text-white text-[11px] min-[390px]:text-[11.5px] font-grotesk font-semibold whitespace-nowrap">
                   <span>{cat.count}</span>
                   <svg
                     className="w-2.5 h-2.5 text-white transition-transform group-hover:translate-x-0.5"

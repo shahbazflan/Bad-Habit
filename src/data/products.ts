@@ -43,7 +43,7 @@ export const HERO_LOGO_URL = '/bad_habit_transparent.webp?v=opt26';
 export const HERO_MODEL_URL = '/assets/aistudio/hero_mobile_model_cutout.webp?v=opt26';
 
 export const ASSET_CACHE_VERSION =
-  typeof __ASSET_VERSION__ !== 'undefined' ? __ASSET_VERSION__ : '20261120-v6';
+  typeof __ASSET_VERSION__ !== 'undefined' ? __ASSET_VERSION__ : '20261121-v7';
 
 export function withAssetVersion(assetPath: string): string {
   if (!assetPath || assetPath.startsWith('http') || assetPath.includes('?')) {
