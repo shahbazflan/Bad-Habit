@@ -217,11 +217,11 @@ export const ShoppingBagDrawer: React.FC = () => {
 
                     {/* Quantity controls & Line Total */}
                     <div className="flex items-center justify-between mt-3">
-                      <div className="glass-capsule flex items-center p-0.5 rounded-full font-grotesk">
+                      <div className="glass-capsule flex items-center p-0.5 rounded-[0.25rem] font-grotesk">
                         <button
                           type="button"
                           onClick={() => updateQuantity(item.productId, item.size, item.quantity - 1)}
-                          className="w-6 h-6 rounded-full flex items-center justify-center text-white hover:bg-white/15 transition-colors cursor-pointer font-grotesk text-[13.5px] font-bold"
+                          className="w-6 h-6 rounded-[0.25rem] flex items-center justify-center text-white hover:bg-white/15 transition-colors cursor-pointer font-grotesk text-[13.5px] font-bold"
                           aria-label="Decrease quantity"
                         >
                           -
@@ -232,7 +232,7 @@ export const ShoppingBagDrawer: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => updateQuantity(item.productId, item.size, item.quantity + 1)}
-                          className="w-6 h-6 rounded-full flex items-center justify-center text-white hover:bg-white/15 transition-colors cursor-pointer font-grotesk text-[13.5px] font-bold"
+                          className="w-6 h-6 rounded-[0.25rem] flex items-center justify-center text-white hover:bg-white/15 transition-colors cursor-pointer font-grotesk text-[13.5px] font-bold"
                           aria-label="Increase quantity"
                         >
                           +
@@ -307,7 +307,7 @@ export const ShoppingBagDrawer: React.FC = () => {
                 type="button"
                 onClick={handleProceedToCheckout}
                 disabled={validating}
-                className="selected-reveal-capsule w-full py-3.5 px-5 rounded-full text-white font-grotesk text-[15px] font-bold tracking-wider transition-all cursor-pointer active:scale-98 disabled:opacity-50 flex items-center justify-center gap-1.5 uppercase"
+                className="selected-reveal-capsule w-full py-3.5 px-5 rounded-[0.25rem] text-white font-grotesk text-[15px] font-bold tracking-wider transition-all cursor-pointer active:scale-98 disabled:opacity-50 flex items-center justify-center gap-1.5 uppercase"
               >
                 <span>{validating ? 'Verifying bag…' : 'Checkout'}</span>
                 {!validating && (

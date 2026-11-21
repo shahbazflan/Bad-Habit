@@ -124,11 +124,6 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
         <h2 className="font-display text-[22px] sm:text-2xl font-bold tracking-tight text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.25)]">
           Shop by category
         </h2>
-        <span className="text-right text-[10px] sm:text-[11px] font-mono text-cyan-200/85 uppercase tracking-[0.18em] leading-[1.25]">
-          SS26
-          <br />
-          Collection
-        </span>
       </div>
 
       {/* Stacked Feature + 3-Column Portrait Grid */}
@@ -140,7 +135,7 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
           onPointerEnter={() => onPrefetchCategory?.('pair')}
           onTouchStart={() => onPrefetchCategory?.('pair')}
           onFocus={() => onPrefetchCategory?.('pair')}
-          className="group relative w-full h-[196px] min-[390px]:h-[208px] sm:h-[228px] rounded-2xl overflow-hidden cursor-pointer outline-none transition-[transform,box-shadow] duration-200 active:scale-[0.98] border-2 border-cyan-200/60 shadow-[0_8px_24px_rgba(7,27,45,0.25)] hover:shadow-[0_12px_32px_rgba(7,27,45,0.35)]"
+          className="group relative w-full h-[196px] min-[390px]:h-[208px] sm:h-[228px] rounded-[0.5rem] overflow-hidden cursor-pointer outline-none transition-[transform,box-shadow] duration-200 active:scale-[0.98] border-2 border-cyan-200/60 shadow-[0_8px_24px_rgba(7,27,45,0.25)] hover:shadow-[0_12px_32px_rgba(7,27,45,0.35)]"
           aria-label={`Shop ${pairCategory.name}${pairCategory.badgeText ? ` — ${pairCategory.badgeText}` : ''}`}
         >
           {/* Unified Architectural Sky-Blue Runway Background */}
@@ -181,8 +176,8 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
           {/* Gentle gradient overlay for high legibility */}
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-black/15 to-transparent pointer-events-none z-10" />
 
-          {/* Left Editorial 15% OFF + MAKE A PAIR Lockup */}
-          <div className="absolute top-3.5 left-3.5 sm:top-4 sm:left-4 z-20 flex flex-col items-start pointer-events-none">
+          {/* Left Editorial 15% OFF + MAKE A PAIR Lockup (Bottom Edge Inside Box) */}
+          <div className="absolute bottom-3 left-3.5 sm:bottom-3.5 sm:left-4 z-20 flex flex-col items-start pointer-events-none">
             <div className="font-poster-condensed not-italic text-white inline-flex items-end gap-1 leading-none whitespace-nowrap drop-shadow-[0_2px_10px_rgba(4,24,43,0.3)]">
               <span className="font-extrabold text-[clamp(76px,22vw,106px)] leading-[0.78] tracking-[-0.02em] tabular-nums">
                 15%
@@ -201,7 +196,7 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
           </div>
 
           {/* Bottom-Right Build Pair Pill */}
-          <div className="glass-capsule absolute bottom-3 right-3 sm:bottom-3.5 sm:right-3.5 z-20 inline-flex items-center gap-1 px-3 py-0.5 rounded-full shadow-sm text-white text-[12px] font-grotesk font-semibold pointer-events-none">
+          <div className="glass-capsule absolute bottom-3 right-3 sm:bottom-3.5 sm:right-3.5 z-20 inline-flex items-center gap-1 px-3 py-0.5 rounded-[0.25rem] shadow-sm text-white text-[12px] font-grotesk font-semibold pointer-events-none">
             <span>{pairCategory.count}</span>
             <svg
               className="w-3 h-3 text-white transition-transform group-hover:translate-x-0.5"
@@ -216,7 +211,7 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
 
           {/* Frosted glass hover sheen */}
           <div
-            className="absolute inset-0 bg-white/0 group-hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors pointer-events-none rounded-2xl z-20"
+            className="absolute inset-0 bg-white/0 group-hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors pointer-events-none rounded-[0.5rem] z-20"
             aria-hidden="true"
           />
         </button>
@@ -231,7 +226,7 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
               onPointerEnter={() => onPrefetchCategory?.(cat.id)}
               onTouchStart={() => onPrefetchCategory?.(cat.id)}
               onFocus={() => onPrefetchCategory?.(cat.id)}
-              className="group relative w-full h-[272px] min-[390px]:h-[304px] sm:h-[340px] rounded-2xl overflow-hidden cursor-pointer outline-none transition-[transform,box-shadow] duration-200 active:scale-[0.98] border border-white/25 shadow-[0_8px_24px_rgba(7,27,45,0.25)] hover:shadow-[0_12px_32px_rgba(7,27,45,0.35)]"
+              className="group relative w-full h-[272px] min-[390px]:h-[304px] sm:h-[340px] rounded-[0.5rem] overflow-hidden cursor-pointer outline-none transition-[transform,box-shadow] duration-200 active:scale-[0.98] border border-white/25 shadow-[0_8px_24px_rgba(7,27,45,0.25)] hover:shadow-[0_12px_32px_rgba(7,27,45,0.35)]"
               aria-label={`Shop ${cat.label} — ${cat.count}`}
             >
               {/* Unified Architectural Sky-Blue Runway Background */}
@@ -253,7 +248,7 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
                     alt={cat.alt}
                     className={`${cat.imageClass} select-none transition-transform duration-300 group-hover:scale-105 ${cat.imageOriginClass ?? 'origin-bottom'}`}
                     sizes="(max-width: 640px) 32vw, 220px"
-                    skeletonClassName="inset-1 rounded-xl"
+                    skeletonClassName="inset-1 rounded-[0.5rem]"
                     loading="lazy"
                     decoding="async"
                     fetchPriority="low"
@@ -270,7 +265,7 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
                   {cat.label}
                 </h3>
 
-                <div className="glass-capsule inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded-full shadow-sm text-white text-[11px] min-[390px]:text-[11.5px] font-grotesk font-semibold whitespace-nowrap">
+                <div className="glass-capsule inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded-[0.25rem] shadow-sm text-white text-[11px] min-[390px]:text-[11.5px] font-grotesk font-semibold whitespace-nowrap">
                   <span>{cat.count}</span>
                   <svg
                     className="w-2.5 h-2.5 text-white transition-transform group-hover:translate-x-0.5"
@@ -286,7 +281,7 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
 
               {/* Frosted glass hover sheen */}
               <div
-                className="absolute inset-0 bg-white/0 group-hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors pointer-events-none rounded-2xl"
+                className="absolute inset-0 bg-white/0 group-hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors pointer-events-none rounded-[0.5rem]"
                 aria-hidden="true"
               />
             </button>

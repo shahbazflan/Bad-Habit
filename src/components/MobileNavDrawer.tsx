@@ -133,7 +133,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                     <span className="font-display text-base font-black tracking-wide text-white block">
                       MAKE A PAIR
                     </span>
-                    <span className="text-xs text-cyan-100 font-semibold mt-0.5 block">
+                    <span className="text-[14px] font-grotesk text-white/95 font-semibold mt-0.5 block">
                       Get a flat 15% off · Shirts, Hoodies + Trousers
                     </span>
                   </div>

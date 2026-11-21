@@ -217,20 +217,202 @@ export const PairStudio: React.FC<PairStudioProps> = ({
       ? 'Choose a hoodie'
       : 'Choose trousers';
 
+  const controlsContent = (
+    <div ref={dropdownContainerRef} className="relative z-20 w-full space-y-2">
+      {/* Row 1: Change shirt/hoodie | Change trousers */}
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            setOpenDropdown(null);
+            setDrawerTab(isWinterTop ? 'hoodies' : 'shirts');
+          }}
+          className="glass-capsule glass-capsule-hover py-2 px-2.5 rounded-[0.25rem] text-white font-grotesk font-semibold text-[12.5px] sm:text-[13.5px] tracking-wide transition-all active:scale-[0.97] cursor-pointer outline-none truncate"
+        >
+          {isWinterTop ? 'Change hoodie' : 'Change shirt'}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setOpenDropdown(null);
+            setDrawerTab('trousers');
+          }}
+          className="glass-capsule glass-capsule-hover py-2 px-2.5 rounded-[0.25rem] text-white font-grotesk font-semibold text-[12.5px] sm:text-[13.5px] tracking-wide transition-all active:scale-[0.97] cursor-pointer outline-none truncate"
+        >
+          Change trousers
+        </button>
+      </div>
+
+      {/* Row 2: Top size M | Trouser size M */}
+      <div className="grid grid-cols-2 gap-2">
+        {/* Top Size Dropdown */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() =>
+              setOpenDropdown((prev) => (prev === 'top' ? null : 'top'))
+            }
+            className="glass-capsule glass-capsule-hover w-full py-2 px-3 rounded-[0.25rem] text-white font-grotesk text-[12.5px] sm:text-[13.5px] flex items-center justify-between transition-all cursor-pointer outline-none"
+            aria-expanded={openDropdown === 'top'}
+            aria-label={`Select ${topLabel} size`}
+          >
+            <span className="text-white/90 font-medium truncate">
+              {topLabelCap} size <strong className="text-white font-bold ml-1">{topSize}</strong>
+            </span>
+            <svg
+              className={`w-3.5 h-3.5 shrink-0 text-white transition-transform duration-200 ${
+                openDropdown === 'top' ? 'rotate-180' : ''
+              }`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2.4"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {openDropdown === 'top' && (
+            <div className="absolute left-0 right-0 bottom-full mb-1.5 p-1.5 rounded-[0.5rem] bg-sky-900/90 border border-white/50 backdrop-blur-xl shadow-2xl flex items-center justify-between gap-1 z-30">
+              {SIZES.map((sz) => (
+                <button
+                  key={sz}
+                  type="button"
+                  onClick={() => {
+                    setTopSize(sz);
+                    setOpenDropdown(null);
+                  }}
+                  className={`flex-1 py-1.5 rounded-[0.25rem] text-xs font-grotesk font-bold transition-all cursor-pointer ${
+                    topSize === sz
+                      ? 'bg-white text-slate-950 shadow-sm'
+                      : 'text-white/85 hover:bg-white/15 hover:text-white'
+                  }`}
+                >
+                  {sz}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Trouser Size Dropdown */}
+        <div className="relative">
+          <button
+            type="button"
+            disabled={isTrouserSoldOut}
+            onClick={() =>
+              setOpenDropdown((prev) => (prev === 'trouser' ? null : 'trouser'))
+            }
+            className={`w-full py-2 px-3 rounded-[0.25rem] border font-grotesk text-[12.5px] sm:text-[13.5px] flex items-center justify-between transition-all outline-none ${
+              isTrouserSoldOut
+                ? 'bg-white/15 border-white/30 text-white/45 cursor-not-allowed'
+                : 'glass-capsule glass-capsule-hover text-white cursor-pointer'
+            }`}
+            aria-expanded={openDropdown === 'trouser'}
+            aria-label="Select trouser size"
+          >
+            <span className={`font-medium truncate ${isTrouserSoldOut ? 'text-white/45' : 'text-white/90'}`}>
+              Trouser size <strong className="font-bold ml-1 text-white">{trouserSize}</strong>
+            </span>
+            <svg
+              className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
+                isTrouserSoldOut ? 'text-white/45' : 'text-white'
+              } ${openDropdown === 'trouser' ? 'rotate-180' : ''}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2.4"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {openDropdown === 'trouser' && !isTrouserSoldOut && (
+            <div className="absolute left-0 right-0 bottom-full mb-1.5 p-1.5 rounded-[0.5rem] bg-sky-900/90 border border-white/50 backdrop-blur-xl shadow-2xl flex items-center justify-between gap-1 z-30">
+              {SIZES.map((sz) => (
+                <button
+                  key={sz}
+                  type="button"
+                  onClick={() => {
+                    setTrouserSize(sz);
+                    setOpenDropdown(null);
+                  }}
+                  className={`flex-1 py-1.5 rounded-[0.25rem] text-xs font-grotesk font-bold transition-all cursor-pointer ${
+                    trouserSize === sz
+                      ? 'bg-white text-slate-950 shadow-sm'
+                      : 'text-white/85 hover:bg-white/15 hover:text-white'
+                  }`}
+                >
+                  {sz}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Row 3: ADD PAIR TO BAG Primary Full-Width Glass Pill */}
+      <button
+        type="button"
+        disabled={isAdding || isUnavailable}
+        onClick={handleAddPair}
+        className={`w-full py-2.5 sm:py-3 px-4 rounded-[0.25rem] border font-grotesk text-[14px] sm:text-[15.5px] font-bold tracking-[0.06em] uppercase flex items-center justify-center gap-2 transition-all outline-none ${
+          isUnavailable
+            ? 'bg-red-950/60 border-red-300/50 text-red-100 cursor-not-allowed'
+            : pairAdded
+            ? 'bg-emerald-500/90 border-emerald-200 text-white cursor-pointer'
+            : 'selected-reveal-capsule text-white active:scale-[0.98] cursor-pointer'
+        }`}
+      >
+        {!isUnavailable && !pairAdded && (
+          <svg className="w-3.5 h-3.5 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
+        )}
+        <span>
+          {isUnavailable
+            ? 'Selected Article Sold Out'
+            : isAdding
+            ? 'Adding Pair…'
+            : pairAdded
+            ? 'Pair Added to Bag ✓'
+            : 'ADD PAIR TO BAG'}
+        </span>
+      </button>
+
+      {/* Live Pair Savings & View Bag Link */}
+      <div className="flex items-center justify-start sm:justify-start gap-3 pt-0.5 text-[11px] font-grotesk text-white/95">
+        <span>
+          15% Off Applied · Save PKR {discountAmount.toLocaleString()}
+        </span>
+        {pairAdded && (
+          <button
+            type="button"
+            onClick={handleViewBag}
+            className="underline font-bold text-white hover:text-cyan-100 cursor-pointer"
+          >
+            View Bag →
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div
       className={`w-full text-white font-display select-none ${
         isDesktopShowroom
-          ? 'h-full overflow-y-auto overscroll-contain pt-[142px] pb-10 px-4 sm:px-6 flex flex-col items-center justify-start'
-          : 'px-3.5 sm:px-5 pt-1.5 pb-24 flex flex-col items-center'
+          ? 'h-full overflow-y-auto overscroll-contain pt-[118px] pb-6 px-4 sm:px-6 flex flex-col items-center justify-start'
+          : 'px-3.5 sm:px-5 pt-1.5 pb-16 flex flex-col items-center'
       }`}
     >
       {/* Top Back Navigation Control */}
-      <div className="w-full max-w-[420px] flex items-center justify-between mb-2.5">
+      <div className="w-full max-w-[460px] sm:max-w-[660px] flex items-center justify-between mb-2">
         <button
           type="button"
           onClick={onBack}
-          className="glass-capsule glass-capsule-hover inline-flex items-center gap-1 px-3 py-1 rounded-full text-[12px] font-grotesk font-semibold tracking-[0.10em] uppercase text-white transition-all active:scale-95 cursor-pointer outline-none shadow-sm"
+          className="glass-capsule glass-capsule-hover inline-flex items-center gap-1 px-3 py-1 rounded-[0.25rem] text-[12px] font-grotesk font-semibold tracking-[0.10em] uppercase text-white transition-all active:scale-95 cursor-pointer outline-none shadow-sm"
         >
           <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -247,318 +429,146 @@ export const PairStudio: React.FC<PairStudioProps> = ({
       </div>
 
       {/* ================================================================= */}
-      {/* FROSTED ATELIER PAIR BOARD (Exact Reference Architecture)         */}
+      {/* SQUARE ATELIER PAIR BOARD (Text/Controls Left · Clothes Right Up) */}
       {/* ================================================================= */}
-      <div className="relative w-full max-w-[420px] rounded-[34px] border border-white/55 bg-gradient-to-b from-sky-200/20 via-sky-300/15 to-sky-500/25 backdrop-blur-md px-5 sm:px-6 pt-5 pb-6 shadow-[0_24px_64px_rgba(4,24,43,0.32),inset_0_1px_1px_rgba(255,255,255,0.65)] overflow-hidden flex flex-col items-center">
+      <div className="relative w-full max-w-[460px] sm:max-w-[660px] rounded-none border border-white/55 bg-gradient-to-b from-sky-200/20 via-sky-300/15 to-sky-500/25 backdrop-blur-md p-4 sm:p-6 shadow-[0_24px_64px_rgba(4,24,43,0.32),inset_0_1px_1px_rgba(255,255,255,0.65)]">
         {/* Subtle Inner Radial Glow */}
         <div
           className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 w-72 h-44 rounded-full bg-white/25 blur-3xl"
           aria-hidden="true"
         />
 
-        {/* Header Stack: BAD HABIT -> MAKE A PAIR -> 15% OFF -> Front/Back */}
-        <div className="relative z-10 flex flex-col items-center text-center w-full">
-          <span className="font-display text-[11px] sm:text-xs font-bold tracking-[0.22em] text-white/95 uppercase drop-shadow-sm">
-            BAD HABIT
-          </span>
+        {/* Side-by-Side Split: Text & Top Controls on Left · Clothes Moved Up on Right */}
+        <div className="relative z-10 w-full grid grid-cols-[1.08fr_0.92fr] sm:grid-cols-[1.12fr_0.88fr] gap-3 sm:gap-6 items-start">
+          {/* LEFT HAND SIDE: Header Text, Top Toggle Pills, Caption & Desktop Controls */}
+          <div className="min-w-0 flex flex-col items-start text-left">
+            <span className="font-grotesk text-[11px] sm:text-xs font-bold tracking-[0.22em] text-white/95 uppercase drop-shadow-sm">
+              BAD HABIT
+            </span>
 
-          <h1 className="font-display text-2xl sm:text-[27px] font-black tracking-[0.04em] text-white uppercase leading-tight mt-0.5 drop-shadow-[0_2px_8px_rgba(4,24,43,0.25)]">
-            MAKE A PAIR
-          </h1>
+            <h1 className="font-display text-xl sm:text-[26px] font-black tracking-[0.04em] text-white uppercase leading-tight mt-0.5 drop-shadow-[0_2px_8px_rgba(4,24,43,0.25)]">
+              MAKE A PAIR
+            </h1>
 
-          {/* 15% OFF Pill */}
-          <span className="glass-capsule mt-1.5 inline-flex items-center justify-center px-4.5 py-0.5 rounded-full text-white font-grotesk font-black text-[14px] tracking-[0.1em] uppercase">
-            15% OFF
-          </span>
+            {/* 15% OFF Pill */}
+            <span className="glass-capsule mt-1.5 inline-flex items-center justify-center px-3.5 py-0.5 rounded-[0.25rem] text-white font-grotesk font-black text-[13px] sm:text-[14px] tracking-[0.1em] uppercase">
+              15% OFF
+            </span>
 
-          {/* Front / Back Segmented Glass Pill */}
-          <div className="glass-capsule mt-2.5 p-0.5 rounded-full inline-flex items-center">
-            <button
-              type="button"
-              onClick={() => setViewAngle('front')}
-              className={`px-5 py-0.5 rounded-full text-[13px] font-grotesk font-bold tracking-wide transition-all cursor-pointer outline-none ${
-                viewAngle === 'front'
-                  ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
-                  : 'text-white/80 hover:text-white'
-              }`}
-            >
-              Front
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewAngle('back')}
-              className={`px-5 py-0.5 rounded-full text-[13px] font-grotesk font-bold tracking-wide transition-all cursor-pointer outline-none ${
-                viewAngle === 'back'
-                  ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
-                  : 'text-white/80 hover:text-white'
-              }`}
-            >
-              Back
-            </button>
+            {/* Front / Back Segmented Glass Pill */}
+            <div className="glass-capsule mt-2 p-0.5 rounded-[0.25rem] inline-flex items-center">
+              <button
+                type="button"
+                onClick={() => setViewAngle('front')}
+                className={`px-3.5 sm:px-4.5 py-0.5 rounded-[0.25rem] text-[12.5px] sm:text-[13px] font-grotesk font-bold tracking-wide transition-all cursor-pointer outline-none ${
+                  viewAngle === 'front'
+                    ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
+                    : 'text-white/80 hover:text-white'
+                }`}
+              >
+                Front
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewAngle('back')}
+                className={`px-3.5 sm:px-4.5 py-0.5 rounded-[0.25rem] text-[12.5px] sm:text-[13px] font-grotesk font-bold tracking-wide transition-all cursor-pointer outline-none ${
+                  viewAngle === 'back'
+                    ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
+                    : 'text-white/80 hover:text-white'
+                }`}
+              >
+                Back
+              </button>
+            </div>
+
+            {/* Selected Look Caption — Positioned Safely on Left So It Never Clips */}
+            <div className="w-full mt-3 mb-2 sm:mb-3.5">
+              <p className="font-grotesk text-[12.5px] sm:text-[13.5px] font-bold text-white tracking-wide leading-snug break-words drop-shadow-[0_1px_3px_rgba(4,24,43,0.45)]">
+                {selectedTop.name} + {selectedTrouser.name}
+              </p>
+              {selectedTop.subtitle && (
+                <p className="text-[10.5px] font-sans text-white/80 tracking-tight leading-snug mt-0.5">
+                  {selectedTop.subtitle}
+                </p>
+              )}
+            </div>
+
+            {/* Action Controls Inside Left Column on Tablet / Desktop */}
+            <div className="hidden sm:block w-full mt-1">
+              {controlsContent}
+            </div>
           </div>
-        </div>
 
-        {/* =============================================================== */}
-        {/* VERTICAL OUTFIT STACK: TOP GARMENT DRAPED OVER TROUSERS         */}
-        {/* =============================================================== */}
-        <div className="relative z-10 w-full flex flex-col items-center justify-center pt-3 pb-2">
-          {/* Top Garment (Shirt or Hoodie layered above trousers so hem covers button) */}
-          <button
-            type="button"
-            onClick={() => {
-              setOpenDropdown(null);
-              setDrawerTab(isWinterTop ? 'hoodies' : 'shirts');
-            }}
-            className={`relative z-20 flex items-center justify-center cursor-pointer outline-none group ${
-              selectedTop.id === 'BH-S06' && viewAngle === 'back'
-                ? 'h-[126px] sm:h-[142px] my-[15px] sm:my-[17px]'
-                : 'h-[156px] sm:h-[176px]'
-            }`}
-            title={`Change ${topLabel} (${selectedTop.name})`}
-            aria-label={`Selected ${topLabel}: ${selectedTop.name}. Click to change ${topLabel}.`}
-          >
-            <SmartImage
-              src={topImageSrc}
-              alt={selectedTop.name}
-              className="h-full w-auto object-contain select-none transition-transform duration-200 group-hover:scale-[1.03]"
-              sizes="240px"
-              showSkeleton={false}
-              loading="eager"
-              decoding="async"
-              fetchPriority="high"
-            />
-          </button>
-
-          {/* Trousers Garment pulled beneath top hem & shifted slightly left to align under placket */}
-          <button
-            type="button"
-            onClick={() => {
-              setOpenDropdown(null);
-              setDrawerTab('trousers');
-            }}
-            className={`relative z-10 -mt-[22px] sm:-mt-[26px] h-[220px] sm:h-[244px] flex items-center justify-center cursor-pointer outline-none group transition-transform duration-200 ${
-              viewAngle === 'front'
-                ? selectedTrouser.id === 'BH-T09' || selectedTrouser.id === 'BH-T11'
-                  ? '-translate-x-[3px]'
-                  : '-translate-x-[6px] sm:-translate-x-[7px]'
-                : '-translate-x-[2px]'
-            }`}
-            title={`Change trousers (${selectedTrouser.name})`}
-            aria-label={`Selected trousers: ${selectedTrouser.name}. Click to change trousers.`}
-          >
-            {isTrouserSoldOut && (
-              <span className="absolute top-8 left-1/2 -translate-x-1/2 z-20 px-3 py-0.5 rounded-full bg-red-600/95 border border-white/60 text-white font-grotesk font-black text-[12px] tracking-[0.14em] uppercase shadow-md">
-                SOLD OUT
-              </span>
-            )}
-            <SmartImage
-              src={trouserImageSrc}
-              alt={selectedTrouser.name}
-              className={`h-full w-auto object-contain select-none transition-transform duration-200 group-hover:scale-[1.02] ${
-                isTrouserSoldOut ? 'opacity-75' : ''
-              }`}
-              sizes="240px"
-              showSkeleton={false}
-              loading="eager"
-              decoding="async"
-              fetchPriority="high"
-            />
-          </button>
-        </div>
-
-        {/* Selected Look Caption */}
-        <div className="relative z-10 w-full text-center mb-3">
-          <p className="font-display text-xs font-semibold text-white/95 tracking-wide truncate px-2">
-            {selectedTop.name} + {selectedTrouser.name}
-          </p>
-          {selectedTop.subtitle && (
-            <p className="text-[10.5px] font-sans text-white/75 tracking-tight truncate px-2 mt-0.5">
-              {selectedTop.subtitle}
-            </p>
-          )}
-        </div>
-
-        {/* =============================================================== */}
-        {/* CONTROLS BELOW OUTFIT (Reference Exact Button & Dropdown Grid)  */}
-        {/* =============================================================== */}
-        <div ref={dropdownContainerRef} className="relative z-20 w-full space-y-2.5">
-          {/* Row 1: Change shirt/hoodie | Change trousers */}
-          <div className="grid grid-cols-2 gap-2.5">
+          {/* RIGHT HAND SIDE: Clothes Moved Up */}
+          <div className="flex flex-col items-center justify-start pt-0 -mt-1 sm:-mt-2">
+            {/* Top Garment (Shirt or Hoodie layered above trousers) */}
             <button
               type="button"
               onClick={() => {
                 setOpenDropdown(null);
                 setDrawerTab(isWinterTop ? 'hoodies' : 'shirts');
               }}
-              className="glass-capsule glass-capsule-hover py-2 px-2.5 rounded-full text-white font-grotesk font-semibold text-[13px] sm:text-[14px] tracking-wide transition-all active:scale-[0.97] cursor-pointer outline-none truncate"
+              className={`relative z-20 flex items-center justify-center cursor-pointer outline-none group ${
+                selectedTop.id === 'BH-S06' && viewAngle === 'back'
+                  ? 'h-[104px] sm:h-[138px] my-[10px] sm:my-[14px]'
+                  : 'h-[124px] sm:h-[168px]'
+              }`}
+              title={`Change ${topLabel} (${selectedTop.name})`}
+              aria-label={`Selected ${topLabel}: ${selectedTop.name}. Click to change ${topLabel}.`}
             >
-              {isWinterTop ? 'Change hoodie' : 'Change shirt'}
+              <SmartImage
+                src={topImageSrc}
+                alt={selectedTop.name}
+                className="h-full w-auto object-contain select-none transition-transform duration-200 group-hover:scale-[1.03]"
+                sizes="(max-width: 640px) 150px, 240px"
+                showSkeleton={false}
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
+              />
             </button>
 
+            {/* Trousers Garment pulled beneath top hem */}
             <button
               type="button"
               onClick={() => {
                 setOpenDropdown(null);
                 setDrawerTab('trousers');
               }}
-              className="glass-capsule glass-capsule-hover py-2 px-2.5 rounded-full text-white font-grotesk font-semibold text-[13px] sm:text-[14px] tracking-wide transition-all active:scale-[0.97] cursor-pointer outline-none truncate"
+              className={`relative z-10 -mt-[16px] sm:-mt-[22px] h-[168px] sm:h-[234px] flex items-center justify-center cursor-pointer outline-none group transition-transform duration-200 ${
+                viewAngle === 'front'
+                  ? selectedTrouser.id === 'BH-T09' || selectedTrouser.id === 'BH-T11'
+                    ? '-translate-x-[3px]'
+                    : '-translate-x-[5px] sm:-translate-x-[6px]'
+                  : '-translate-x-[2px]'
+              }`}
+              title={`Change trousers (${selectedTrouser.name})`}
+              aria-label={`Selected trousers: ${selectedTrouser.name}. Click to change trousers.`}
             >
-              Change trousers
+              {isTrouserSoldOut && (
+                <span className="absolute top-6 left-1/2 -translate-x-1/2 z-20 px-2.5 py-0.5 rounded-[0.25rem] bg-red-600/95 border border-white/60 text-white font-grotesk font-black text-[11px] tracking-[0.14em] uppercase shadow-md">
+                  SOLD OUT
+                </span>
+              )}
+              <SmartImage
+                src={trouserImageSrc}
+                alt={selectedTrouser.name}
+                className={`h-full w-auto object-contain select-none transition-transform duration-200 group-hover:scale-[1.02] ${
+                  isTrouserSoldOut ? 'opacity-75' : ''
+                }`}
+                sizes="(max-width: 640px) 150px, 240px"
+                showSkeleton={false}
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
+              />
             </button>
           </div>
+        </div>
 
-          {/* Row 2: Top size M ⌄ | Trouser size M ⌄ */}
-          <div className="grid grid-cols-2 gap-2.5">
-            {/* Top Size Dropdown */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() =>
-                  setOpenDropdown((prev) => (prev === 'top' ? null : 'top'))
-                }
-                className="glass-capsule glass-capsule-hover w-full py-2 px-3.5 rounded-full text-white font-grotesk text-[13px] sm:text-[14px] flex items-center justify-between transition-all cursor-pointer outline-none"
-                aria-expanded={openDropdown === 'top'}
-                aria-label={`Select ${topLabel} size`}
-              >
-                <span className="text-white/90 font-medium truncate">
-                  {topLabelCap} size <strong className="text-white font-bold ml-1">{topSize}</strong>
-                </span>
-                <svg
-                  className={`w-3.5 h-3.5 shrink-0 text-white transition-transform duration-200 ${
-                    openDropdown === 'top' ? 'rotate-180' : ''
-                  }`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2.4"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {openDropdown === 'top' && (
-                <div className="absolute left-0 right-0 bottom-full mb-1.5 p-1.5 rounded-2xl bg-sky-900/85 border border-white/50 backdrop-blur-xl shadow-2xl flex items-center justify-between gap-1 z-30">
-                  {SIZES.map((sz) => (
-                    <button
-                      key={sz}
-                      type="button"
-                      onClick={() => {
-                        setTopSize(sz);
-                        setOpenDropdown(null);
-                      }}
-                      className={`flex-1 py-1.5 rounded-xl text-xs font-display font-bold transition-all cursor-pointer ${
-                        topSize === sz
-                          ? 'bg-white text-slate-950 shadow-sm'
-                          : 'text-white/85 hover:bg-white/15 hover:text-white'
-                      }`}
-                    >
-                      {sz}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Trouser Size Dropdown */}
-            <div className="relative">
-              <button
-                type="button"
-                disabled={isTrouserSoldOut}
-                onClick={() =>
-                  setOpenDropdown((prev) => (prev === 'trouser' ? null : 'trouser'))
-                }
-                className={`w-full py-2 px-3.5 rounded-full border font-grotesk text-[13px] sm:text-[14px] flex items-center justify-between transition-all outline-none ${
-                  isTrouserSoldOut
-                    ? 'bg-white/15 border-white/30 text-white/45 cursor-not-allowed'
-                    : 'glass-capsule glass-capsule-hover text-white cursor-pointer'
-                }`}
-                aria-expanded={openDropdown === 'trouser'}
-                aria-label="Select trouser size"
-              >
-                <span className={`font-medium truncate ${isTrouserSoldOut ? 'text-white/45' : 'text-white/90'}`}>
-                  Trouser size <strong className="font-bold ml-1 text-white">{trouserSize}</strong>
-                </span>
-                <svg
-                  className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
-                    isTrouserSoldOut ? 'text-white/45' : 'text-white'
-                  } ${openDropdown === 'trouser' ? 'rotate-180' : ''}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2.4"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {openDropdown === 'trouser' && !isTrouserSoldOut && (
-                <div className="absolute left-0 right-0 bottom-full mb-1.5 p-1.5 rounded-2xl bg-sky-900/85 border border-white/50 backdrop-blur-xl shadow-2xl flex items-center justify-between gap-1 z-30">
-                  {SIZES.map((sz) => (
-                    <button
-                      key={sz}
-                      type="button"
-                      onClick={() => {
-                        setTrouserSize(sz);
-                        setOpenDropdown(null);
-                      }}
-                      className={`flex-1 py-1.5 rounded-xl text-xs font-display font-bold transition-all cursor-pointer ${
-                        trouserSize === sz
-                          ? 'bg-white text-slate-950 shadow-sm'
-                          : 'text-white/85 hover:bg-white/15 hover:text-white'
-                      }`}
-                    >
-                      {sz}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Row 3: ADD PAIR TO BAG Primary Full-Width Glass Pill */}
-          <button
-            type="button"
-            disabled={isAdding || isUnavailable}
-            onClick={handleAddPair}
-            className={`w-full py-3 px-5 rounded-full border font-grotesk text-[15px] sm:text-[16px] font-bold tracking-[0.06em] uppercase flex items-center justify-center gap-2 transition-all outline-none ${
-              isUnavailable
-                ? 'bg-red-950/60 border-red-300/50 text-red-100 cursor-not-allowed'
-                : pairAdded
-                ? 'bg-emerald-500/90 border-emerald-200 text-white cursor-pointer'
-                : 'selected-reveal-capsule text-white active:scale-[0.98] cursor-pointer'
-            }`}
-          >
-            {!isUnavailable && !pairAdded && (
-              <svg className="w-3.5 h-3.5 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-            )}
-            <span>
-              {isUnavailable
-                ? 'Selected Article Sold Out'
-                : isAdding
-                ? 'Adding Pair…'
-                : pairAdded
-                ? 'Pair Added to Bag ✓'
-                : 'ADD PAIR TO BAG'}
-            </span>
-          </button>
-
-          {/* Live Pair Savings & View Bag Link */}
-          <div className="flex items-center justify-center gap-3 pt-0.5 text-[11px] font-display text-white/90">
-            <span>
-              15% Off Applied · Save PKR {discountAmount.toLocaleString()}
-            </span>
-            {pairAdded && (
-              <button
-                type="button"
-                onClick={handleViewBag}
-                className="underline font-bold text-white hover:text-cyan-100 cursor-pointer"
-              >
-                View Bag →
-              </button>
-            )}
-          </div>
+        {/* Action Controls Full-Width Below on Narrow Mobile Only (< 640px) */}
+        <div className="sm:hidden relative z-20 w-full mt-3 pt-2.5 border-t border-white/20">
+          {controlsContent}
         </div>
 
         {/* =============================================================== */}
@@ -566,7 +576,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
         {/* =============================================================== */}
         {drawerTab !== null && (
           <div
-            className="absolute inset-x-0 bottom-0 top-[18%] sm:top-[20%] z-30 rounded-t-[32px] bg-gradient-to-b from-[#71b9f2]/80 via-[#5ea7eb]/82 to-[#428fdc]/90 backdrop-blur-2xl border-t-[1.5px] border-x border-white/80 shadow-[0_-18px_50px_rgba(8,64,118,0.28),inset_0_1.5px_2px_rgba(255,255,255,0.75)] flex flex-col px-4 sm:px-5 pt-3 pb-4"
+            className="absolute inset-x-0 bottom-0 top-[8%] sm:top-[10%] z-30 rounded-none bg-gradient-to-b from-[#71b9f2]/90 via-[#5ea7eb]/90 to-[#428fdc]/95 backdrop-blur-2xl border-t-[1.5px] border-x border-white/80 shadow-[0_-18px_50px_rgba(8,64,118,0.28),inset_0_1.5px_2px_rgba(255,255,255,0.75)] flex flex-col px-4 sm:px-5 pt-3 pb-4"
             role="dialog"
             aria-label={drawerHeading}
           >
@@ -591,11 +601,11 @@ export const PairStudio: React.FC<PairStudioProps> = ({
             </h2>
 
             {/* Segmented Glass Pill Tabs: Shirts | Hoodies | Trousers */}
-            <div className="glass-capsule mt-2.5 mx-auto p-0.5 rounded-full inline-flex items-center">
+            <div className="glass-capsule mt-2.5 mx-auto p-0.5 rounded-[0.25rem] inline-flex items-center">
               <button
                 type="button"
                 onClick={() => setDrawerTab('shirts')}
-                className={`px-3.5 sm:px-4.5 py-1 rounded-full text-[13px] sm:text-[14px] font-grotesk font-bold tracking-wide transition-all cursor-pointer outline-none ${
+                className={`px-3.5 sm:px-4.5 py-1 rounded-[0.25rem] text-[13px] sm:text-[14px] font-grotesk font-bold tracking-wide transition-all cursor-pointer outline-none ${
                   drawerTab === 'shirts'
                     ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
                     : 'text-white/80 hover:text-white border border-transparent'
@@ -606,7 +616,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
               <button
                 type="button"
                 onClick={() => setDrawerTab('hoodies')}
-                className={`px-3.5 sm:px-4.5 py-1 rounded-full text-[13px] sm:text-[14px] font-grotesk font-bold tracking-wide transition-all cursor-pointer outline-none ${
+                className={`px-3.5 sm:px-4.5 py-1 rounded-[0.25rem] text-[13px] sm:text-[14px] font-grotesk font-bold tracking-wide transition-all cursor-pointer outline-none ${
                   drawerTab === 'hoodies'
                     ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
                     : 'text-white/80 hover:text-white border border-transparent'
@@ -617,7 +627,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
               <button
                 type="button"
                 onClick={() => setDrawerTab('trousers')}
-                className={`px-3.5 sm:px-4.5 py-1 rounded-full text-[13px] sm:text-[14px] font-grotesk font-bold tracking-wide transition-all cursor-pointer outline-none ${
+                className={`px-3.5 sm:px-4.5 py-1 rounded-[0.25rem] text-[13px] sm:text-[14px] font-grotesk font-bold tracking-wide transition-all cursor-pointer outline-none ${
                   drawerTab === 'trousers'
                     ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
                     : 'text-white/80 hover:text-white border border-transparent'
@@ -627,9 +637,9 @@ export const PairStudio: React.FC<PairStudioProps> = ({
               </button>
             </div>
 
-            {/* 2-Column Scrollable Frosted Selection Cards (Exact Reference Look) */}
+            {/* Frosted Selection Cards */}
             <div className="mt-3.5 flex-1 overflow-y-auto px-0.5 py-0.5">
-              <div className="grid grid-cols-2 gap-3 pb-1">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pb-1">
                 {drawerTab === 'shirts'
                   ? SHIRT_PRODUCTS.map((shirt, idx) => {
                       const isSelected = shirt.id === selectedTop.id;
@@ -645,7 +655,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                             setSelectedTop(shirt);
                             setPairAdded(false);
                           }}
-                          className={`relative rounded-2xl p-2.5 flex flex-col items-center justify-between transition-all cursor-pointer outline-none ${
+                          className={`relative rounded-[0.5rem] p-2.5 flex flex-col items-center justify-between transition-all cursor-pointer outline-none ${
                             isSelected
                               ? 'bg-gradient-to-b from-white/48 via-sky-100/32 to-sky-300/24 border-2 border-white shadow-[0_0_22px_rgba(56,189,248,0.85),0_0_8px_rgba(255,255,255,0.75),inset_0_0_16px_rgba(255,255,255,0.3)]'
                               : 'bg-gradient-to-b from-white/42 via-white/28 to-white/18 hover:from-white/52 hover:to-white/26 border border-white/55 backdrop-blur-md shadow-[0_4px_14px_rgba(12,72,130,0.12),inset_0_1px_1px_rgba(255,255,255,0.65)]'
@@ -704,7 +714,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                             setSelectedTop(hoodie);
                             setPairAdded(false);
                           }}
-                          className={`relative rounded-2xl p-2.5 flex flex-col items-center justify-between transition-all cursor-pointer outline-none ${
+                          className={`relative rounded-[0.5rem] p-2.5 flex flex-col items-center justify-between transition-all cursor-pointer outline-none ${
                             isSelected
                               ? 'bg-gradient-to-b from-white/48 via-sky-100/32 to-sky-300/24 border-2 border-white shadow-[0_0_22px_rgba(56,189,248,0.85),0_0_8px_rgba(255,255,255,0.75),inset_0_0_16px_rgba(255,255,255,0.3)]'
                               : 'bg-gradient-to-b from-white/42 via-white/28 to-white/18 hover:from-white/52 hover:to-white/26 border border-white/55 backdrop-blur-md shadow-[0_4px_14px_rgba(12,72,130,0.12),inset_0_1px_1px_rgba(255,255,255,0.65)]'
@@ -751,7 +761,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                             setSelectedTrouser(trouser);
                             setPairAdded(false);
                           }}
-                          className={`relative rounded-2xl p-2.5 flex flex-col items-center justify-between transition-all cursor-pointer outline-none ${
+                          className={`relative rounded-[0.5rem] p-2.5 flex flex-col items-center justify-between transition-all cursor-pointer outline-none ${
                             isSelected
                               ? 'bg-gradient-to-b from-white/48 via-sky-100/32 to-sky-300/24 border-2 border-white shadow-[0_0_22px_rgba(56,189,248,0.85),0_0_8px_rgba(255,255,255,0.75),inset_0_0_16px_rgba(255,255,255,0.3)]'
                               : 'bg-gradient-to-b from-white/42 via-white/28 to-white/18 hover:from-white/52 hover:to-white/26 border border-white/55 backdrop-blur-md shadow-[0_4px_14px_rgba(12,72,130,0.12),inset_0_1px_1px_rgba(255,255,255,0.65)]'
@@ -767,7 +777,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                           )}
 
                           {trouser.soldOut && (
-                            <span className="absolute top-2 left-2 z-20 px-2 py-0.5 rounded-full bg-red-600/95 border border-white/60 text-[11px] font-grotesk font-black uppercase tracking-wider text-white shadow">
+                            <span className="absolute top-2 left-2 z-20 px-2 py-0.5 rounded-[0.25rem] bg-red-600/95 border border-white/60 text-[11px] font-grotesk font-black uppercase tracking-wider text-white shadow">
                               SOLD OUT
                             </span>
                           )}
@@ -799,7 +809,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
             <button
               type="button"
               onClick={() => setDrawerTab(null)}
-              className="selected-reveal-capsule mt-3 w-full py-3 rounded-full text-white font-grotesk font-bold text-[16.5px] tracking-wide transition-all active:scale-[0.98] cursor-pointer outline-none shrink-0"
+              className="selected-reveal-capsule mt-3 w-full py-3 rounded-[0.25rem] text-white font-grotesk font-bold text-[16.5px] tracking-wide transition-all active:scale-[0.98] cursor-pointer outline-none shrink-0"
             >
               Done
             </button>

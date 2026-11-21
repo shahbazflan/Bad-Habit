@@ -53,12 +53,24 @@
 }
 
 .font-ribbon {
-  font-family: 'Syne', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'Helvetica Neue Condensed Bold', 'Helvetica Condensed', 'Arial Narrow', 'Barlow Condensed', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-stretch: condensed;
+  font-weight: 700;
 }
 
 @layer components {
+  /* Solid Non-Transparent Navy Blue Architectural Runway Ribbon */
+  .hero-silky-ribbon {
+    position: relative;
+    background-color: #071e38;
+    border-top: 1px solid rgba(255, 255, 255, 0.28);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.24);
+    box-shadow: 0 8px 24px rgba(4, 16, 34, 0.34);
+  }
+
   /* Sheer Translucent Frosted Glass Capsule with Crisp White Typography */
   .glass-capsule {
+    border-radius: 0.25rem;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     background: linear-gradient(135deg, rgba(16, 46, 82, 0.24) 0%, rgba(255, 255, 255, 0.16) 100%);
     border: 1px solid rgba(255, 255, 255, 0.65);
@@ -90,7 +102,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 9999px;
+    border-radius: 0.25rem;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     background: linear-gradient(135deg, rgba(16, 46, 82, 0.26) 0%, rgba(255, 255, 255, 0.18) 100%);
     border: 1px solid rgba(255, 255, 255, 0.68);
@@ -121,7 +133,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 9999px;
+    border-radius: 0.25rem;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     background: linear-gradient(135deg, rgba(16, 46, 82, 0.30) 0%, rgba(255, 255, 255, 0.22) 100%);
     border: 1.2px solid rgba(255, 255, 255, 0.74);
@@ -152,7 +164,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 9999px;
+    border-radius: 0.25rem;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     background: linear-gradient(135deg, rgba(16, 46, 82, 0.28) 0%, rgba(255, 255, 255, 0.18) 100%);
     border: 1.2px solid rgba(255, 255, 255, 0.68);

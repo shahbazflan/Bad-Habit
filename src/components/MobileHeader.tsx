@@ -77,7 +77,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
           <button
             type="button"
             onClick={() => setIsMemberModalOpen(true)}
-            className={`glass-capsule h-8 px-2.5 rounded-full text-[11px] font-grotesk font-bold tracking-wide flex items-center gap-1 transition-all active:scale-95 cursor-pointer text-white ${
+            className={`glass-capsule h-8 px-2.5 rounded-[0.25rem] text-[11px] font-grotesk font-bold tracking-wide flex items-center gap-1 transition-all active:scale-95 cursor-pointer text-white ${
               member ? 'border-white' : 'border-white/85'
             }`}
             aria-label={member ? 'Member pass' : 'Member login'}

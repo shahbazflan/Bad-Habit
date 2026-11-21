@@ -118,7 +118,7 @@ export const AddToCartModal: React.FC = () => {
           <button
             type="button"
             onClick={handleViewBag}
-            className="glass-capsule glass-capsule-hover w-full py-2 px-3.5 rounded-full text-[13px] font-grotesk font-semibold tracking-wider text-white transition-all cursor-pointer outline-none"
+            className="glass-capsule glass-capsule-hover w-full py-2 px-3.5 rounded-[0.25rem] text-[13px] font-grotesk font-semibold tracking-wider text-white transition-all cursor-pointer outline-none"
           >
             View shopping bag
           </button>

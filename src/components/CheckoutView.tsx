@@ -640,7 +640,7 @@ export const CheckoutView: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => updateQuantity(item.productId, item.size, item.quantity - 1)}
-                              className="w-4.5 h-4.5 rounded-full hover:bg-white/15 text-white flex items-center justify-center text-[13px] font-grotesk font-bold transition-all active:scale-90 cursor-pointer"
+                              className="w-4.5 h-4.5 rounded-[0.25rem] hover:bg-white/15 text-white flex items-center justify-center text-[13px] font-grotesk font-bold transition-all active:scale-90 cursor-pointer"
                               aria-label="Decrease quantity"
                             >
                               −
@@ -651,7 +651,7 @@ export const CheckoutView: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => updateQuantity(item.productId, item.size, item.quantity + 1)}
-                              className="w-4.5 h-4.5 rounded-full hover:bg-white/15 text-white flex items-center justify-center text-[13px] font-grotesk font-bold transition-all active:scale-90 cursor-pointer"
+                              className="w-4.5 h-4.5 rounded-[0.25rem] hover:bg-white/15 text-white flex items-center justify-center text-[13px] font-grotesk font-bold transition-all active:scale-90 cursor-pointer"
                               aria-label="Increase quantity"
                             >
                               +
@@ -1374,7 +1374,7 @@ export const CheckoutView: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => updateQuantity(item.productId, item.size, item.quantity - 1)}
-                                className="w-4.5 h-4.5 rounded-full hover:bg-white/15 text-white flex items-center justify-center text-[13px] font-grotesk font-bold transition-all active:scale-90 cursor-pointer"
+                                className="w-4.5 h-4.5 rounded-[0.25rem] hover:bg-white/15 text-white flex items-center justify-center text-[13px] font-grotesk font-bold transition-all active:scale-90 cursor-pointer"
                                 title="Subtract 1 article"
                                 aria-label="Subtract 1 article"
                               >
@@ -1386,7 +1386,7 @@ export const CheckoutView: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => updateQuantity(item.productId, item.size, item.quantity + 1)}
-                                className="w-4.5 h-4.5 rounded-full hover:bg-white/15 text-white flex items-center justify-center text-[13px] font-grotesk font-bold transition-all active:scale-90 cursor-pointer"
+                                className="w-4.5 h-4.5 rounded-[0.25rem] hover:bg-white/15 text-white flex items-center justify-center text-[13px] font-grotesk font-bold transition-all active:scale-90 cursor-pointer"
                                 title="Add 1 article"
                                 aria-label="Add 1 article"
                               >

@@ -43,7 +43,7 @@ export const HERO_LOGO_URL = '/bad_habit_transparent.webp?v=opt26';
 export const HERO_MODEL_URL = '/assets/aistudio/hero_mobile_model_cutout.webp?v=opt26';
 
 export const ASSET_CACHE_VERSION =
-  typeof __ASSET_VERSION__ !== 'undefined' ? __ASSET_VERSION__ : '20261121-v7';
+  typeof __ASSET_VERSION__ !== 'undefined' ? __ASSET_VERSION__ : '20261121-v8';
 
 export function withAssetVersion(assetPath: string): string {
   if (!assetPath || assetPath.startsWith('http') || assetPath.includes('?')) {
@@ -321,7 +321,7 @@ const RAW_PRODUCTS: Product[] = [
       '/assets/hoodies/dusty_rose_hoodie_detail_showcase-3_v2.webp',
     ],
     price: 'PKR 4,499',
-    fabric: 'Premium peach-finish brushed cotton with tonal BAD HABIT chest embroidery, cross-over hood, and seamless kangaroo pocket',
+    fabric: 'Premium peach-finish brushed cotton with tonal emblem chest embroidery, cross-over hood, and seamless kangaroo pocket',
   },
   {
     id: 'BH-H05',

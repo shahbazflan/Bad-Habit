@@ -111,7 +111,7 @@ export const MobileShoppingBag: React.FC<MobileShoppingBagProps> = ({
             <button
               type="button"
               onClick={onContinueShopping}
-              className="selected-reveal-capsule px-5 py-2 rounded-full text-white font-grotesk font-semibold text-[13px] tracking-wider uppercase transition-all active:scale-95 cursor-pointer shadow-lg"
+              className="selected-reveal-capsule px-5 py-2 rounded-[0.25rem] text-white font-grotesk font-semibold text-[13px] tracking-wider uppercase transition-all active:scale-95 cursor-pointer shadow-lg"
             >
               Explore collection
             </button>
@@ -252,7 +252,7 @@ export const MobileShoppingBag: React.FC<MobileShoppingBagProps> = ({
               type="button"
               onClick={handleCheckout}
               disabled={validating}
-              className="selected-reveal-capsule w-full py-3 px-5 rounded-full text-white font-grotesk font-semibold text-[15px] sm:text-[16.5px] tracking-tight flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer outline-none mt-5"
+              className="selected-reveal-capsule w-full py-3 px-5 rounded-[0.25rem] text-white font-grotesk font-semibold text-[15px] sm:text-[16.5px] tracking-tight flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer outline-none mt-5"
               aria-label="Proceed to checkout"
             >
               <span>{validating ? 'Verifying bag...' : 'Checkout'}</span>

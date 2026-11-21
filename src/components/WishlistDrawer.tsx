@@ -124,7 +124,7 @@ export const WishlistDrawer: React.FC = () => {
                 setIsWishlistOpen(false);
                 setIsMemberModalOpen(true);
               }}
-              className="selected-reveal-capsule px-3 py-1 rounded-full text-white font-grotesk text-[11px] font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer shadow-sm"
+              className="selected-reveal-capsule px-3 py-1 rounded-[0.25rem] text-white font-grotesk text-[11px] font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer shadow-sm"
             >
               Join
             </button>
@@ -220,7 +220,7 @@ export const WishlistDrawer: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleQuickAdd(item.productId)}
-                          className="selected-reveal-capsule px-3 py-1 rounded-full text-white font-grotesk text-[12px] font-bold uppercase tracking-wider transition-all cursor-pointer active:scale-95"
+                          className="selected-reveal-capsule px-3 py-1 rounded-[0.25rem] text-white font-grotesk text-[12px] font-bold uppercase tracking-wider transition-all cursor-pointer active:scale-95"
                         >
                           {addedId === item.productId ? 'Added ✓' : 'Add to bag'}
                         </button>

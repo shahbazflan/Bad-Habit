@@ -63,7 +63,7 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
         onPointerEnter={() => preloadProductDetailImages(product)}
         onTouchStart={() => preloadProductDetailImages(product)}
         onFocus={() => preloadProductDetailImages(product)}
-        className="group relative w-full rounded-2xl bg-white/[0.12] hover:bg-white/[0.18] active:scale-[0.98] border border-white/20 backdrop-blur-md p-2.5 sm:p-3 flex flex-col items-center justify-between transition-[transform,background-color] duration-150 cursor-pointer outline-none text-center shadow-[0_4px_16px_rgba(4,24,43,0.15)]"
+        className="group relative w-full rounded-[0.5rem] bg-white/[0.12] hover:bg-white/[0.18] active:scale-[0.98] border border-white/20 backdrop-blur-md p-2.5 sm:p-3 flex flex-col items-center justify-between transition-[transform,background-color] duration-150 cursor-pointer outline-none text-center shadow-[0_4px_16px_rgba(4,24,43,0.15)]"
         aria-label={`${product.name} — ${product.soldOut ? 'Sold Out' : product.price}`}
       >
         {/* Wishlist Heart Toggle */}
@@ -102,7 +102,7 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
         {/* SOLD OUT Badge */}
         {product.soldOut && (
           <div className="absolute top-2.5 right-2.5 z-20">
-            <span className="inline-block px-3 py-1 rounded-full bg-red-600/95 border border-white/50 text-white font-grotesk font-black text-[12px] tracking-[0.14em] uppercase shadow-[0_4px_14px_rgba(220,38,38,0.45)]">
+            <span className="inline-block px-3 py-1 rounded-[0.25rem] bg-red-600/95 border border-white/50 text-white font-grotesk font-black text-[12px] tracking-[0.14em] uppercase shadow-[0_4px_14px_rgba(220,38,38,0.45)]">
               SOLD OUT
             </span>
           </div>
@@ -119,7 +119,7 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
               product.soldOut ? 'opacity-85' : ''
             }`}
             sizes="(max-width: 639px) 88vw, 44vw"
-            skeletonClassName="inset-3 rounded-2xl"
+            skeletonClassName="inset-3 rounded-[0.5rem]"
             loading={index < 2 ? 'eager' : 'lazy'}
             fetchPriority={index < 2 ? 'high' : 'low'}
             decoding="async"
@@ -139,7 +139,7 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
 
           {/* Price Capsule & Sold Out State */}
           <div className="mt-1.5 flex items-center justify-center gap-2 flex-wrap">
-            <div className="showroom-mobile-price-capsule inline-flex items-center justify-center px-4 py-0.5 rounded-full shadow-sm">
+            <div className="showroom-mobile-price-capsule inline-flex items-center justify-center px-4 py-0.5 rounded-[0.25rem] shadow-sm">
               <span
                 className={`text-[13px] sm:text-[14px] font-grotesk font-bold tracking-tight ${
                   product.soldOut ? 'text-white/55 line-through' : 'text-white'
@@ -149,7 +149,7 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
               </span>
             </div>
             {product.soldOut && (
-              <span className="px-2.5 py-0.5 rounded-full bg-red-600/95 border border-white/40 text-[12px] font-grotesk font-black tracking-[0.12em] uppercase text-white shadow-sm">
+              <span className="px-2.5 py-0.5 rounded-[0.25rem] bg-red-600/95 border border-white/40 text-[12px] font-grotesk font-black tracking-[0.12em] uppercase text-white shadow-sm">
                 SOLD OUT
               </span>
             )}
@@ -185,9 +185,9 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
 
       {/* Empty State for In-Curation Categories */}
       {products.length === 0 ? (
-        <div className="w-full py-16 px-6 rounded-2xl border border-white/20 bg-white/[0.08] backdrop-blur-md flex flex-col items-center text-center">
+        <div className="w-full py-16 px-6 rounded-[0.5rem] border border-white/20 bg-white/[0.08] backdrop-blur-md flex flex-col items-center text-center">
           <span className="text-xs font-mono tracking-widest uppercase text-white/60 mb-2">
-            In Curation · SS26
+            In Curation
           </span>
           <h2 className="font-display text-lg font-bold text-white mb-2">
             {categoryTitle} Series
@@ -198,7 +198,7 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
           <button
             type="button"
             onClick={onBackToCategories}
-            className="glass-capsule glass-capsule-hover px-5 py-2 rounded-full text-white font-grotesk font-semibold text-[13px] tracking-wider uppercase transition-all active:scale-95 cursor-pointer shadow-lg"
+            className="glass-capsule glass-capsule-hover px-5 py-2 rounded-[0.25rem] text-white font-grotesk font-semibold text-[13px] tracking-wider uppercase transition-all active:scale-95 cursor-pointer shadow-lg"
           >
             Back to categories
           </button>
@@ -230,7 +230,7 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
             <button
               type="button"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="glass-capsule glass-capsule-hover inline-flex items-center gap-1 px-4 py-1.5 rounded-full text-white text-[13px] font-grotesk font-semibold tracking-tight shadow-[0_6px_18px_rgba(4,15,34,0.20)] transition-all active:scale-95 cursor-pointer outline-none"
+              className="glass-capsule glass-capsule-hover inline-flex items-center gap-1 px-4 py-1.5 rounded-[0.25rem] text-white text-[13px] font-grotesk font-semibold tracking-tight shadow-[0_6px_18px_rgba(4,15,34,0.20)] transition-all active:scale-95 cursor-pointer outline-none"
               aria-label="Back to top"
             >
               <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
@@ -242,7 +242,7 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
             <button
               type="button"
               onClick={onBackToCategories}
-              className="glass-capsule glass-capsule-hover inline-flex items-center gap-1 px-4 py-1.5 rounded-full text-white text-[13px] font-grotesk font-semibold tracking-tight shadow-[0_6px_18px_rgba(4,15,34,0.20)] transition-all active:scale-95 cursor-pointer outline-none"
+              className="glass-capsule glass-capsule-hover inline-flex items-center gap-1 px-4 py-1.5 rounded-[0.25rem] text-white text-[13px] font-grotesk font-semibold tracking-tight shadow-[0_6px_18px_rgba(4,15,34,0.20)] transition-all active:scale-95 cursor-pointer outline-none"
               aria-label="Go to Categories"
             >
               <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">

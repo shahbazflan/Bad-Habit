@@ -258,7 +258,7 @@ export const PairModelCanvas: React.FC<PairModelCanvasProps> = ({
           aria-label={`Selected trousers: ${trouserAlt}. Click to change trousers.`}
         >
           {trouserSoldOut && (
-            <span className="absolute top-3 left-1/2 -translate-x-1/2 z-20 px-3 py-0.5 rounded-full bg-red-600/95 border border-white/60 text-white font-display font-black text-[10px] tracking-[0.16em] uppercase shadow-md">
+            <span className="absolute top-3 left-1/2 -translate-x-1/2 z-20 px-3 py-0.5 rounded-[0.25rem] bg-red-600/95 border border-white/60 text-white font-grotesk font-black text-[10px] tracking-[0.16em] uppercase shadow-md">
               SOLD OUT
             </span>
           )}
@@ -279,7 +279,7 @@ export const PairModelCanvas: React.FC<PairModelCanvasProps> = ({
     <div className="relative h-[385px] sm:h-[435px] w-full flex items-center justify-center select-none">
       <div className="relative h-full aspect-[503/1231] flex items-center justify-center">
         {trouserSoldOut && (
-          <span className="absolute top-[52%] left-1/2 -translate-x-1/2 z-20 px-3 py-0.5 rounded-full bg-red-600/95 border border-white/60 text-white font-display font-black text-[10px] tracking-[0.16em] uppercase shadow-md pointer-events-none">
+          <span className="absolute top-[52%] left-1/2 -translate-x-1/2 z-20 px-3 py-0.5 rounded-[0.25rem] bg-red-600/95 border border-white/60 text-white font-grotesk font-black text-[10px] tracking-[0.16em] uppercase shadow-md pointer-events-none">
             SOLD OUT
           </span>
         )}

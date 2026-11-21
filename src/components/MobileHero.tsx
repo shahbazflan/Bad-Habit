@@ -175,7 +175,7 @@ export const MobileHero: React.FC<MobileHeroProps> = ({
         <button
           type="button"
           onClick={onExplore}
-          className="glass-capsule glass-capsule-hover w-full sm:max-w-[288px] py-3 px-5 rounded-full text-white font-grotesk font-semibold text-[15px] sm:text-[16.5px] tracking-tight flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(4,24,43,0.3)] active:scale-[0.98] transition-all cursor-pointer outline-none"
+          className="glass-capsule glass-capsule-hover w-full sm:max-w-[288px] py-3 px-5 rounded-[0.25rem] text-white font-grotesk font-semibold text-[15px] sm:text-[16.5px] tracking-tight flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(4,24,43,0.3)] active:scale-[0.98] transition-all cursor-pointer outline-none"
           aria-label="Explore collection — scroll to categories"
         >
           <span>Explore collection</span>

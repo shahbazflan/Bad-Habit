@@ -58,7 +58,7 @@ export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProp
           <button
             type="button"
             onClick={() => setIsMemberModalOpen(true)}
-            className="glass-capsule glass-capsule-hover px-3.5 py-1.5 rounded-full flex items-center gap-1.5 text-[13px] font-grotesk font-semibold text-white cursor-pointer transition-all shadow-sm"
+            className="glass-capsule glass-capsule-hover px-3.5 py-1.5 rounded-[0.25rem] flex items-center gap-1.5 text-[13px] font-grotesk font-semibold text-white cursor-pointer transition-all shadow-sm"
             aria-label={member ? 'View member pass' : 'Become a member for 10% off first order'}
           >
             <svg className="w-3.5 h-3.5 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -72,7 +72,7 @@ export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProp
           <button
             type="button"
             onClick={() => setIsWishlistOpen(true)}
-            className="glass-capsule glass-capsule-hover px-3.5 py-1.5 rounded-full flex items-center gap-1.5 text-[13px] font-grotesk font-semibold text-white cursor-pointer transition-all shadow-sm"
+            className="glass-capsule glass-capsule-hover px-3.5 py-1.5 rounded-[0.25rem] flex items-center gap-1.5 text-[13px] font-grotesk font-semibold text-white cursor-pointer transition-all shadow-sm"
             aria-label={`Wishlist (${wishlistCount} items)`}
           >
             <svg
@@ -91,7 +91,7 @@ export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProp
             <button
               type="button"
               onClick={() => setIsBagOpen(true)}
-              className="glass-capsule glass-capsule-hover px-3.5 py-1.5 rounded-full flex items-center gap-1.5 text-[13px] font-grotesk font-semibold text-white cursor-pointer transition-all shadow-sm"
+              className="glass-capsule glass-capsule-hover px-3.5 py-1.5 rounded-[0.25rem] flex items-center gap-1.5 text-[13px] font-grotesk font-semibold text-white cursor-pointer transition-all shadow-sm"
               aria-label={`Shopping bag containing ${cartCount} items`}
             >
               <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -107,7 +107,7 @@ export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProp
           <button
             type="button"
             onClick={() => setIsMemberModalOpen(true)}
-            className="glass-capsule px-2.5 py-1 rounded-full flex items-center gap-1 text-[12px] font-grotesk font-semibold text-white cursor-pointer shadow-sm"
+            className="glass-capsule px-2.5 py-1 rounded-[0.25rem] flex items-center gap-1 text-[12px] font-grotesk font-semibold text-white cursor-pointer shadow-sm"
             aria-label={member ? 'Member pass' : 'Member login'}
           >
             <svg className="w-3 h-3 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -120,7 +120,7 @@ export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProp
             <button
               type="button"
               onClick={() => setIsBagOpen(true)}
-              className="glass-capsule px-2.5 py-1 rounded-full flex items-center gap-1 text-[12px] font-grotesk font-semibold text-white cursor-pointer shadow-sm"
+              className="glass-capsule px-2.5 py-1 rounded-[0.25rem] flex items-center gap-1 text-[12px] font-grotesk font-semibold text-white cursor-pointer shadow-sm"
               aria-label={`Shopping bag containing ${cartCount} items`}
             >
               <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -136,7 +136,7 @@ export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProp
       <div className="hidden md:inline-flex absolute left-[clamp(20px,6vw,120px)] top-[48%] -translate-y-1/2 z-25">
         <button
           onClick={onViewCollection}
-          className="glass-capsule glass-capsule-hover group relative inline-flex items-center justify-center px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-white font-grotesk font-semibold text-[16.5px] sm:text-[17.5px] tracking-tight cursor-pointer transition-all duration-200 outline-none"
+          className="glass-capsule glass-capsule-hover group relative inline-flex items-center justify-center px-5 sm:px-6 py-2.5 sm:py-3 rounded-[0.25rem] text-white font-grotesk font-semibold text-[16.5px] sm:text-[17.5px] tracking-tight cursor-pointer transition-all duration-200 outline-none"
           aria-label="View collection — descend to lower showroom"
         >
           <span>View collection</span>
@@ -252,7 +252,7 @@ export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProp
         <button
           type="button"
           onClick={onViewCollection}
-          className="glass-capsule glass-capsule-hover w-full max-w-[252px] py-3 px-5 rounded-full text-white font-grotesk font-semibold text-[16.5px] tracking-tight flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(4,24,43,0.3)] active:scale-95 cursor-pointer outline-none"
+          className="glass-capsule glass-capsule-hover w-full max-w-[252px] py-3 px-5 rounded-[0.25rem] text-white font-grotesk font-semibold text-[16.5px] tracking-tight flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(4,24,43,0.3)] active:scale-95 cursor-pointer outline-none"
           aria-label="View collection — descend to lower showroom"
         >
           <span>View collection</span>

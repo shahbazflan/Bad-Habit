@@ -131,7 +131,7 @@ export const MobileCampaignVideo: React.FC<MobileCampaignVideoProps> = ({
         <button
           type="button"
           onClick={onOpenMenu}
-          className="w-10 h-10 rounded-full flex items-center justify-center text-white transition-all active:scale-95 cursor-pointer outline-none glass-capsule shadow-sm"
+          className="w-10 h-10 rounded-[0.25rem] flex items-center justify-center text-white transition-all active:scale-95 cursor-pointer outline-none glass-capsule shadow-sm"
           aria-label="Open navigation menu"
         >
           <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -153,7 +153,7 @@ export const MobileCampaignVideo: React.FC<MobileCampaignVideoProps> = ({
         <button
           type="button"
           onClick={onOpenBag}
-          className="relative w-10 h-10 rounded-full flex items-center justify-center text-white transition-all active:scale-95 cursor-pointer outline-none glass-capsule shadow-sm"
+          className="relative w-10 h-10 rounded-[0.25rem] flex items-center justify-center text-white transition-all active:scale-95 cursor-pointer outline-none glass-capsule shadow-sm"
           aria-label={`Shopping bag containing ${cartCount} items`}
         >
           <svg className="w-4.5 h-4.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
@@ -201,7 +201,7 @@ export const MobileCampaignVideo: React.FC<MobileCampaignVideoProps> = ({
         <button
           type="button"
           onClick={onExplore}
-          className="glass-capsule glass-capsule-hover group relative inline-flex items-center justify-center min-w-[198px] px-6 py-2.5 rounded-full text-white font-grotesk font-semibold text-[13px] tracking-[0.14em] uppercase transition-all duration-300 active:scale-95 cursor-pointer outline-none shadow-[0_4px_24px_rgba(0,0,0,0.35)]"
+          className="glass-capsule glass-capsule-hover group relative inline-flex items-center justify-center min-w-[198px] px-6 py-2.5 rounded-[0.25rem] text-white font-grotesk font-semibold text-[13px] tracking-[0.14em] uppercase transition-all duration-300 active:scale-95 cursor-pointer outline-none shadow-[0_4px_24px_rgba(0,0,0,0.35)]"
           aria-label="Explore collection — scroll to categories"
         >
           <span className="text-white font-semibold">
