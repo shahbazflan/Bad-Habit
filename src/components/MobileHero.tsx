@@ -58,6 +58,7 @@ export const MobileHero: React.FC<MobileHeroProps> = ({
           onGoHome={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           cartCount={cartCount}
           transparent={true}
+          showBrandLogo={false}
         />
       </div>
 

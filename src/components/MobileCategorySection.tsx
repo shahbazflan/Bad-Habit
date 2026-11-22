@@ -149,7 +149,7 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
             fetchPriority="low"
           />
 
-          {/* Right-side Magnum BOXY Shirt + Classic Brown Trousers Cutouts */}
+          {/* Right-side Magnum Shirt + Classic Brown Trousers Cutouts */}
           <div className="absolute inset-y-2 right-2 sm:right-4 w-[58%] flex items-center justify-end -space-x-4 sm:-space-x-3 pointer-events-none z-10">
             <SmartImage
               src={POSTER_SHIRT.image}
@@ -287,6 +287,16 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Centered 2-Line Brand Signature at Bottom of Shop by Category */}
+      <div className="mt-6 pt-3 flex flex-col items-center justify-center text-center pointer-events-none">
+        <span className="font-display font-black uppercase text-[#0f2c4c] text-base sm:text-lg tracking-[0.18em] leading-none">
+          BAD HABIT
+        </span>
+        <span className="font-display font-semibold uppercase text-[#1f486d]/85 text-[9.5px] sm:text-[10.5px] tracking-[0.26em] leading-none mt-1.5">
+          YOU KNOW YOU WANT IT
+        </span>
       </div>
     </section>
   );

@@ -170,34 +170,33 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
                 : 'w-full h-full'
             } object-contain object-center select-none`}
             sizes="(max-width: 640px) 84vw, 480px"
-            skeletonClassName="inset-6 rounded-2xl"
+            skeletonClassName="inset-6 rounded-[0.5rem]"
             loading="eager"
             decoding="async"
             fetchPriority="high"
           />
 
-          {/* Current View Pill Indicator */}
-          <div className="absolute top-1 left-1 z-20">
-            <span className="glass-capsule px-2.5 py-0.5 rounded-[0.25rem] text-[11px] font-grotesk font-semibold text-white">
+          {/* Top-Right Stacked Controls: View Pill Above Size Guide (keeps top-left poster logos unobstructed) */}
+          <div className="absolute top-1 right-1 z-25 flex flex-col items-end gap-1">
+            <span className="glass-capsule px-2 py-[2px] rounded-[0.25rem] text-[10px] font-grotesk font-semibold text-white tracking-wide">
               {galleryImages[activeImageIndex]?.label || 'Front'}
             </span>
-          </div>
 
-          {/* Small Size Guide Button on Top Right of Trousers & Shirts Articles */}
-          {(product.category === 'Trousers' || product.category === 'Shirts') && (
-            <button
-              type="button"
-              onClick={() => setIsSizeGuideOpen(true)}
-              className="glass-capsule absolute top-1 right-1 z-25 px-2.5 py-0.5 rounded-[0.25rem] active:scale-95 text-[11px] font-grotesk font-semibold text-white inline-flex items-center gap-1 shadow-sm transition-all cursor-pointer outline-none"
-              aria-label={`Open ${product.category.toLowerCase()} size guide`}
-            >
-              <svg className="w-3 h-3 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 8.25V15.75C3 16.9926 4.00736 18 5.25 18H18.75C19.9926 18 21 16.9926 21 15.75V8.25C21 7.00736 19.9926 6 18.75 6H5.25C4.00736 6 3 7.00736 3 8.25Z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 6V10M12 6V11.5M16.5 6V10" />
-              </svg>
-              <span>Size guide</span>
-            </button>
-          )}
+            {(product.category === 'Trousers' || product.category === 'Shirts') && (
+              <button
+                type="button"
+                onClick={() => setIsSizeGuideOpen(true)}
+                className="glass-capsule px-2.5 py-0.5 rounded-[0.25rem] active:scale-95 text-[11px] font-grotesk font-semibold text-white inline-flex items-center gap-1 shadow-sm transition-all cursor-pointer outline-none"
+                aria-label={`Open ${product.category.toLowerCase()} size guide`}
+              >
+                <svg className="w-3 h-3 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 8.25V15.75C3 16.9926 4.00736 18 5.25 18H18.75C19.9926 18 21 16.9926 21 15.75V8.25C21 7.00736 19.9926 6 18.75 6H5.25C4.00736 6 3 7.00736 3 8.25Z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 6V10M12 6V11.5M16.5 6V10" />
+                </svg>
+                <span>Size guide</span>
+              </button>
+            )}
+          </div>
 
           {/* Vertical Column of Exact Color Dots Beside the Garment */}
           {onSelectProduct && colorVariants.length > 1 && (
@@ -211,15 +210,15 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
           )}
         </div>
 
-        {/* Dedicated Front / Back / Details Toggle Pill */}
-        <div className="relative z-20 mt-2.5 flex items-center justify-center">
-          <div className="glass-capsule p-0.5 rounded-[0.25rem] flex items-center gap-0.5 shadow-md">
+        {/* Dedicated Front / Back / Details Delicate Toggle Pill (centered directly under garment box) */}
+        <div className="relative z-20 mt-2 w-full pl-4 pr-12 flex items-center justify-center">
+          <div className="glass-capsule p-[2px] rounded-[0.25rem] flex items-center gap-0.5 shadow-sm">
             <button
               type="button"
               onClick={() => setActiveImageIndex(0)}
-              className={`px-3.5 py-0.5 rounded-[0.25rem] text-[13px] font-grotesk font-bold tracking-wider uppercase transition-all cursor-pointer ${
+              className={`px-2.5 py-[2px] rounded-[0.2rem] text-[10.5px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-all cursor-pointer ${
                 activeImageIndex === 0
-                  ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm scale-105'
+                  ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
                   : 'text-white/80 hover:text-white'
               }`}
             >
@@ -228,9 +227,9 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
             <button
               type="button"
               onClick={() => setActiveImageIndex(1)}
-              className={`px-3.5 py-0.5 rounded-[0.25rem] text-[13px] font-grotesk font-bold tracking-wider uppercase transition-all cursor-pointer ${
+              className={`px-2.5 py-[2px] rounded-[0.2rem] text-[10.5px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-all cursor-pointer ${
                 activeImageIndex === 1
-                  ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm scale-105'
+                  ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
                   : 'text-white/80 hover:text-white'
               }`}
             >
@@ -245,9 +244,9 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
                   key={detailIdx}
                   type="button"
                   onClick={() => setActiveImageIndex(detailIdx)}
-                  className={`px-3.5 py-0.5 rounded-[0.25rem] text-[13px] font-grotesk font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                  className={`px-2.5 py-[2px] rounded-[0.2rem] text-[10.5px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-all cursor-pointer ${
                     activeImageIndex === detailIdx
-                      ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm scale-105'
+                      ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
                       : 'text-white/80 hover:text-white'
                   }`}
                 >
@@ -259,9 +258,9 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
         </div>
       </div>
 
-      {/* 3. Article Multi-View Thumbnails (Front, Back, Details) */}
+      {/* 3. Article Multi-View Thumbnails (aligned directly beneath garment center) */}
       {galleryImages.length > 1 && (
-        <div className="w-full flex items-center justify-center gap-2 my-2 py-1 overflow-x-auto">
+        <div className="w-full pl-4 pr-12 flex items-center justify-center gap-2 my-2 py-1 overflow-x-auto">
           {galleryImages.map((img, idx) => {
             const isSelected = activeImageIndex === idx;
             return (
@@ -293,7 +292,7 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
       )}
 
       {/* 4. Translucent Frosted Details Card in Normal Flow */}
-      <div className="w-full rounded-2xl bg-white/[0.12] border border-white/20 backdrop-blur-xl p-3.5 sm:p-4 flex flex-col items-center text-center mt-2 shadow-[0_8px_32px_rgba(4,24,43,0.3)]">
+      <div className="w-full rounded-[0.5rem] bg-white/[0.12] border border-white/20 backdrop-blur-xl p-3.5 sm:p-4 flex flex-col items-center text-center mt-2 shadow-[0_8px_32px_rgba(4,24,43,0.3)]">
         {/* Product Name + Subtitle + Color */}
         <h2 className="font-display text-base sm:text-lg font-bold tracking-tight text-white">
           {product.name}
@@ -309,10 +308,15 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
 
         {/* Highlighted Frosted Glass Price Capsule with White Text */}
         <div className="mt-2 mb-2.5 flex items-center justify-center gap-2 flex-wrap">
-          <div className="selected-reveal-capsule inline-flex items-center justify-center px-4.5 py-1 rounded-[0.25rem]">
+          <div className="selected-reveal-capsule inline-flex items-center justify-center gap-2 px-4.5 py-1 rounded-[0.25rem]">
+            {product.originalPrice && (
+              <span className="text-[11.5px] sm:text-[13px] font-grotesk font-medium text-white/60 line-through tracking-wider uppercase whitespace-nowrap">
+                {product.originalPrice}
+              </span>
+            )}
             <span
-              className={`text-[13.5px] sm:text-[15px] font-grotesk font-black tracking-wider uppercase ${
-                product.soldOut ? 'text-white/55 line-through' : 'text-white'
+              className={`text-[13.5px] sm:text-[15px] font-grotesk font-black tracking-wider uppercase whitespace-nowrap ${
+                product.soldOut ? 'text-white/60 line-through' : 'text-white'
               }`}
             >
               {product.price}
@@ -413,15 +417,15 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
           type="button"
           onClick={() => void toggleWishlist(product)}
           className={`glass-capsule glass-capsule-hover w-full mt-2 py-2 px-3.5 rounded-[0.25rem] font-grotesk text-[13px] sm:text-[15px] font-bold tracking-wide text-white flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer outline-none ${
-            savedInWishlist ? 'border-rose-300/80 shadow-sm' : ''
+            savedInWishlist ? 'border-red-400/80 shadow-sm' : ''
           }`}
         >
           <svg
-            className={`w-3.5 h-3.5 shrink-0 ${savedInWishlist ? 'text-rose-400' : 'text-white'}`}
+            className="w-3.5 h-3.5 shrink-0 text-red-500"
             fill={savedInWishlist ? 'currentColor' : 'none'}
             viewBox="0 0 24 24"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="2.1"
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
           </svg>

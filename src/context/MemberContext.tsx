@@ -63,6 +63,7 @@ interface MemberContextType {
     email: string;
     phone: string;
     displayName?: string;
+    mode?: 'register' | 'signin';
   }) => Promise<{ ok: boolean; isNewMember?: boolean; error?: string }>;
   updateMemberProfile: (params: {
     phone?: string;
@@ -403,10 +404,12 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       email,
       phone,
       displayName,
+      mode = 'register',
     }: {
       email: string;
       phone: string;
       displayName?: string;
+      mode?: 'register' | 'signin';
     }): Promise<{ ok: boolean; isNewMember?: boolean; error?: string }> => {
       const normalizedEmail = normEmail(email);
       const normalizedPhone = normPhone(phone);
@@ -435,6 +438,7 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             email: normalizedEmail,
             phone: normalizedPhone,
             displayName: displayName?.trim() || undefined,
+            mode,
             clientPriorOrderUsed: hasOrderedIdentity({ email: normalizedEmail, phone: normalizedPhone }),
           }),
         });
@@ -466,7 +470,7 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               firstOrderDiscountUsed: savedMember.firstOrderDiscountUsed,
             });
           } catch (fbErr) {
-            if (fbErr instanceof Error && fbErr.message.includes('already registered to another account')) {
+            if (fbErr instanceof Error && fbErr.message.includes('Already registered')) {
               return { ok: false, error: fbErr.message };
             }
           }
@@ -597,7 +601,7 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               firstOrderDiscountUsed: updated.firstOrderDiscountUsed,
             });
           } catch (fbErr) {
-            if (fbErr instanceof Error && fbErr.message.includes('already registered to another account')) {
+            if (fbErr instanceof Error && fbErr.message.includes('Already registered')) {
               return { ok: false, error: fbErr.message };
             }
           }

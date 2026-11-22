@@ -11,6 +11,7 @@ interface MobileHeaderProps {
   onBack?: () => void;
   backLabel?: string;
   transparent?: boolean;
+  showBrandLogo?: boolean;
 }
 
 /**
@@ -29,6 +30,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   onBack,
   backLabel = 'Back',
   transparent = false,
+  showBrandLogo = true,
 }) => {
   const { member, wishlistItems, setIsMemberModalOpen, setIsWishlistOpen } = useMember();
   const wishlistCount = wishlistItems.length;
@@ -69,7 +71,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
             </button>
           )}
 
-          <BrandLogo compact onClick={onGoHome} />
+          {showBrandLogo && <BrandLogo compact onClick={onGoHome} />}
         </div>
 
         {/* RIGHT ACTIONS: Member, Wishlist & Shopping Bag */}
@@ -95,11 +97,11 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
             aria-label={`Wishlist containing ${wishlistCount} items`}
           >
             <svg
-              className={`w-5 h-5 ${wishlistCount > 0 ? 'text-rose-300 fill-rose-400' : 'text-white'}`}
-              fill={wishlistCount > 0 ? 'currentColor' : 'none'}
+              className="w-5 h-5 text-red-500 fill-red-500 drop-shadow-[0_1px_3px_rgba(0,0,0,0.28)]"
+              fill="currentColor"
               viewBox="0 0 24 24"
               stroke="currentColor"
-              strokeWidth="1.9"
+              strokeWidth="1.4"
             >
               <path
                 strokeLinecap="round"
@@ -109,7 +111,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
             </svg>
             {wishlistCount > 0 && (
               <span
-                className="absolute top-1 right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-rose-500 text-white text-[11px] font-grotesk font-bold flex items-center justify-center shadow-sm"
+                className="absolute top-1 right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[11px] font-grotesk font-bold flex items-center justify-center shadow-sm"
               >
                 {wishlistCount}
               </span>

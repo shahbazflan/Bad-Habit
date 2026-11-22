@@ -401,14 +401,18 @@ export const PairStudio: React.FC<PairStudioProps> = ({
 
   return (
     <div
-      className={`w-full text-white font-display select-none ${
+      className={`w-full text-white font-display select-none flex flex-col items-center ${
         isDesktopShowroom
-          ? 'h-full overflow-y-auto overscroll-contain pt-[118px] pb-6 px-4 sm:px-6 flex flex-col items-center justify-start'
-          : 'px-3.5 sm:px-5 pt-1.5 pb-16 flex flex-col items-center'
+          ? 'h-full overflow-y-auto overscroll-contain pt-[142px] lg:pt-[148px] pb-3.5 px-4 sm:px-6 lg:px-10 justify-start'
+          : 'flex-1 min-h-[calc(100svh-72px)] px-2.5 sm:px-5 pt-1 pb-3 justify-between'
       }`}
     >
       {/* Top Back Navigation Control */}
-      <div className="w-full max-w-[460px] sm:max-w-[660px] flex items-center justify-between mb-2">
+      <div
+        className={`w-full flex items-center justify-between mb-2 shrink-0 ${
+          isDesktopShowroom ? 'max-w-[1280px]' : 'max-w-none'
+        }`}
+      >
         <button
           type="button"
           onClick={onBack}
@@ -429,38 +433,42 @@ export const PairStudio: React.FC<PairStudioProps> = ({
       </div>
 
       {/* ================================================================= */}
-      {/* SQUARE ATELIER PAIR BOARD (Text/Controls Left · Clothes Right Up) */}
+      {/* FULL-SCREEN ATELIER PAIR BOARD (Text/Controls Left · Clothes Right)*/}
       {/* ================================================================= */}
-      <div className="relative w-full max-w-[460px] sm:max-w-[660px] rounded-none border border-white/55 bg-gradient-to-b from-sky-200/20 via-sky-300/15 to-sky-500/25 backdrop-blur-md p-4 sm:p-6 shadow-[0_24px_64px_rgba(4,24,43,0.32),inset_0_1px_1px_rgba(255,255,255,0.65)]">
+      <div
+        className={`relative w-full rounded-[0.5rem] border border-white/55 bg-gradient-to-b from-sky-200/20 via-sky-300/15 to-sky-500/25 backdrop-blur-md shadow-[0_24px_64px_rgba(4,24,43,0.32),inset_0_1px_1px_rgba(255,255,255,0.65)] flex-1 flex flex-col justify-between ${
+          isDesktopShowroom ? 'max-w-[1280px] p-4 sm:p-6 lg:p-8' : 'max-w-none p-3.5 sm:p-6'
+        }`}
+      >
         {/* Subtle Inner Radial Glow */}
         <div
           className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 w-72 h-44 rounded-full bg-white/25 blur-3xl"
           aria-hidden="true"
         />
 
-        {/* Side-by-Side Split: Text & Top Controls on Left · Clothes Moved Up on Right */}
-        <div className="relative z-10 w-full grid grid-cols-[1.08fr_0.92fr] sm:grid-cols-[1.12fr_0.88fr] gap-3 sm:gap-6 items-start">
+        {/* Side-by-Side Split: Text & Controls on Left · Larger Garments on Right */}
+        <div className="relative z-10 w-full flex-1 grid grid-cols-[0.86fr_1.14fr] sm:grid-cols-[0.9fr_1.1fr] gap-2.5 sm:gap-6 lg:gap-10 items-center min-h-0">
           {/* LEFT HAND SIDE: Header Text, Top Toggle Pills, Caption & Desktop Controls */}
           <div className="min-w-0 flex flex-col items-start text-left">
             <span className="font-grotesk text-[11px] sm:text-xs font-bold tracking-[0.22em] text-white/95 uppercase drop-shadow-sm">
               BAD HABIT
             </span>
 
-            <h1 className="font-display text-xl sm:text-[26px] font-black tracking-[0.04em] text-white uppercase leading-tight mt-0.5 drop-shadow-[0_2px_8px_rgba(4,24,43,0.25)]">
+            <h1 className="font-display text-lg min-[390px]:text-xl sm:text-[26px] lg:text-3xl font-black tracking-[0.04em] text-white uppercase leading-tight mt-0.5 drop-shadow-[0_2px_8px_rgba(4,24,43,0.25)]">
               MAKE A PAIR
             </h1>
 
             {/* 15% OFF Pill */}
-            <span className="glass-capsule mt-1.5 inline-flex items-center justify-center px-3.5 py-0.5 rounded-[0.25rem] text-white font-grotesk font-black text-[13px] sm:text-[14px] tracking-[0.1em] uppercase">
+            <span className="glass-capsule mt-1.5 inline-flex items-center justify-center px-3 py-0.5 rounded-[0.25rem] text-white font-grotesk font-black text-[12px] sm:text-[13.5px] tracking-[0.1em] uppercase">
               15% OFF
             </span>
 
-            {/* Front / Back Segmented Glass Pill */}
-            <div className="glass-capsule mt-2 p-0.5 rounded-[0.25rem] inline-flex items-center">
+            {/* Front / Back Delicate Segmented Glass Pill */}
+            <div className="glass-capsule mt-2 p-[2px] rounded-[0.25rem] inline-flex items-center gap-0.5">
               <button
                 type="button"
                 onClick={() => setViewAngle('front')}
-                className={`px-3.5 sm:px-4.5 py-0.5 rounded-[0.25rem] text-[12.5px] sm:text-[13px] font-grotesk font-bold tracking-wide transition-all cursor-pointer outline-none ${
+                className={`px-2.5 sm:px-3 py-[2px] rounded-[0.2rem] text-[10.5px] sm:text-[11px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-all cursor-pointer outline-none ${
                   viewAngle === 'front'
                     ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
                     : 'text-white/80 hover:text-white'
@@ -471,7 +479,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
               <button
                 type="button"
                 onClick={() => setViewAngle('back')}
-                className={`px-3.5 sm:px-4.5 py-0.5 rounded-[0.25rem] text-[12.5px] sm:text-[13px] font-grotesk font-bold tracking-wide transition-all cursor-pointer outline-none ${
+                className={`px-2.5 sm:px-3 py-[2px] rounded-[0.2rem] text-[10.5px] sm:text-[11px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-all cursor-pointer outline-none ${
                   viewAngle === 'back'
                     ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
                     : 'text-white/80 hover:text-white'
@@ -481,9 +489,9 @@ export const PairStudio: React.FC<PairStudioProps> = ({
               </button>
             </div>
 
-            {/* Selected Look Caption — Positioned Safely on Left So It Never Clips */}
+            {/* Selected Look Caption */}
             <div className="w-full mt-3 mb-2 sm:mb-3.5">
-              <p className="font-grotesk text-[12.5px] sm:text-[13.5px] font-bold text-white tracking-wide leading-snug break-words drop-shadow-[0_1px_3px_rgba(4,24,43,0.45)]">
+              <p className="font-grotesk text-[12.5px] sm:text-[14px] lg:text-[15px] font-bold text-white tracking-wide leading-snug break-words drop-shadow-[0_1px_3px_rgba(4,24,43,0.45)]">
                 {selectedTop.name} + {selectedTrouser.name}
               </p>
               {selectedTop.subtitle && (
@@ -494,13 +502,13 @@ export const PairStudio: React.FC<PairStudioProps> = ({
             </div>
 
             {/* Action Controls Inside Left Column on Tablet / Desktop */}
-            <div className="hidden sm:block w-full mt-1">
+            <div className="hidden sm:block w-full max-w-[440px] mt-1">
               {controlsContent}
             </div>
           </div>
 
-          {/* RIGHT HAND SIDE: Clothes Moved Up */}
-          <div className="flex flex-col items-center justify-start pt-0 -mt-1 sm:-mt-2">
+          {/* RIGHT HAND SIDE: Enlarged Garments Matched Front-to-Back */}
+          <div className="flex flex-col items-center justify-center w-full h-full">
             {/* Top Garment (Shirt or Hoodie layered above trousers) */}
             <button
               type="button"
@@ -510,8 +518,8 @@ export const PairStudio: React.FC<PairStudioProps> = ({
               }}
               className={`relative z-20 flex items-center justify-center cursor-pointer outline-none group ${
                 selectedTop.id === 'BH-S06' && viewAngle === 'back'
-                  ? 'h-[104px] sm:h-[138px] my-[10px] sm:my-[14px]'
-                  : 'h-[124px] sm:h-[168px]'
+                  ? 'h-[146px] min-[390px]:h-[164px] sm:h-[20vh] lg:h-[23vh] xl:h-[25vh] max-h-[230px] my-[10px] sm:my-[12px]'
+                  : 'h-[172px] min-[390px]:h-[192px] sm:h-[23vh] lg:h-[26vh] xl:h-[29vh] max-h-[265px]'
               }`}
               title={`Change ${topLabel} (${selectedTop.name})`}
               aria-label={`Selected ${topLabel}: ${selectedTop.name}. Click to change ${topLabel}.`}
@@ -520,7 +528,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                 src={topImageSrc}
                 alt={selectedTop.name}
                 className="h-full w-auto object-contain select-none transition-transform duration-200 group-hover:scale-[1.03]"
-                sizes="(max-width: 640px) 150px, 240px"
+                sizes="(max-width: 640px) 220px, 380px"
                 showSkeleton={false}
                 loading="eager"
                 decoding="async"
@@ -528,20 +536,14 @@ export const PairStudio: React.FC<PairStudioProps> = ({
               />
             </button>
 
-            {/* Trousers Garment pulled beneath top hem */}
+            {/* Trousers Garment meeting shirt hem cleanly so Front waistband matches Back view */}
             <button
               type="button"
               onClick={() => {
                 setOpenDropdown(null);
                 setDrawerTab('trousers');
               }}
-              className={`relative z-10 -mt-[16px] sm:-mt-[22px] h-[168px] sm:h-[234px] flex items-center justify-center cursor-pointer outline-none group transition-transform duration-200 ${
-                viewAngle === 'front'
-                  ? selectedTrouser.id === 'BH-T09' || selectedTrouser.id === 'BH-T11'
-                    ? '-translate-x-[3px]'
-                    : '-translate-x-[5px] sm:-translate-x-[6px]'
-                  : '-translate-x-[2px]'
-              }`}
+              className="relative z-10 -mt-[2px] sm:-mt-[4px] -translate-x-[1px] sm:-translate-x-[2px] h-[238px] min-[390px]:h-[264px] sm:h-[33vh] lg:h-[37vh] xl:h-[40vh] max-h-[375px] flex items-center justify-center cursor-pointer outline-none group transition-transform duration-200"
               title={`Change trousers (${selectedTrouser.name})`}
               aria-label={`Selected trousers: ${selectedTrouser.name}. Click to change trousers.`}
             >
@@ -556,7 +558,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                 className={`h-full w-auto object-contain select-none transition-transform duration-200 group-hover:scale-[1.02] ${
                   isTrouserSoldOut ? 'opacity-75' : ''
                 }`}
-                sizes="(max-width: 640px) 150px, 240px"
+                sizes="(max-width: 640px) 220px, 380px"
                 showSkeleton={false}
                 loading="eager"
                 decoding="async"
@@ -567,7 +569,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
         </div>
 
         {/* Action Controls Full-Width Below on Narrow Mobile Only (< 640px) */}
-        <div className="sm:hidden relative z-20 w-full mt-3 pt-2.5 border-t border-white/20">
+        <div className="sm:hidden relative z-20 w-full mt-2.5 pt-2.5 border-t border-white/20 shrink-0">
           {controlsContent}
         </div>
 

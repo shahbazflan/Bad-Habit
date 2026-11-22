@@ -262,9 +262,9 @@ export const MobileExperience: React.FC = () => {
           decoding="async"
           fetchPriority="high"
         />
-        {/* Skyblue theme wash: ONLY active for landing page (home view). Collections retain exact original theme */}
+        {/* Skyblue top mixing cleanly into crisp white bottom on landing & categories */}
         {activeView === 'home' ? (
-          <div className="absolute inset-0 bg-gradient-to-b from-[#1b3d5f]/25 via-[#22486c]/50 to-[#193a58]/95" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1f5685]/28 via-[#66a2cf]/18 to-[#f4f8fc]/92" />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-b from-[#1b3d5f]/15 via-transparent to-[#0a1e30]/15" />
         )}

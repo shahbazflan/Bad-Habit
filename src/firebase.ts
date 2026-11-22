@@ -108,9 +108,7 @@ export async function syncFirebaseMemberProfile(params: {
       ]);
 
       if (targetPhoneSnap.exists() && targetPhoneSnap.data()?.uid !== params.uid) {
-        throw new Error(
-          'This phone number is already registered to another account. Please sign in with that account or use a different phone number.'
-        );
+        throw new Error('Email/phone Already registered');
       }
 
       const prevPhoneKey = existingProfileSnap.exists()
@@ -157,7 +155,7 @@ export async function syncFirebaseMemberProfile(params: {
       }
     });
   } catch (error) {
-    if (error instanceof Error && error.message.includes('already registered to another account')) {
+    if (error instanceof Error && error.message.includes('Already registered')) {
       throw error;
     }
     handleFirestoreError(error, OperationType.WRITE, profilePath);

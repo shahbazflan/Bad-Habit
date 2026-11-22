@@ -24,15 +24,15 @@ export const HeroCloudOffer: React.FC<HeroCloudOfferProps> = ({
           className="flex items-center shrink-0"
         >
           <span
-            className={`font-ribbon font-bold uppercase text-white tracking-[0.12em] whitespace-nowrap drop-shadow-[0_1px_5px_rgba(3,12,24,0.52)] ${
-              isMobile ? 'text-base sm:text-lg' : 'text-lg md:text-xl lg:text-2xl'
+            className={`font-ribbon uppercase text-white tracking-[0.14em] whitespace-nowrap leading-none drop-shadow-[0_1px_5px_rgba(3,12,24,0.52)] ${
+              isMobile ? 'text-[21px] sm:text-[23px]' : 'text-[23px] md:text-[26px] lg:text-[30px]'
             }`}
           >
             FLAT 15% OFF
           </span>
           <span
             className={`text-white/65 font-light select-none ${
-              isMobile ? 'mx-5 text-sm' : 'mx-8 text-base'
+              isMobile ? 'mx-6 text-base' : 'mx-9 text-lg'
             }`}
             aria-hidden="true"
           >
@@ -50,7 +50,7 @@ export const HeroCloudOffer: React.FC<HeroCloudOfferProps> = ({
       }`}
       aria-hidden="true"
     >
-      <div className="hero-silky-ribbon w-full py-2 sm:py-2.5 overflow-hidden">
+      <div className="hero-silky-ribbon bg-[#071e38] w-full py-2 sm:py-2.5 overflow-hidden">
         <div className="hero-strip-track relative z-[1]">
           {renderTrack('a')}
           {renderTrack('b')}

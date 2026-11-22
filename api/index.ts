@@ -261,8 +261,8 @@ const isValidPhoneNumber = (raw: string): boolean => {
   return /^\+[1-9][0-9]{7,14}$/.test(e164);
 };
 
-const PHONE_CONFLICT_ERROR =
-  "This phone number is already registered to another account. Please sign in with that account's email or use a different phone number.";
+const PHONE_CONFLICT_ERROR = 'Email/phone Already registered';
+const DUPLICATE_IDENTITY_ERROR = 'Email/phone Already registered';
 
 const MEMBER_PROMO_CODE = 'BH-DETECTED';
 const MEMBER_FIRST_ORDER_RATE = 0.10;
@@ -1732,10 +1732,11 @@ apiRouter.post('/cart/validate', (req, res) => {
   });
 });
 
-// 3. Member Signup / Login (Phone + Email) with strict 1-account-per-phone-number enforcement
+// 3. Member Signup / Login (Phone + Email) with strict 1-account-per-phone & 1-account-per-email enforcement
 apiRouter.post('/members/session', async (req, res) => {
   try {
-    const { email, phone, displayName, dryRun, clientPriorOrderUsed } = req.body || {};
+    const { email, phone, displayName, dryRun, clientPriorOrderUsed, mode } = req.body || {};
+    const authMode: 'register' | 'signin' = mode === 'signin' ? 'signin' : 'register';
     const normEmail = normalizeEmail(email);
     const normPhone = normalizePhoneToE164(phone);
 
@@ -1756,92 +1757,113 @@ apiRouter.post('/members/session', async (req, res) => {
       const existingByPhone = findMemberByPhoneInList(members, normPhone);
       const now = new Date().toISOString();
 
-      // Strict uniqueness check: reject if this phone number belongs to a different account (zero PII leaked)
-      if (
-        existingByPhone &&
-        (!existingByEmail || existingByPhone.id !== existingByEmail.id) &&
-        normalizeEmail(existingByPhone.email) !== normEmail
-      ) {
-        return {
-          status: 409 as const,
-          payload: {
-            success: false,
-            field: 'phone',
-            code: 'PHONE_ALREADY_REGISTERED',
-            error: PHONE_CONFLICT_ERROR,
-          },
-        };
-      }
+      if (authMode === 'register') {
+        // Strict uniqueness enforcement: 1 email = 1 account AND 1 phone = 1 account
+        if (existingByEmail || existingByPhone) {
+          return {
+            status: 409 as const,
+            payload: {
+              success: false,
+              field:
+                existingByEmail && existingByPhone
+                  ? 'both'
+                  : existingByEmail
+                    ? 'email'
+                    : 'phone',
+              code:
+                existingByEmail && !existingByPhone
+                  ? 'EMAIL_ALREADY_REGISTERED'
+                  : !existingByEmail && existingByPhone
+                    ? 'PHONE_ALREADY_REGISTERED'
+                    : 'EMAIL_OR_PHONE_ALREADY_REGISTERED',
+              error: DUPLICATE_IDENTITY_ERROR,
+            },
+          };
+        }
 
-      if (existingByEmail) {
-        // Ensure updating phone to an unclaimed number or retaining normalized E.164 never collides
-        const emailMatches = findAllMatchingMembersInList(members, {
-          memberId: existingByEmail.id,
-          email: normEmail,
-          phone: normPhone,
-        });
         const priorOrdered =
           Boolean(clientPriorOrderUsed) ||
-          emailMatches.some(
-            (m: any) =>
-              Boolean(m.firstOrderDiscountUsed) ||
-              Number(m.orderCount || 0) > 0 ||
-              hasPriorOrderByIdentityInLists(orders, members, {
-                memberId: m.id,
-                email: m.email,
-                phone: m.phone,
-              })
-          ) ||
           hasPriorOrderByIdentityInLists(orders, members, { email: normEmail, phone: normPhone });
+        const rand = Math.floor(10000 + Math.random() * 90000);
+        const newMember = {
+          id: `mem_${Date.now()}_${rand}`,
+          email: normEmail,
+          phone: normPhone,
+          displayName: displayName ? String(displayName).trim().slice(0, 100) : '',
+          promoCode: MEMBER_PROMO_CODE,
+          orderCount: priorOrdered ? 1 : 0,
+          firstOrderDiscountUsed: priorOrdered,
+          firstOrderNumber: null,
+          wishlist: [],
+          createdAt: now,
+          updatedAt: now,
+        };
 
-        if (priorOrdered && (!existingByEmail.firstOrderDiscountUsed || Number(existingByEmail.orderCount || 0) === 0)) {
-          existingByEmail.firstOrderDiscountUsed = true;
-          existingByEmail.orderCount = Math.max(1, Number(existingByEmail.orderCount || 0));
-        }
-        existingByEmail.phone = normPhone;
-        if (displayName && !existingByEmail.displayName) {
-          existingByEmail.displayName = String(displayName).trim().slice(0, 100);
-        }
-        existingByEmail.updatedAt = now;
-        const saved = await upsertMemberRecordAsync(existingByEmail);
+        const saved = await upsertMemberRecordAsync(newMember);
         return {
-          status: 200 as const,
-          isNew: false,
+          status: 201 as const,
+          isNew: true,
           member: saved,
           payload: {
             success: true,
-            isNewMember: false,
+            isNewMember: true,
             member: saved,
           },
         };
       }
 
-      const priorOrdered =
-        Boolean(clientPriorOrderUsed) ||
-        hasPriorOrderByIdentityInLists(orders, members, { email: normEmail, phone: normPhone });
-      const rand = Math.floor(10000 + Math.random() * 90000);
-      const newMember = {
-        id: `mem_${Date.now()}_${rand}`,
+      // Sign-in mode: require exact matching account (never overwrite phone or split an email across accounts)
+      if (!existingByEmail || !existingByPhone || existingByEmail.id !== existingByPhone.id) {
+        return {
+          status: 401 as const,
+          payload: {
+            success: false,
+            code: 'ACCOUNT_MISMATCH',
+            error: 'No matching account found for this email and phone combination.',
+          },
+        };
+      }
+
+      const emailMatches = findAllMatchingMembersInList(members, {
+        memberId: existingByEmail.id,
         email: normEmail,
         phone: normPhone,
-        displayName: displayName ? String(displayName).trim().slice(0, 100) : '',
-        promoCode: MEMBER_PROMO_CODE,
-        orderCount: priorOrdered ? 1 : 0,
-        firstOrderDiscountUsed: priorOrdered,
-        firstOrderNumber: null,
-        wishlist: [],
-        createdAt: now,
-        updatedAt: now,
-      };
+      });
+      const priorOrdered =
+        Boolean(clientPriorOrderUsed) ||
+        emailMatches.some(
+          (m: any) =>
+            Boolean(m.firstOrderDiscountUsed) ||
+            Number(m.orderCount || 0) > 0 ||
+            hasPriorOrderByIdentityInLists(orders, members, {
+              memberId: m.id,
+              email: m.email,
+              phone: m.phone,
+            })
+        ) ||
+        hasPriorOrderByIdentityInLists(orders, members, { email: normEmail, phone: normPhone });
 
-      const saved = await upsertMemberRecordAsync(newMember);
+      let needsSave = false;
+      if (priorOrdered && (!existingByEmail.firstOrderDiscountUsed || Number(existingByEmail.orderCount || 0) === 0)) {
+        existingByEmail.firstOrderDiscountUsed = true;
+        existingByEmail.orderCount = Math.max(1, Number(existingByEmail.orderCount || 0));
+        needsSave = true;
+      }
+      if (displayName && !existingByEmail.displayName) {
+        existingByEmail.displayName = String(displayName).trim().slice(0, 100);
+        needsSave = true;
+      }
+      if (needsSave) {
+        existingByEmail.updatedAt = now;
+      }
+      const saved = needsSave ? await upsertMemberRecordAsync(existingByEmail) : existingByEmail;
       return {
-        status: 201 as const,
-        isNew: true,
+        status: 200 as const,
+        isNew: false,
         member: saved,
         payload: {
           success: true,
-          isNewMember: true,
+          isNewMember: false,
           member: saved,
         },
       };
@@ -2019,6 +2041,21 @@ apiRouter.post('/wishlist/add', async (req, res) => {
       const normPhone = normalizePhoneToE164(phone);
       let member = findMemberByIdInList(members, memberId) || findMemberByEmailInList(members, normEmail);
 
+      if (member && normPhone && normalizePhoneToE164(member.phone) !== normPhone) {
+        const phoneOwner = findMemberByPhoneInList(members, normPhone);
+        if (phoneOwner && phoneOwner.id !== member.id) {
+          return {
+            status: 409 as const,
+            payload: {
+              success: false,
+              field: 'phone',
+              code: 'PHONE_ALREADY_REGISTERED',
+              error: DUPLICATE_IDENTITY_ERROR,
+            },
+          };
+        }
+      }
+
       if (!member && normPhone) {
         const phoneOwner = findMemberByPhoneInList(members, normPhone);
         if (phoneOwner && normEmail && normalizeEmail(phoneOwner.email) !== normEmail) {
@@ -2028,7 +2065,7 @@ apiRouter.post('/wishlist/add', async (req, res) => {
               success: false,
               field: 'phone',
               code: 'PHONE_ALREADY_REGISTERED',
-              error: PHONE_CONFLICT_ERROR,
+              error: DUPLICATE_IDENTITY_ERROR,
             },
           };
         }

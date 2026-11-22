@@ -451,11 +451,11 @@ export function ShowroomFloor({
               aria-label={`Wishlist (${wishlistCount} items)`}
             >
               <svg
-                className={`w-3.5 h-3.5 ${wishlistCount > 0 ? 'text-rose-400 fill-rose-400' : 'text-white'}`}
-                fill={wishlistCount > 0 ? 'currentColor' : 'none'}
+                className="w-3.5 h-3.5 text-red-500 fill-red-500"
+                fill="currentColor"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
-                strokeWidth="2"
+                strokeWidth="1.5"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
               </svg>
@@ -498,11 +498,11 @@ export function ShowroomFloor({
               aria-label="Wishlist"
             >
               <svg
-                className={`w-3 h-3 ${wishlistCount > 0 ? 'text-rose-400 fill-rose-400' : 'text-white'}`}
-                fill={wishlistCount > 0 ? 'currentColor' : 'none'}
+                className="w-3 h-3 text-red-500 fill-red-500"
+                fill="currentColor"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
-                strokeWidth="2"
+                strokeWidth="1.5"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
               </svg>
@@ -619,10 +619,7 @@ export function ShowroomFloor({
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-start pt-[144px] lg:pt-[152px] pb-5 px-4 sm:px-8 w-full max-w-[1720px] mx-auto select-none pointer-events-auto">
             {/* Header: Tightened directly below top bar */}
             <div className="text-center mb-2.5 lg:mb-3.5">
-              <span className="text-[10px] sm:text-[11px] font-mono tracking-[0.28em] text-cyan-200 uppercase font-semibold">
-                CURATED COLLECTION
-              </span>
-              <h2 className="font-display text-2xl sm:text-3xl lg:text-[32px] font-black tracking-tight text-white uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)] mt-0.5 leading-tight">
+              <h2 className="font-display text-2xl sm:text-3xl lg:text-[32px] font-black tracking-tight text-white uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)] leading-tight">
                 SHOP BY CATEGORY
               </h2>
             </div>
@@ -651,11 +648,11 @@ export function ShowroomFloor({
                   </div>
                 </div>
 
-                {/* Live Magnum BOXY Shirt + Classic Brown Trousers Showcase */}
+                {/* Live Magnum Shirt + Classic Brown Trousers Showcase */}
                 <div className="absolute inset-x-1 top-[86px] lg:top-[104px] bottom-[66px] flex items-center justify-center -space-x-3 pointer-events-none">
                   <SmartImage
                     src={(SHIRT_PRODUCTS.find((p) => p.id === 'BH-S05') || SHIRT_PRODUCTS[5]).image}
-                    alt="Magnum BOXY shirt pairing"
+                    alt="Magnum Shirt pairing"
                     className="relative z-10 h-[86%] w-auto max-w-[54%] object-contain transition-transform duration-350 group-hover:scale-105"
                     sizes="(max-width: 1024px) 180px, 240px"
                     showSkeleton={false}
@@ -887,8 +884,8 @@ export function ShowroomFloor({
                                 onTouchStart={(e) => e.stopPropagation()}
                                 className={`absolute top-1 left-2 z-30 pointer-events-auto w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-all cursor-pointer active:scale-90 shadow-md ${
                                   saved
-                                    ? 'bg-white/95 border-white text-rose-500'
-                                    : 'bg-slate-900/45 border-white/30 text-white/90 hover:bg-slate-900/65 hover:text-white'
+                                    ? 'bg-white/95 border-white text-red-500'
+                                    : 'bg-white/80 border-white/85 text-red-500 hover:bg-white/95'
                                 }`}
                                 aria-label={
                                   saved
@@ -901,7 +898,7 @@ export function ShowroomFloor({
                                   fill={saved ? 'currentColor' : 'none'}
                                   viewBox="0 0 24 24"
                                   stroke="currentColor"
-                                  strokeWidth="2"
+                                  strokeWidth="2.1"
                                 >
                                   <path
                                     strokeLinecap="round"
@@ -954,15 +951,22 @@ export function ShowroomFloor({
                               )}
 
                               <div className="flex items-center justify-center gap-1.5 mt-1.5">
-                                <div className="showroom-glass-capsule w-[144px] sm:w-[164px] h-[40px] px-3.5 cursor-pointer shadow-[0_6px_20px_rgba(4,15,34,0.16)]">
+                                <div className="showroom-glass-capsule min-w-[154px] sm:min-w-[172px] h-[40px] px-3.5 cursor-pointer shadow-[0_6px_20px_rgba(4,15,34,0.16)]">
                                   <span className="absolute inset-x-2 top-[2px] h-[40%] rounded-[0.25rem] bg-gradient-to-b from-white/55 via-white/20 to-transparent pointer-events-none" />
                                   <span className="absolute inset-x-3.5 bottom-[2px] h-[25%] rounded-[0.25rem] bg-gradient-to-t from-blue-200/30 to-transparent pointer-events-none opacity-60" />
-                                  <span
-                                    className={`relative z-10 font-grotesk text-[15px] sm:text-[16.5px] font-bold text-white tracking-tight whitespace-nowrap ${
-                                      product.soldOut ? 'line-through opacity-55' : ''
-                                    }`}
-                                  >
-                                    {product.price}
+                                  <span className="relative z-10 inline-flex items-baseline gap-1.5 font-grotesk tracking-tight whitespace-nowrap">
+                                    {product.originalPrice && (
+                                      <span className="text-[11.5px] sm:text-[12.5px] font-medium text-white/60 line-through">
+                                        {product.originalPrice}
+                                      </span>
+                                    )}
+                                    <span
+                                      className={`text-[15px] sm:text-[16.5px] font-bold text-white ${
+                                        product.soldOut ? 'line-through opacity-60' : ''
+                                      }`}
+                                    >
+                                      {product.price}
+                                    </span>
                                   </span>
                                 </div>
                               </div>
@@ -1072,10 +1076,15 @@ export function ShowroomFloor({
               </p>
 
               <div className="flex items-center gap-3 flex-wrap">
-                <div className="selected-reveal-capsule min-w-[180px] sm:min-w-[198px] px-6 py-2.5">
+                <div className="selected-reveal-capsule min-w-[180px] sm:min-w-[198px] px-5 py-2.5 gap-2">
+                  {selectedProduct.originalPrice && (
+                    <span className="font-grotesk text-[13.5px] sm:text-[15px] font-medium text-white/60 line-through whitespace-nowrap">
+                      {selectedProduct.originalPrice}
+                    </span>
+                  )}
                   <span
                     className={`font-grotesk text-[18.5px] sm:text-[20px] font-black tracking-wider whitespace-nowrap ${
-                      selectedProduct.soldOut ? 'text-white/55 line-through' : 'text-white'
+                      selectedProduct.soldOut ? 'text-white/60 line-through' : 'text-white'
                     }`}
                   >
                     {selectedProduct.price}
@@ -1100,9 +1109,9 @@ export function ShowroomFloor({
                         key={idx}
                         type="button"
                         onClick={() => setSelectedImageIndex(idx)}
-                        className={`px-3 py-1 rounded-[0.25rem] text-[13px] font-grotesk font-semibold transition-all cursor-pointer ${
+                        className={`px-2.5 py-[2px] rounded-[0.25rem] text-[10.5px] sm:text-[11px] font-grotesk font-semibold tracking-[0.06em] uppercase transition-all cursor-pointer ${
                           selectedImageIndex === idx
-                            ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white font-bold shadow-md'
+                            ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white font-bold shadow-sm'
                             : 'glass-capsule glass-capsule-hover text-white/85 shadow-sm'
                         }`}
                       >
@@ -1169,15 +1178,15 @@ export function ShowroomFloor({
                 )}
               </div>
 
-              {/* Front / Back / Details Garment View Switcher Pill */}
-              <div className="mt-3 flex items-center gap-2">
-                <div className="glass-capsule p-0.5 rounded-[0.25rem] flex items-center gap-0.5 shadow-lg">
+              {/* Front / Back / Details Garment Delicate View Switcher Pill */}
+              <div className="mt-2.5 flex items-center gap-2">
+                <div className="glass-capsule p-[2px] rounded-[0.25rem] flex items-center gap-0.5 shadow-sm">
                   <button
                     type="button"
                     onClick={() => setSelectedImageIndex(0)}
-                    className={`px-3.5 py-1 rounded-[0.25rem] text-[13px] font-grotesk font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                    className={`px-2.5 py-[2px] rounded-[0.2rem] text-[10.5px] sm:text-[11px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-all cursor-pointer ${
                       selectedImageIndex === 0
-                        ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-md scale-105'
+                        ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
                         : 'text-white/80 hover:text-white hover:bg-white/15'
                     }`}
                   >
@@ -1186,9 +1195,9 @@ export function ShowroomFloor({
                   <button
                     type="button"
                     onClick={() => setSelectedImageIndex(1)}
-                    className={`px-3.5 py-1 rounded-[0.25rem] text-[13px] font-grotesk font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                    className={`px-2.5 py-[2px] rounded-[0.2rem] text-[10.5px] sm:text-[11px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-all cursor-pointer ${
                       selectedImageIndex === 1
-                        ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-md scale-105'
+                        ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
                         : 'text-white/80 hover:text-white hover:bg-white/15'
                     }`}
                   >
@@ -1203,9 +1212,9 @@ export function ShowroomFloor({
                         key={detailIdx}
                         type="button"
                         onClick={() => setSelectedImageIndex(detailIdx)}
-                        className={`px-3.5 py-1 rounded-[0.25rem] text-[13px] font-grotesk font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                        className={`px-2.5 py-[2px] rounded-[0.2rem] text-[10.5px] sm:text-[11px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-all cursor-pointer ${
                           selectedImageIndex === detailIdx
-                            ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-md scale-105'
+                            ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
                             : 'text-white/80 hover:text-white hover:bg-white/15'
                         }`}
                       >
@@ -1297,15 +1306,15 @@ export function ShowroomFloor({
                   type="button"
                   onClick={() => void toggleWishlist(selectedProduct)}
                   className={`glass-capsule glass-capsule-hover min-w-[184px] sm:min-w-[202px] mt-1 px-4.5 py-2 rounded-[0.25rem] font-grotesk text-[13px] font-bold tracking-wide text-white flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer outline-none ${
-                    isInWishlist(selectedProduct.id) ? 'border-rose-300/80' : ''
+                    isInWishlist(selectedProduct.id) ? 'border-red-400/80' : ''
                   }`}
                 >
                   <svg
-                    className={`w-3.5 h-3.5 shrink-0 ${isInWishlist(selectedProduct.id) ? 'text-rose-400' : 'text-white'}`}
+                    className="w-3.5 h-3.5 shrink-0 text-red-500"
                     fill={isInWishlist(selectedProduct.id) ? 'currentColor' : 'none'}
                     viewBox="0 0 24 24"
                     stroke="currentColor"
-                    strokeWidth="2"
+                    strokeWidth="2.1"
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                   </svg>
@@ -1441,7 +1450,12 @@ export function ShowroomFloor({
                 </span>
               )}
 
-              <div className="showroom-mobile-price-capsule px-5 py-1.5 mt-2 shadow-[0_6px_20px_rgba(4,15,34,0.16)]">
+              <div className="showroom-mobile-price-capsule px-5 py-1.5 mt-2 gap-2 shadow-[0_6px_20px_rgba(4,15,34,0.16)]">
+                {currentMobileProduct.originalPrice && (
+                  <span className="font-grotesk text-[12px] font-medium text-white/60 line-through whitespace-nowrap">
+                    {currentMobileProduct.originalPrice}
+                  </span>
+                )}
                 <span className="font-grotesk text-[15px] font-bold text-white tracking-tight whitespace-nowrap">
                   {currentMobileProduct.soldOut ? `${currentMobileProduct.price} · SOLD OUT` : currentMobileProduct.price}
                 </span>
@@ -1546,15 +1560,15 @@ export function ShowroomFloor({
                 )}
               </div>
 
-              {/* Front / Back / Details Toggle Pill */}
-              <div className="mt-2.5 flex items-center justify-center">
-                <div className="glass-capsule p-0.5 rounded-[0.25rem] flex items-center gap-0.5 shadow-md">
+              {/* Front / Back / Details Delicate Toggle Pill (centered under garment container) */}
+              <div className="mt-2 w-full pl-2 pr-10 flex items-center justify-center">
+                <div className="glass-capsule p-[2px] rounded-[0.25rem] flex items-center gap-0.5 shadow-sm">
                   <button
                     type="button"
                     onClick={() => setSelectedImageIndex(0)}
-                    className={`px-3.5 py-1 rounded-[0.25rem] text-[13px] font-grotesk font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                    className={`px-2.5 py-[2px] rounded-[0.2rem] text-[10.5px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-all cursor-pointer ${
                       selectedImageIndex === 0
-                        ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-md scale-105'
+                        ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
                         : 'text-white/80 hover:text-white'
                     }`}
                   >
@@ -1563,9 +1577,9 @@ export function ShowroomFloor({
                   <button
                     type="button"
                     onClick={() => setSelectedImageIndex(1)}
-                    className={`px-3.5 py-1 rounded-[0.25rem] text-[13px] font-grotesk font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                    className={`px-2.5 py-[2px] rounded-[0.2rem] text-[10.5px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-all cursor-pointer ${
                       selectedImageIndex === 1
-                        ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-md scale-105'
+                        ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
                         : 'text-white/80 hover:text-white'
                     }`}
                   >
@@ -1580,9 +1594,9 @@ export function ShowroomFloor({
                         key={detailIdx}
                         type="button"
                         onClick={() => setSelectedImageIndex(detailIdx)}
-                        className={`px-3.5 py-1 rounded-[0.25rem] text-[13px] font-grotesk font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                        className={`px-2.5 py-[2px] rounded-[0.2rem] text-[10.5px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-all cursor-pointer ${
                           selectedImageIndex === detailIdx
-                            ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-md scale-105'
+                            ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
                             : 'text-white/80 hover:text-white'
                         }`}
                       >
@@ -1596,7 +1610,7 @@ export function ShowroomFloor({
 
             {/* Multi-view thumbnails */}
             {activeGallery.length > 1 && (
-              <div className="flex items-center gap-2 overflow-x-auto py-1">
+              <div className="w-full pl-2 pr-10 flex items-center justify-center gap-2 overflow-x-auto py-1">
                 {activeGallery.map((img, idx) => (
                   <button
                     key={idx}
@@ -1644,7 +1658,12 @@ export function ShowroomFloor({
                 {selectedProduct.fabric}
               </p>
 
-              <div className="showroom-mobile-price-capsule px-5 py-1.5 shadow-md">
+              <div className="showroom-mobile-price-capsule px-5 py-1.5 gap-2 shadow-md">
+                {selectedProduct.originalPrice && (
+                  <span className="font-grotesk text-[12px] font-medium text-white/60 line-through whitespace-nowrap">
+                    {selectedProduct.originalPrice}
+                  </span>
+                )}
                 <span className="font-grotesk text-[15px] font-bold text-white tracking-tight whitespace-nowrap">
                   {selectedProduct.soldOut ? `${selectedProduct.price} · SOLD OUT` : selectedProduct.price}
                 </span>

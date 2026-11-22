@@ -75,7 +75,7 @@ export const WishlistDrawer: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-[calc(22px+env(safe-area-inset-top))] pb-4 border-b border-white/20 bg-white/[0.06]">
           <div className="flex items-center gap-2.5">
-            <svg className="w-5 h-5 text-rose-400" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
             </svg>
             <span className="font-display text-lg font-black tracking-[0.08em] uppercase text-white">
@@ -100,7 +100,7 @@ export const WishlistDrawer: React.FC = () => {
 
         {/* Promo Banner for Eligible Members */}
         {member && isFirstOrderAvailable && (
-          <div className="mx-5 mt-4 p-3.5 rounded-2xl bg-cyan-400/20 border border-cyan-200/40 text-xs font-display flex items-center justify-between gap-2">
+          <div className="mx-5 mt-4 p-3.5 rounded-[0.5rem] bg-cyan-400/20 border border-cyan-200/40 text-xs font-display flex items-center justify-between gap-2">
             <div>
               <span className="font-bold text-white block">10% Off First Order Active</span>
               <span className="text-[11px] text-cyan-100">Use member code at checkout:</span>
@@ -113,7 +113,7 @@ export const WishlistDrawer: React.FC = () => {
 
         {/* Promo Banner for Guests */}
         {!member && (
-          <div className="mx-5 mt-4 p-3.5 rounded-2xl bg-cyan-400/20 border border-cyan-200/40 text-xs font-display flex items-center justify-between gap-2.5">
+          <div className="mx-5 mt-4 p-3.5 rounded-[0.5rem] bg-cyan-400/20 border border-cyan-200/40 text-xs font-display flex items-center justify-between gap-2.5">
             <div>
               <span className="font-bold text-white block">Flat 10% Off First Order</span>
               <span className="text-[11px] text-cyan-100">Join to sync your wishlist & unlock code</span>
@@ -152,7 +152,7 @@ export const WishlistDrawer: React.FC = () => {
               return (
                 <div
                   key={item.productId}
-                  className="rounded-2xl bg-white/[0.10] border border-white/20 p-3.5 flex gap-3.5 items-center shadow-sm"
+                  className="rounded-[0.5rem] bg-white/[0.10] border border-white/20 p-3.5 flex gap-3.5 items-center shadow-sm"
                 >
                   <div className="relative w-20 h-24 shrink-0 rounded-xl bg-white/[0.08] border border-white/15 p-1.5 flex items-center justify-center overflow-hidden">
                     <SmartImage
@@ -181,7 +181,12 @@ export const WishlistDrawer: React.FC = () => {
                           </span>
                         )}
                         <span className="text-xs font-mono font-semibold text-white/90 block mt-0.5">
-                          {isSoldOut ? `${item.price} · SOLD OUT` : item.price}
+                          {catalogItem?.originalPrice && (
+                            <span className="line-through text-white/55 mr-1.5 font-normal">
+                              {catalogItem.originalPrice}
+                            </span>
+                          )}
+                          {isSoldOut ? `${catalogItem?.price || item.price} · SOLD OUT` : catalogItem?.price || item.price}
                         </span>
                       </div>
 

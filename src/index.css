@@ -53,16 +53,16 @@
 }
 
 .font-ribbon {
-  font-family: 'Helvetica Neue Condensed Bold', 'Helvetica Condensed', 'Arial Narrow', 'Barlow Condensed', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-stretch: condensed;
-  font-weight: 700;
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-weight: 400;
 }
 
 @layer components {
-  /* Solid Non-Transparent Navy Blue Architectural Runway Ribbon */
+  /* Navy Blue Architectural Runway Ribbon */
   .hero-silky-ribbon {
     position: relative;
     background-color: #071e38;
+    background-image: none;
     border-top: 1px solid rgba(255, 255, 255, 0.28);
     border-bottom: 1px solid rgba(255, 255, 255, 0.24);
     box-shadow: 0 8px 24px rgba(4, 16, 34, 0.34);

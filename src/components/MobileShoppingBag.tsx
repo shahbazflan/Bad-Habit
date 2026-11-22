@@ -93,7 +93,7 @@ export const MobileShoppingBag: React.FC<MobileShoppingBagProps> = ({
       )}
 
       {/* Main Translucent Glass Bag Panel matching Phone 5 */}
-      <div className="w-full rounded-2xl bg-white/[0.12] border border-white/20 backdrop-blur-xl p-4 sm:p-5 shadow-[0_8px_32px_rgba(4,24,43,0.3)] flex flex-col">
+      <div className="w-full rounded-[0.5rem] bg-white/[0.12] border border-white/20 backdrop-blur-xl p-4 sm:p-5 shadow-[0_8px_32px_rgba(4,24,43,0.3)] flex flex-col">
         {items.length === 0 ? (
           /* Empty State */
           <div className="py-12 flex flex-col items-center text-center">
@@ -126,7 +126,7 @@ export const MobileShoppingBag: React.FC<MobileShoppingBagProps> = ({
                 return (
                   <div
                     key={`${item.productId}-${item.size}`}
-                    className="relative w-full rounded-xl bg-white/[0.08] border border-white/15 p-3 flex items-center gap-3.5 transition-all"
+                    className="relative w-full rounded-[0.5rem] bg-white/[0.08] border border-white/15 p-3 flex items-center gap-3.5 transition-all"
                   >
                     {/* Thumbnail in rounded container */}
                     <div className="relative w-16 h-20 rounded-lg bg-white/[0.06] border border-white/10 flex items-center justify-center p-1 shrink-0 overflow-hidden">
@@ -231,7 +231,7 @@ export const MobileShoppingBag: React.FC<MobileShoppingBagProps> = ({
 
             {member ? (
               isFirstOrderEligible && (
-                <div className="mt-3 rounded-xl bg-cyan-400/15 border border-cyan-200/35 px-3 py-2 text-[11px] font-display text-cyan-100 flex items-center justify-between gap-2">
+                <div className="mt-3 rounded-[0.5rem] bg-cyan-400/15 border border-cyan-200/35 px-3 py-2 text-[11px] font-display text-cyan-100 flex items-center justify-between gap-2">
                   <span>1st order 10% off at checkout</span>
                   <span className="font-mono font-bold text-white">BH-DETECTED</span>
                 </div>
@@ -240,7 +240,7 @@ export const MobileShoppingBag: React.FC<MobileShoppingBagProps> = ({
               <button
                 type="button"
                 onClick={() => setIsMemberModalOpen(true)}
-                className="w-full mt-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/25 px-3 py-2 text-[11px] font-display text-cyan-100 flex items-center justify-between gap-2 cursor-pointer transition-colors"
+                className="w-full mt-3 rounded-[0.5rem] bg-white/10 hover:bg-white/15 border border-white/25 px-3 py-2 text-[11px] font-display text-cyan-100 flex items-center justify-between gap-2 cursor-pointer transition-colors"
               >
                 <span>Become a member · 10% off first order</span>
                 <span className="font-display font-bold text-white underline whitespace-nowrap">JOIN AND GET A CODE</span>

@@ -29,6 +29,7 @@ export interface Product {
   backImage?: string; // Transparent back garment cutout
   detailImages?: string[]; // High-definition close-up detail cutouts
   price: string;
+  originalPrice?: string;
   fabric: string;
   isHighlight?: boolean;
   soldOut?: boolean;
@@ -40,7 +41,7 @@ export const HERO_PLATE_WEBP_1376 = '/clean_plate_1376.webp?v=opt26';
 export const HERO_PLATE_AVIF_800 = '/clean_plate_800.avif?v=opt26';
 export const HERO_PLATE_AVIF_1376 = '/clean_plate_1376.avif?v=opt26';
 export const HERO_LOGO_URL = '/bad_habit_transparent.webp?v=opt26';
-export const HERO_MODEL_URL = '/assets/aistudio/hero_mobile_model_cutout.webp?v=opt26';
+export const HERO_MODEL_URL = '/assets/aistudio/hero_mobile_model_cutout.webp?v=opt27';
 
 export const ASSET_CACHE_VERSION =
   typeof __ASSET_VERSION__ !== 'undefined' ? __ASSET_VERSION__ : '20261121-v8';
@@ -130,7 +131,8 @@ const RAW_PRODUCTS: Product[] = [
     detailImages: [
       '/assets/trousers_v2/midnight_blue_trousers_detail_poster-2_d6eee5c8.webp',
     ],
-    price: 'PKR 6,499',
+    price: 'PKR 4,999',
+    originalPrice: 'PKR 6,499',
     fabric: 'Pure washed architectural linen with elasticated drawstring waistband, horn button, and tonal monogram weave',
   },
   {
@@ -147,7 +149,8 @@ const RAW_PRODUCTS: Product[] = [
     detailImages: [
       '/assets/trousers_v2/transparent_fashion_slide_with_white_typography-16_e57d3a87.webp',
     ],
-    price: 'PKR 6,499',
+    price: 'PKR 4,999',
+    originalPrice: 'PKR 6,499',
     fabric: 'Natural textured slub linen blend with relaxed straight cut, belt loops, and tonal back welt pockets',
   },
   {
@@ -165,7 +168,8 @@ const RAW_PRODUCTS: Product[] = [
       '/assets/trousers_v2/sage_trousers_macro_details_poster-8_229092bc.webp',
       '/assets/trousers_v2/sage_trousers_fashion_poster-7_c47a8ef2.webp',
     ],
-    price: 'PKR 6,499',
+    price: 'PKR 4,999',
+    originalPrice: 'PKR 6,499',
     fabric: 'Subtle sage garment-dyed cotton-linen weave with tonal drawcord, horn button, and tailored waistband',
   },
   {
@@ -182,7 +186,8 @@ const RAW_PRODUCTS: Product[] = [
     detailImages: [
       '/assets/trousers_v2/stone_trousers_detail_poster-9_2b5e0113.webp',
     ],
-    price: 'PKR 6,499',
+    price: 'PKR 4,999',
+    originalPrice: 'PKR 6,499',
     fabric: 'Earth-tone washed linen with relaxed drape, horn button closure, back flap pockets, and clean finished hem',
   },
   {
@@ -200,7 +205,8 @@ const RAW_PRODUCTS: Product[] = [
       '/assets/trousers_v2/transparent_fashion_carousel_with_white_typography-2_33cfcc84.webp',
       '/assets/trousers_v2/transparent_white_typography_trouser_poster-7_d7aaa4b7.webp',
     ],
-    price: 'PKR 6,499',
+    price: 'PKR 4,999',
+    originalPrice: 'PKR 6,499',
     fabric: 'Garment-washed cotton twill in signature warm saddle brown with architectural relaxed cut and horn button closure',
   },
 
@@ -221,7 +227,8 @@ const RAW_PRODUCTS: Product[] = [
     detailImages: [
       '/assets/trousers_v2/white_typography_on_a_transparent_fashion_slide-5_287bf00d.webp',
     ],
-    price: 'PKR 7,999',
+    price: 'PKR 4,999',
+    originalPrice: 'PKR 7,999',
     fabric: 'Volumetric structured twill with tapered balloon silhouette, elasticated cording, and dual rear patch pockets',
   },
   {
@@ -238,7 +245,8 @@ const RAW_PRODUCTS: Product[] = [
     detailImages: [
       '/assets/trousers_v2/ash-baggy-trousers-the-details-21-white-transparent_ad7e3eb9.webp',
     ],
-    price: 'PKR 6,499',
+    price: 'PKR 4,999',
+    originalPrice: 'PKR 6,499',
     fabric: 'Slouch-cut textured weave fleece with wide architectural drape, elongated drawcord, and deep hand pockets',
   },
   {
@@ -251,7 +259,8 @@ const RAW_PRODUCTS: Product[] = [
     colorGroup: 'trousers-streetwear',
     image: '/assets/trousers_v2/chocolate_balloon_front_only_v2.webp',
     backImage: '/assets/trousers_v2/chocolate_balloon_back_only_v2.webp',
-    price: 'PKR 7,999',
+    price: 'PKR 4,999',
+    originalPrice: 'PKR 7,999',
     fabric: 'Volumetric structured heavy-loopback cotton in rich chocolate brown with tapered balloon silhouette, elasticated drawcord waistband, and dual rear patch pockets',
     soldOut: true,
   },
@@ -393,80 +402,87 @@ const RAW_PRODUCTS: Product[] = [
   {
     id: 'BH-S05',
     backImage: '/assets/shirts/magnum_boxy_back_v2.webp',
-    name: 'Magnum BOXY',
+    name: 'Magnum Shirt',
     subtitle: 'Rough Cuban collar',
     category: 'Shirts',
     color: 'Black',
     colorHex: '#222020',
     colorGroup: 'shirts',
     image: '/assets/shirts/magnum_boxy_front_v2.webp',
-    price: 'PKR 4,999',
-    fabric: 'Deep black heavyweight matte poplin with structured collar stand, tonal buttons, and architectural straight boxy hem',
+    price: 'PKR 3,999',
+    originalPrice: 'PKR 4,999',
+    fabric: 'Deep black heavyweight matte poplin with structured collar stand, tonal buttons, and architectural straight hem',
   },
   {
     id: 'BH-S06',
     backImage: '/assets/shirts/rough_boxy_back_v2.webp',
-    name: 'Rough BOXY',
+    name: 'Rough Shirt',
     subtitle: 'Rough Cuban collar',
     category: 'Shirts',
     color: 'Rough Olive',
     colorHex: '#796e63',
     colorGroup: 'shirts',
     image: '/assets/shirts/rough_boxy_front_v2.webp',
-    price: 'PKR 4,999',
-    fabric: 'Crisp textured European poplin with original branded labels, wide camp collar, and relaxed boxy tailoring',
+    price: 'PKR 3,999',
+    originalPrice: 'PKR 4,999',
+    fabric: 'Crisp textured European poplin with original branded labels, wide camp collar, and relaxed architectural tailoring',
   },
   {
     id: 'BH-S04',
     backImage: '/assets/shirts/maroon_boxy_back_v2.webp',
-    name: 'Maroon BOXY',
+    name: 'Maroon Shirt',
     subtitle: 'Rough Cuban collar',
     category: 'Shirts',
     color: 'Maroon',
     colorHex: '#5a3330',
     colorGroup: 'shirts',
     image: '/assets/shirts/maroon_boxy_front_v2.webp',
-    price: 'PKR 4,999',
-    fabric: 'Rich maroon garment-washed poplin with unstructured camp collar, clean tonal stitching, and breathable boxy fit',
+    price: 'PKR 3,999',
+    originalPrice: 'PKR 4,999',
+    fabric: 'Rich maroon garment-washed poplin with unstructured camp collar, clean tonal stitching, and breathable relaxed fit',
   },
   {
     id: 'BH-S03',
     backImage: '/assets/shirts/espresso_boxy_back_v2.webp',
-    name: 'Espresso BOXY',
+    name: 'Espresso Shirt',
     subtitle: 'Rough Cuban collar',
     category: 'Shirts',
     color: 'Espresso',
     colorHex: '#3c2e28',
     colorGroup: 'shirts',
     image: '/assets/shirts/espresso_boxy_front_v2.webp',
-    price: 'PKR 4,999',
-    fabric: 'Ultra-smooth washed mulberry silk blend with fluid drape, tonal buttons, and architectural boxy camp collar',
+    price: 'PKR 3,999',
+    originalPrice: 'PKR 4,999',
+    fabric: 'Ultra-smooth washed mulberry silk blend with fluid drape, tonal buttons, and architectural camp collar',
   },
   {
     id: 'BH-S02',
     backImage: '/assets/shirts/cream_boxy_back_v2.webp',
-    name: 'Cream BOXY',
+    name: 'Cream Shirt',
     subtitle: 'Rough Cuban collar',
     category: 'Shirts',
     color: 'Cream',
     colorHex: '#dacfc2',
     colorGroup: 'shirts',
     image: '/assets/shirts/cream_boxy_front_v2.webp',
-    price: 'PKR 4,999',
-    fabric: 'Premium textured slub cotton in warm cream with open cuban collar, dropped shoulder drape, and boxy tailoring',
+    price: 'PKR 3,999',
+    originalPrice: 'PKR 4,999',
+    fabric: 'Premium textured slub cotton in warm cream with open cuban collar, dropped shoulder drape, and relaxed tailoring',
   },
   {
     id: 'BH-S01',
     backImage: '/assets/shirts/foam_boxy_back_v2.webp',
-    name: 'Foam BOXY',
+    name: 'Foam Shirt',
     subtitle: 'Rough Cuban collar',
     category: 'Shirts',
     color: 'Foam White',
     colorHex: '#e8e6e4',
     colorGroup: 'shirts',
     image: '/assets/shirts/foam_boxy_front_v2.webp',
-    price: 'PKR 4,999',
-    fabric: '100% lightweight European poplin cotton with relaxed camp collar, mother-of-pearl buttons, and structured boxy hem',
+    price: 'PKR 3,999',
+    originalPrice: 'PKR 4,999',
+    fabric: '100% lightweight European poplin cotton with relaxed camp collar, mother-of-pearl buttons, and structured straight hem',
+    soldOut: true,
   },
 ];
 
@@ -642,12 +658,12 @@ export function getShirtDetailImageClass(
   isBackView: boolean,
   platform: 'desktop' | 'mobile'
 ): string {
-  // Rough BOXY Back (1086x1448 portrait) vs Front (1448x1086 landscape):
+  // Rough Shirt Back (1086x1448 portrait) vs Front (1448x1086 landscape):
   // Constrain Back height so torso & collar-to-hem size match Front cleanly
   if (productId === 'BH-S06' && isBackView) {
     return platform === 'desktop' ? 'h-[71%] w-auto' : 'h-[63%] w-auto';
   }
-  // Cream BOXY Front (1199x1312 portrait) vs Back (1312x1199 landscape):
+  // Cream Shirt Front (1199x1312 portrait) vs Back (1312x1199 landscape):
   if (productId === 'BH-S02' && !isBackView) {
     return platform === 'desktop' ? 'h-[81%] w-auto' : 'h-[85%] w-auto';
   }

@@ -18,6 +18,7 @@ export const MemberAuthModal: React.FC = () => {
     logoutMember,
   } = useMember();
 
+  const [authMode, setAuthMode] = useState<'register' | 'signin'>('register');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -53,6 +54,7 @@ export const MemberAuthModal: React.FC = () => {
 
   useEffect(() => {
     if (!isMemberModalOpen) return;
+    setAuthMode('register');
     setErrorMsg(null);
     setEditError(null);
     setEditSuccess(null);
@@ -104,7 +106,8 @@ export const MemberAuthModal: React.FC = () => {
     const result = await loginOrRegister({
       email: cleanedEmail,
       phone: e164Phone,
-      displayName: displayName.trim(),
+      displayName: authMode === 'register' ? displayName.trim() : undefined,
+      mode: authMode,
     });
     if (!result.ok) {
       setErrorMsg(result.error || 'Could not complete sign in.');
@@ -154,7 +157,7 @@ export const MemberAuthModal: React.FC = () => {
               BAD HABIT CLUB
             </span>
             <h2 className="font-display text-xl font-black tracking-wide uppercase text-white mt-0.5">
-              {member ? 'Member Pass' : 'Become a Member'}
+              {member ? 'Member Pass' : authMode === 'register' ? 'Become a Member' : 'Member Sign In'}
             </h2>
           </div>
 
@@ -258,7 +261,7 @@ export const MemberAuthModal: React.FC = () => {
                 ) : (
                   <form onSubmit={handleSaveProfileUpdate} className="space-y-2.5 pt-1 border-t border-white/15">
                     {editError && (
-                      <div className="p-2.5 rounded-xl bg-red-950/75 border border-red-400/45 text-red-200 text-[11px] font-display">
+                      <div className="p-2.5 rounded-xl bg-red-950/90 border border-red-500 text-red-400 text-[11px] font-display font-semibold">
                         {editError}
                       </div>
                     )}
@@ -353,7 +356,10 @@ export const MemberAuthModal: React.FC = () => {
               </div>
 
               {errorMsg && (
-                <div className="p-3 rounded-xl bg-red-950/75 border border-red-400/45 text-red-200 text-xs font-display">
+                <div
+                  role="alert"
+                  className="p-3 rounded-xl bg-red-950/90 border border-red-500 text-red-400 text-xs sm:text-[13px] font-display font-semibold"
+                >
                   {errorMsg}
                 </div>
               )}
@@ -361,14 +367,17 @@ export const MemberAuthModal: React.FC = () => {
               <form onSubmit={handleSubmit} className="space-y-3.5">
                 <div>
                   <label htmlFor="member-phone" className="block text-[11px] font-display font-bold uppercase tracking-wider text-white/90 mb-1.5">
-                    Phone Number <span className="text-red-300">*</span>
+                    Phone Number <span className="text-red-400">*</span>
                   </label>
                   <input
                     id="member-phone"
                     type="tel"
                     required
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => {
+                      setPhone(e.target.value);
+                      if (errorMsg) setErrorMsg(null);
+                    }}
                     placeholder="e.g. 0300 1234567"
                     className="w-full px-4 py-3 rounded-2xl bg-black/35 focus:bg-black/50 text-white placeholder:text-white/50 border border-white/25 focus:border-white/65 focus:outline-none text-sm font-display"
                   />
@@ -376,41 +385,67 @@ export const MemberAuthModal: React.FC = () => {
 
                 <div>
                   <label htmlFor="member-email" className="block text-[11px] font-display font-bold uppercase tracking-wider text-white/90 mb-1.5">
-                    Email Address <span className="text-red-300">*</span>
+                    Email Address <span className="text-red-400">*</span>
                   </label>
                   <input
                     id="member-email"
                     type="email"
                     required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (errorMsg) setErrorMsg(null);
+                    }}
                     placeholder="you@example.com"
                     className="w-full px-4 py-3 rounded-2xl bg-black/35 focus:bg-black/50 text-white placeholder:text-white/50 border border-white/25 focus:border-white/65 focus:outline-none text-sm font-display"
                   />
                 </div>
 
-                <div>
-                  <label htmlFor="member-name" className="block text-[11px] font-display font-bold uppercase tracking-wider text-white/80 mb-1.5">
-                    Full Name (Optional)
-                  </label>
-                  <input
-                    id="member-name"
-                    type="text"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="e.g. Hassan Ahmed"
-                    className="w-full px-4 py-3 rounded-2xl bg-black/35 focus:bg-black/50 text-white placeholder:text-white/50 border border-white/25 focus:border-white/65 focus:outline-none text-sm font-display"
-                  />
-                </div>
+                {authMode === 'register' && (
+                  <div>
+                    <label htmlFor="member-name" className="block text-[11px] font-display font-bold uppercase tracking-wider text-white/80 mb-1.5">
+                      Full Name (Optional)
+                    </label>
+                    <input
+                      id="member-name"
+                      type="text"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      placeholder="e.g. Hassan Ahmed"
+                      className="w-full px-4 py-3 rounded-2xl bg-black/35 focus:bg-black/50 text-white placeholder:text-white/50 border border-white/25 focus:border-white/65 focus:outline-none text-sm font-display"
+                    />
+                  </div>
+                )}
 
                 <button
                   type="submit"
                   disabled={isLoading}
                   className="w-full py-3 px-5 selected-reveal-capsule font-grotesk text-white text-[15px] font-bold tracking-wider uppercase transition-all cursor-pointer active:scale-98 disabled:opacity-50"
                 >
-                  {isLoading ? 'Activating Membership…' : 'JOIN AND GET A CODE'}
+                  {isLoading
+                    ? authMode === 'register'
+                      ? 'Activating Membership…'
+                      : 'Signing In…'
+                    : authMode === 'register'
+                      ? 'JOIN AND GET A CODE'
+                      : 'SIGN IN TO PASS'}
                 </button>
               </form>
+
+              <div className="pt-1 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode((prev) => (prev === 'register' ? 'signin' : 'register'));
+                    setErrorMsg(null);
+                  }}
+                  className="text-xs font-display text-white/80 hover:text-white underline underline-offset-4 cursor-pointer transition-colors"
+                >
+                  {authMode === 'register'
+                    ? 'Already a member? Sign in'
+                    : 'New member? Create an account'}
+                </button>
+              </div>
             </div>
           )}
         </div>

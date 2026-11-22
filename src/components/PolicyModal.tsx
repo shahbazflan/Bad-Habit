@@ -62,7 +62,11 @@ export const PolicyModal: React.FC<PolicyModalProps> = ({ type, onClose }) => {
       aria-modal="true"
       aria-labelledby="policy-modal-title"
     >
-      <div className="relative w-full max-w-lg max-h-[85vh] rounded-3xl p-6 sm:p-8 bg-[#0a1828]/95 border border-white/30 backdrop-blur-2xl shadow-2xl flex flex-col text-white select-none">
+      <div
+        className={`relative w-full ${
+          type === 'terms' ? 'max-w-xl' : 'max-w-lg'
+        } max-h-[85vh] rounded-3xl p-6 sm:p-8 bg-[#0a1828]/95 border border-white/30 backdrop-blur-2xl shadow-2xl flex flex-col text-white select-none`}
+      >
         {/* Close Button */}
         <button
           type="button"
@@ -88,8 +92,21 @@ export const PolicyModal: React.FC<PolicyModalProps> = ({ type, onClose }) => {
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto space-y-3.5 pr-2 my-2 text-xs sm:text-sm text-white/80 leading-relaxed font-sans divide-y divide-white/10">
+          {type === 'terms' && (
+            <div className="pb-3.5">
+              <div className="rounded-2xl bg-[#071320]/90 border border-white/15 px-3 py-3 sm:px-4 sm:py-3.5 shadow-inner">
+                <img
+                  src="/assets/aistudio/Black_Fabric_Tags_With_White_Text__1__5871c2a8.png"
+                  alt="BAD HABIT — We resell carefully selected export surplus from brands such as Zara, Essentials, Wrangler, and Pull&Bear. Stock varies by availability. We handpick the best pieces from each batch."
+                  className="w-full h-auto object-contain mx-auto pointer-events-none select-none"
+                  loading="eager"
+                  decoding="async"
+                />
+              </div>
+            </div>
+          )}
           {policy.content.map((paragraph, idx) => (
-            <p key={idx} className={idx > 0 ? 'pt-3' : ''}>
+            <p key={idx} className={idx > 0 || type === 'terms' ? 'pt-3' : ''}>
               {paragraph}
             </p>
           ))}

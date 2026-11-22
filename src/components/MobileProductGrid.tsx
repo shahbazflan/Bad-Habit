@@ -79,8 +79,8 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
           onTouchStart={(e) => e.stopPropagation()}
           className={`absolute top-2.5 left-2.5 z-30 pointer-events-auto w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-all cursor-pointer active:scale-90 shadow-sm ${
             saved
-              ? 'bg-white/95 border-white text-rose-500'
-              : 'bg-slate-900/45 border-white/30 text-white/90 hover:bg-slate-900/65'
+              ? 'bg-white/95 border-white text-red-500'
+              : 'bg-white/80 border-white/85 text-red-500 hover:bg-white/95'
           }`}
           aria-label={saved ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
         >
@@ -89,7 +89,7 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
             fill={saved ? 'currentColor' : 'none'}
             viewBox="0 0 24 24"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="2.1"
           >
             <path
               strokeLinecap="round"
@@ -139,10 +139,15 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
 
           {/* Price Capsule & Sold Out State */}
           <div className="mt-1.5 flex items-center justify-center gap-2 flex-wrap">
-            <div className="showroom-mobile-price-capsule inline-flex items-center justify-center px-4 py-0.5 rounded-[0.25rem] shadow-sm">
+            <div className="showroom-mobile-price-capsule inline-flex items-center justify-center gap-1.5 px-3.5 py-0.5 rounded-[0.25rem] shadow-sm">
+              {product.originalPrice && (
+                <span className="text-[11px] sm:text-[12px] font-grotesk font-medium text-white/60 line-through tracking-tight whitespace-nowrap">
+                  {product.originalPrice}
+                </span>
+              )}
               <span
-                className={`text-[13px] sm:text-[14px] font-grotesk font-bold tracking-tight ${
-                  product.soldOut ? 'text-white/55 line-through' : 'text-white'
+                className={`text-[13px] sm:text-[14px] font-grotesk font-bold tracking-tight whitespace-nowrap ${
+                  product.soldOut ? 'text-white/60 line-through' : 'text-white'
                 }`}
               >
                 {product.price}

@@ -75,8 +75,8 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
             decoding="async"
           />
         </div>
-        <div className="absolute inset-0 bg-[#2f5c88]/85 backdrop-blur-2xl pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-black/20 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1e4d7a]/95 via-[#4e88bc]/90 to-[#edf5fc]/96 backdrop-blur-2xl pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-white/45 pointer-events-none" />
 
         {/* Content Container */}
         <div className="relative z-10 flex flex-col justify-between h-full min-h-[520px]">
@@ -127,7 +127,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                     onSelectCategory('pair');
                     onClose();
                   }}
-                  className="group flex items-center justify-between p-3.5 rounded-2xl bg-cyan-400/[0.18] hover:bg-cyan-400/[0.26] active:scale-[0.98] border border-cyan-200/50 backdrop-blur-md transition-all text-left cursor-pointer outline-none"
+                  className="group flex items-center justify-between p-3.5 rounded-[0.5rem] bg-cyan-400/[0.20] hover:bg-cyan-400/[0.28] active:scale-[0.98] border border-cyan-200/50 backdrop-blur-md transition-all text-left cursor-pointer outline-none"
                 >
                   <div>
                     <span className="font-display text-base font-black tracking-wide text-white block">
@@ -151,17 +151,17 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                     onSelectCategory('trousers');
                     onClose();
                   }}
-                  className="group flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.12] hover:bg-white/[0.20] active:scale-[0.98] border border-white/20 backdrop-blur-md transition-all text-left cursor-pointer outline-none"
+                  className="group flex items-center justify-between p-3.5 rounded-[0.5rem] bg-white/[0.14] hover:bg-white/[0.22] active:scale-[0.98] border border-white/25 backdrop-blur-md transition-all text-left cursor-pointer outline-none"
                 >
                   <div>
                     <span className="font-display text-base font-bold tracking-wide text-white block">
                       TROUSERS
                     </span>
-                    <span className="text-xs text-white/85 font-sans mt-0.5 block">
+                    <span className="text-xs text-white/90 font-sans mt-0.5 block">
                       {MAIN_COLLECTION.length} Articles
                     </span>
                   </div>
-                  <div className="w-8 h-8 rounded-full border border-white/20 bg-white/10 flex items-center justify-center text-white/80 group-hover:text-white group-hover:border-white/40 transition-colors">
+                  <div className="w-8 h-8 rounded-full border border-white/25 bg-white/12 flex items-center justify-center text-white/90 group-hover:text-white group-hover:border-white/50 transition-colors">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                     </svg>
@@ -175,17 +175,17 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                     onSelectCategory('shirts');
                     onClose();
                   }}
-                  className="group flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.12] hover:bg-white/[0.20] active:scale-[0.98] border border-white/20 backdrop-blur-md transition-all text-left cursor-pointer outline-none"
+                  className="group flex items-center justify-between p-3.5 rounded-[0.5rem] bg-white/[0.14] hover:bg-white/[0.22] active:scale-[0.98] border border-white/25 backdrop-blur-md transition-all text-left cursor-pointer outline-none"
                 >
                   <div>
                     <span className="font-display text-base font-bold tracking-wide text-white block">
                       SHIRTS
                     </span>
-                    <span className="text-xs text-white/85 font-sans mt-0.5 block">
+                    <span className="text-xs text-white/90 font-sans mt-0.5 block">
                       {SHIRT_PRODUCTS.length} Articles
                     </span>
                   </div>
-                  <div className="w-8 h-8 rounded-full border border-white/20 bg-white/10 flex items-center justify-center text-white/80 group-hover:text-white group-hover:border-white/40 transition-colors">
+                  <div className="w-8 h-8 rounded-full border border-white/25 bg-white/12 flex items-center justify-center text-white/90 group-hover:text-white group-hover:border-white/50 transition-colors">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                     </svg>
@@ -199,17 +199,17 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                     onSelectCategory('hoodies');
                     onClose();
                   }}
-                  className="group flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.12] hover:bg-white/[0.20] active:scale-[0.98] border border-white/20 backdrop-blur-md transition-all text-left cursor-pointer outline-none"
+                  className="group flex items-center justify-between p-3.5 rounded-[0.5rem] bg-white/[0.14] hover:bg-white/[0.22] active:scale-[0.98] border border-white/25 backdrop-blur-md transition-all text-left cursor-pointer outline-none"
                 >
                   <div>
                     <span className="font-display text-base font-bold tracking-wide text-white block">
                       HOODIES & SWEATSHIRTS
                     </span>
-                    <span className="text-xs text-white/85 font-sans mt-0.5 block">
+                    <span className="text-xs text-white/90 font-sans mt-0.5 block">
                       {HOODIE_PRODUCTS.length} Articles
                     </span>
                   </div>
-                  <div className="w-8 h-8 rounded-full border border-white/20 bg-white/10 flex items-center justify-center text-white/80 group-hover:text-white group-hover:border-white/40 transition-colors">
+                  <div className="w-8 h-8 rounded-full border border-white/25 bg-white/12 flex items-center justify-center text-white/90 group-hover:text-white group-hover:border-white/50 transition-colors">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                     </svg>
@@ -224,7 +224,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                   onClose();
                   setIsMemberModalOpen(true);
                 }}
-                className="w-full mt-4 flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-cyan-400/20 via-sky-300/20 to-cyan-400/20 hover:from-cyan-400/30 hover:to-sky-300/30 active:scale-[0.98] border border-cyan-200/45 backdrop-blur-md transition-all text-left cursor-pointer outline-none shadow-sm"
+                className="w-full mt-4 flex items-center justify-between p-3.5 rounded-[0.5rem] bg-[#1f4d79]/75 hover:bg-[#1f4d79]/85 active:scale-[0.98] border border-white/45 backdrop-blur-md transition-all text-left cursor-pointer outline-none shadow-sm"
               >
                 <div>
                   <span className="font-display text-sm font-black tracking-wide text-white block">
@@ -248,11 +248,11 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                   onClose();
                   setIsWishlistOpen(true);
                 }}
-                className="w-full mt-2.5 flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.14] hover:bg-white/[0.22] active:scale-[0.98] border border-white/25 backdrop-blur-md transition-all text-left cursor-pointer outline-none shadow-sm"
+                className="w-full mt-2.5 flex items-center justify-between p-3.5 rounded-[0.5rem] bg-[#1f4d79]/65 hover:bg-[#1f4d79]/80 active:scale-[0.98] border border-white/45 backdrop-blur-md transition-all text-left cursor-pointer outline-none shadow-sm"
               >
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center text-rose-300">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <div className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center text-red-500">
+                    <svg className="w-4 h-4 fill-red-500" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                     </svg>
                   </div>
@@ -272,10 +272,10 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                   onOpenBag();
                   onClose();
                 }}
-                className="w-full mt-2.5 flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.18] hover:bg-white/[0.26] active:scale-[0.98] border border-white/30 backdrop-blur-md transition-all text-left cursor-pointer outline-none shadow-sm"
+                className="w-full mt-2.5 flex items-center justify-between p-3.5 rounded-[0.5rem] bg-[#1f4d79]/65 hover:bg-[#1f4d79]/80 active:scale-[0.98] border border-white/45 backdrop-blur-md transition-all text-left cursor-pointer outline-none shadow-sm"
               >
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center text-white">
+                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.9">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" />
                     </svg>
@@ -292,19 +292,19 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
           </div>
 
           {/* Bottom Policy Links & Details */}
-          <div className="pt-6 border-t border-white/20 space-y-4">
-            <span className="font-display text-[10px] font-bold tracking-[0.24em] text-white/70 uppercase block">
+          <div className="pt-6 border-t border-[#123354]/15 space-y-4">
+            <span className="font-display text-[10px] font-bold tracking-[0.24em] text-[#123354]/70 uppercase block">
               STUDIO POLICIES
             </span>
 
-            <div className="grid grid-cols-2 gap-2 text-xs text-white/85 font-medium">
+            <div className="grid grid-cols-2 gap-2 text-xs text-[#102d4c] font-semibold">
               <button
                 type="button"
                 onClick={() => {
                   onOpenPolicy('shipping');
                   onClose();
                 }}
-                className="text-left hover:text-white transition-colors py-1 cursor-pointer outline-none"
+                className="text-left hover:text-[#071a30] transition-colors py-1 cursor-pointer outline-none"
               >
                 Shipping & Delivery
               </button>
@@ -314,7 +314,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                   onOpenPolicy('returns');
                   onClose();
                 }}
-                className="text-left hover:text-white transition-colors py-1 cursor-pointer outline-none"
+                className="text-left hover:text-[#071a30] transition-colors py-1 cursor-pointer outline-none"
               >
                 Returns Policy
               </button>
@@ -324,7 +324,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                   onOpenPolicy('privacy');
                   onClose();
                 }}
-                className="text-left hover:text-white transition-colors py-1 cursor-pointer outline-none"
+                className="text-left hover:text-[#071a30] transition-colors py-1 cursor-pointer outline-none"
               >
                 Privacy Notice
               </button>
@@ -334,13 +334,13 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                   onOpenPolicy('terms');
                   onClose();
                 }}
-                className="text-left hover:text-white transition-colors py-1 cursor-pointer outline-none"
+                className="text-left hover:text-[#071a30] transition-colors py-1 cursor-pointer outline-none"
               >
                 Terms of Service
               </button>
             </div>
 
-            <div className="pt-2 text-[11px] text-white/70 font-medium border-t border-white/10">
+            <div className="pt-2 text-[11px] text-[#123354]/75 font-semibold border-t border-[#123354]/15">
               <span>Currency: PKR · Cash on Delivery</span>
             </div>
           </div>
