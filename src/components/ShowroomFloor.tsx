@@ -32,6 +32,7 @@ import { useMember } from '../context/MemberContext';
 import { BrandLogo } from './BrandLogo';
 import { CleanPlatePicture } from './CleanPlatePicture';
 import { SmartImage } from './SmartImage';
+import { PrecisionZoomStage } from './PrecisionZoomStage';
 import { ErrorBoundary } from './ErrorBoundary';
 import {
   preloadCategoryImages,
@@ -83,6 +84,7 @@ export function ShowroomFloor({
   const [mobileIndex, setMobileIndex] = useState(0);
   const [curationModalCategory, setCurationModalCategory] = useState<CategoryItem | null>(null);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+  const [isDetailZooming, setIsDetailZooming] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef<number | null>(null);
@@ -916,24 +918,30 @@ export function ShowroomFloor({
                                 </div>
                               )}
 
-                              {/* Transparent Garment-Only Cutout floating in skyline runway */}
+                              {/* Transparent Garment-Only Cutout floating in skyline runway with subtle cursor-tracked zoom */}
                               <div
                                 className={`relative w-full h-[36vh] sm:h-[40vh] md:h-[44vh] min-h-[220px] max-h-[340px] flex items-center justify-center ${
                                   product.category === 'Shirts' ? 'p-0' : 'p-1'
                                 }`}
                               >
-                                <SmartImage
-                                  src={product.image}
-                                  alt={product.name}
-                                  className={`${getGarmentCardFrame(product.id).desktopCardImgClass} h-full object-contain select-none transition-transform duration-300 group-hover:scale-[1.03] ${
-                                    product.soldOut ? 'opacity-85' : ''
-                                  }`}
-                                  sizes="(max-width: 1024px) 220px, 275px"
-                                  skeletonClassName="inset-4 rounded-2xl"
-                                  loading={isCurrentPage && isFullyInView ? 'eager' : 'lazy'}
-                                  decoding="async"
-                                  fetchPriority={isCurrentPage && isFullyInView ? 'high' : 'low'}
-                                />
+                                <PrecisionZoomStage
+                                  zoomScale={1.15}
+                                  clipOverflow={false}
+                                  resetKey={product.id}
+                                >
+                                  <SmartImage
+                                    src={product.image}
+                                    alt={product.name}
+                                    className={`${getGarmentCardFrame(product.id).desktopCardImgClass} h-full object-contain select-none ${
+                                      product.soldOut ? 'opacity-85' : ''
+                                    }`}
+                                    sizes="(max-width: 1024px) 220px, 275px"
+                                    skeletonClassName="inset-4 rounded-2xl"
+                                    loading={isCurrentPage && isFullyInView ? 'eager' : 'lazy'}
+                                    decoding="async"
+                                    fetchPriority={isCurrentPage && isFullyInView ? 'high' : 'low'}
+                                  />
+                                </PrecisionZoomStage>
                               </div>
 
                             <div
@@ -1151,20 +1159,29 @@ export function ShowroomFloor({
                   </button>
                 )}
 
-                <SmartImage
-                  src={currentGarmentImage || selectedProduct.image}
-                  alt={`${selectedProduct.name} ${activeGallery[selectedImageIndex]?.label || 'garment view'}`}
-                  className={`${
-                    selectedImageIndex <= 1
-                      ? getShirtDetailImageClass(selectedProduct.id, selectedImageIndex === 1, 'desktop')
-                      : 'w-full h-full'
-                  } object-contain select-none`}
-                  sizes="(max-width: 1024px) 42vw, 540px"
-                  skeletonClassName="inset-6 rounded-2xl"
-                  loading="eager"
-                  decoding="async"
-                  fetchPriority="high"
-                />
+                <PrecisionZoomStage
+                  zoomScale={2.35}
+                  allowClickToggle={true}
+                  clipOverflow={true}
+                  resetKey={`${selectedProduct.id}-${selectedImageIndex}`}
+                  onZoomStateChange={setIsDetailZooming}
+                  className="z-10 rounded-xl"
+                >
+                  <SmartImage
+                    src={currentGarmentImage || selectedProduct.image}
+                    alt={`${selectedProduct.name} ${activeGallery[selectedImageIndex]?.label || 'garment view'}`}
+                    className={`${
+                      selectedImageIndex <= 1
+                        ? getShirtDetailImageClass(selectedProduct.id, selectedImageIndex === 1, 'desktop')
+                        : 'w-full h-full'
+                    } object-contain select-none`}
+                    responsive={false}
+                    skeletonClassName="inset-6 rounded-2xl"
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
+                  />
+                </PrecisionZoomStage>
 
                 {/* Vertical Column of Exact Color Dots Beside the Garment */}
                 {selectedColorVariants.length > 1 && (
@@ -1228,7 +1245,9 @@ export function ShowroomFloor({
               {/* View Label */}
               <div className="mt-1.5 text-center">
                 <span className="text-[11px] font-mono tracking-widest text-slate-700 uppercase drop-shadow-[0_1px_2px_rgba(255,255,255,0.6)] font-medium">
-                  {activeGallery[selectedImageIndex]?.label || 'Garment Display'}
+                  {isDetailZooming
+                    ? `${activeGallery[selectedImageIndex]?.label || 'Garment'} · 2.35× Fabric Zoom`
+                    : activeGallery[selectedImageIndex]?.label || 'Garment Display'}
                 </span>
               </div>
             </div>
