@@ -7,13 +7,13 @@ import nodemailer from 'nodemailer';
 // Official Product Catalogue with Authoritative Prices & Stock
 const CATALOG_ITEMS = [
   // Authoritative Trousers Collection
-  { id: 'BH-T01', name: 'Midnight Blue', price: 6499, stock: 12 },
-  { id: 'BH-T06', name: 'Ivory Trousers', price: 6499, stock: 8 },
-  { id: 'BH-T07', name: 'Sage Trousers', price: 6499, stock: 11 },
-  { id: 'BH-T08', name: 'Stone Trousers', price: 6499, stock: 10 },
-  { id: 'BH-T10', name: 'Classic Brown Trousers', price: 6499, stock: 9 },
+  { id: 'BH-T01', name: 'Midnight Blue', price: 5799, stock: 12 },
+  { id: 'BH-T06', name: 'Ivory Trousers', price: 5799, stock: 8 },
+  { id: 'BH-T07', name: 'Sage Trousers', price: 5799, stock: 11 },
+  { id: 'BH-T08', name: 'Stone Trousers', price: 5799, stock: 10 },
+  { id: 'BH-T10', name: 'Classic Brown Trousers', price: 5799, stock: 9 },
   { id: 'BH-T09', name: 'Deep Charcoal Balloon Pants', price: 7999, stock: 9 },
-  { id: 'BH-T05', name: 'Ash Baggy', price: 6499, stock: 14 },
+  { id: 'BH-T05', name: 'Ash Baggy', price: 7999, stock: 14 },
   { id: 'BH-T11', name: 'Chocolate Balloon Pants', price: 7999, stock: 0, soldOut: true },
 
   // Authoritative Hoodies & Sweatshirts Collection
@@ -28,24 +28,24 @@ const CATALOG_ITEMS = [
   { id: 'BH-H09', name: 'Oatmeal Hoodie', price: 4499, stock: 12 },
 
   // Authoritative Shirts Collection
-  { id: 'BH-S01', name: 'Foam BOXY', subtitle: 'Rough Cuban collar', price: 4999, stock: 12 },
-  { id: 'BH-S02', name: 'Cream BOXY', subtitle: 'Rough Cuban collar', price: 4999, stock: 10 },
-  { id: 'BH-S03', name: 'Espresso BOXY', subtitle: 'Rough Cuban collar', price: 4999, stock: 10 },
-  { id: 'BH-S04', name: 'Maroon BOXY', subtitle: 'Rough Cuban collar', price: 4999, stock: 14 },
-  { id: 'BH-S05', name: 'Magnum BOXY', subtitle: 'Rough Cuban collar', price: 4999, stock: 12 },
-  { id: 'BH-S06', name: 'Rough BOXY', subtitle: 'Rough Cuban collar', price: 4999, stock: 11 },
+  { id: 'BH-S01', name: 'Foam Shirt', subtitle: 'Rough Cuban collar', price: 4249, stock: 0, soldOut: true },
+  { id: 'BH-S02', name: 'Cream Shirt', subtitle: 'Rough Cuban collar', price: 4249, stock: 10 },
+  { id: 'BH-S03', name: 'Espresso Shirt', subtitle: 'Rough Cuban collar', price: 4249, stock: 10 },
+  { id: 'BH-S04', name: 'Maroon Shirt', subtitle: 'Rough Cuban collar', price: 4249, stock: 14 },
+  { id: 'BH-S05', name: 'Magnum Shirt', subtitle: 'Rough Cuban collar', price: 4249, stock: 12 },
+  { id: 'BH-S06', name: 'Rough Shirt', subtitle: 'Rough Cuban collar', price: 4249, stock: 11 },
 
   // Backwards compatibility legacy aliases
-  { id: 'BH-001', name: 'Midnight Blue', price: 6499, stock: 12 },
-  { id: 'BH-002', name: 'Cream', price: 6499, stock: 8 },
-  { id: 'BH-003', name: 'Mocha Essentials', price: 6499, stock: 15 },
-  { id: 'BH-004', name: 'Latte Essentials', price: 6499, stock: 10 },
-  { id: 'BH-005', name: 'Milk Foam', price: 6499, stock: 6 },
-  { id: 'BH-006', name: 'Charcoal Balloon Trousers', price: 8000, stock: 9 },
-  { id: 'BH-007', name: 'Ash Baggy', price: 6499, stock: 14 },
-  { id: 'BH-008', name: 'Ivory Relaxed Linen', price: 6499, stock: 7 },
-  { id: 'BH-009', name: 'Sage', price: 6499, stock: 11 },
-  { id: 'BH-010', name: 'Stone', price: 6499, stock: 10 },
+  { id: 'BH-001', name: 'Midnight Blue', price: 5799, stock: 12 },
+  { id: 'BH-002', name: 'Cream', price: 5799, stock: 8 },
+  { id: 'BH-003', name: 'Mocha Essentials', price: 5799, stock: 15 },
+  { id: 'BH-004', name: 'Latte Essentials', price: 5799, stock: 10 },
+  { id: 'BH-005', name: 'Milk Foam', price: 5799, stock: 6 },
+  { id: 'BH-006', name: 'Charcoal Balloon Trousers', price: 7999, stock: 9 },
+  { id: 'BH-007', name: 'Ash Baggy', price: 7999, stock: 14 },
+  { id: 'BH-008', name: 'Ivory Relaxed Linen', price: 5799, stock: 7 },
+  { id: 'BH-009', name: 'Sage', price: 5799, stock: 11 },
+  { id: 'BH-010', name: 'Stone', price: 5799, stock: 10 },
   { id: 'BH-011', name: 'Chocolate Balloon Pants', price: 7999, stock: 0, soldOut: true },
 ];
 
