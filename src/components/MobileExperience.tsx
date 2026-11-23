@@ -8,6 +8,15 @@ import { CleanPlatePicture } from './CleanPlatePicture';
 import { ErrorBoundary } from './ErrorBoundary';
 import type { PolicyType } from './PolicyModal';
 import { preloadCategoryImages, preloadProductDetailImages } from '../utils/preloadImages';
+import { trackPageView } from '../utils/metaPixel';
+import {
+  findProductByPath,
+  getCategoryIdForProduct,
+  getProductSlug,
+  pushHomeUrl,
+  pushProductUrl,
+  replaceProductUrl,
+} from '../utils/productRouting';
 
 const MobileProductGrid = lazy(() =>
   import('./MobileProductGrid').then((m) => ({ default: m.MobileProductGrid }))
@@ -42,11 +51,20 @@ export type MobileActiveView = 'home' | 'category' | 'product' | 'bag' | 'pair';
  * 6. Shopping bag (translucent panel, line totals, 15% pair discount, checkout)
  */
 export const MobileExperience: React.FC = () => {
-  const { cartCount, setIsCheckoutOpen } = useCart();
+  const { cartCount, setIsCheckoutOpen, isCheckoutOpen, confirmedOrder } = useCart();
 
-  const [activeView, setActiveView] = useState<MobileActiveView>('home');
-  const [selectedCategory, setSelectedCategory] = useState<CategoryId>('trousers');
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const initialUrlProduct = React.useMemo(
+    () => (typeof window !== 'undefined' ? findProductByPath(window.location.pathname) : null),
+    []
+  );
+
+  const [activeView, setActiveView] = useState<MobileActiveView>(() =>
+    initialUrlProduct ? 'product' : 'home'
+  );
+  const [selectedCategory, setSelectedCategory] = useState<CategoryId>(() =>
+    initialUrlProduct ? getCategoryIdForProduct(initialUrlProduct) : 'trousers'
+  );
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(() => initialUrlProduct);
   const [pairSeedShirt, setPairSeedShirt] = useState<Product | null>(null);
   const [pairSeedTrouser, setPairSeedTrouser] = useState<Product | null>(null);
   const [pairInitialMode, setPairInitialMode] = useState<'summer' | 'winter'>('summer');
@@ -60,6 +78,38 @@ export const MobileExperience: React.FC = () => {
   // Store grid scroll position so returning from product detail restores it
   const gridScrollPosition = useRef<number>(0);
   const scrollTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (initialUrlProduct) {
+      replaceProductUrl(initialUrlProduct, {
+        mobileView: 'product',
+        category: getCategoryIdForProduct(initialUrlProduct),
+      });
+    }
+  }, [initialUrlProduct]);
+
+  useEffect(() => {
+    if (activeView === 'product' && selectedProduct) {
+      document.title = `${selectedProduct.name} — BAD HABIT`;
+    } else {
+      document.title = 'BAD HABIT';
+    }
+  }, [activeView, selectedProduct]);
+
+  useEffect(() => {
+    if (isCheckoutOpen || confirmedOrder) return;
+    if (activeView === 'home') {
+      trackPageView('mobile:home');
+    } else if (activeView === 'category') {
+      trackPageView(`mobile:category:${selectedCategory}`);
+    } else if (activeView === 'product' && selectedProduct) {
+      trackPageView(`mobile:product:${selectedProduct.id}`);
+    } else if (activeView === 'pair') {
+      trackPageView('mobile:pair');
+    } else if (activeView === 'bag') {
+      trackPageView('mobile:bag');
+    }
+  }, [activeView, selectedCategory, selectedProduct, isCheckoutOpen, confirmedOrder]);
 
   useEffect(() => {
     return () => {
@@ -125,6 +175,7 @@ export const MobileExperience: React.FC = () => {
       setPairInitialMode('summer');
       pairReturnViewRef.current = 'home';
       setActiveView('pair');
+      pushHomeUrl({ mobileView: 'pair' });
       window.scrollTo({ top: 0, behavior: 'auto' });
       return;
     }
@@ -133,6 +184,7 @@ export const MobileExperience: React.FC = () => {
     setSelectedCategory(catId);
     setSelectedProduct(null);
     setActiveView('category');
+    pushHomeUrl({ mobileView: 'category', category: catId });
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, []);
 
@@ -140,6 +192,7 @@ export const MobileExperience: React.FC = () => {
   const handleBackToCategories = useCallback(() => {
     setActiveView('home');
     setSelectedProduct(null);
+    pushHomeUrl({ mobileView: 'home' });
     if (scrollTimerRef.current !== null) window.clearTimeout(scrollTimerRef.current);
     scrollTimerRef.current = window.setTimeout(() => {
       scrollTimerRef.current = null;
@@ -151,14 +204,21 @@ export const MobileExperience: React.FC = () => {
   const handleSelectProduct = useCallback((product: Product) => {
     preloadProductDetailImages(product);
     gridScrollPosition.current = window.scrollY;
+    const cat = getCategoryIdForProduct(product);
+    setSelectedCategory(cat);
     setSelectedProduct(product);
     setActiveView('product');
+    pushProductUrl(product, { mobileView: 'product', category: cat });
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, []);
 
   // Switch colorway inside Product detail view without resetting category grid scroll position
   const handleSwitchProductColor = useCallback((product: Product) => {
+    preloadProductDetailImages(product);
+    const cat = getCategoryIdForProduct(product);
+    setSelectedCategory(cat);
     setSelectedProduct(product);
+    pushProductUrl(product, { mobileView: 'product', category: cat });
   }, []);
 
   // Open Make a Pair studio pre-seeded with Shirt, Hoodie, or Trouser from Product Detail
@@ -178,6 +238,7 @@ export const MobileExperience: React.FC = () => {
     }
     pairReturnViewRef.current = 'product';
     setActiveView('pair');
+    pushHomeUrl({ mobileView: 'pair', returnProductSlug: getProductSlug(product) });
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, []);
 
@@ -185,6 +246,10 @@ export const MobileExperience: React.FC = () => {
   const handleBackFromPair = useCallback(() => {
     if (pairReturnViewRef.current === 'product' && selectedProduct) {
       setActiveView('product');
+      pushProductUrl(selectedProduct, {
+        mobileView: 'product',
+        category: getCategoryIdForProduct(selectedProduct),
+      });
       window.scrollTo({ top: 0, behavior: 'auto' });
     } else {
       handleBackToCategories();
@@ -195,12 +260,13 @@ export const MobileExperience: React.FC = () => {
   const handleBackToCategory = useCallback(() => {
     setActiveView('category');
     setSelectedProduct(null);
+    pushHomeUrl({ mobileView: 'category', category: selectedCategory });
     if (scrollTimerRef.current !== null) window.clearTimeout(scrollTimerRef.current);
     scrollTimerRef.current = window.setTimeout(() => {
       scrollTimerRef.current = null;
       window.scrollTo({ top: gridScrollPosition.current, behavior: 'auto' });
     }, 40);
-  }, []);
+  }, [selectedCategory]);
 
   // Open Shopping Bag (Screen 5)
   const handleOpenBag = useCallback(() => {
@@ -208,45 +274,74 @@ export const MobileExperience: React.FC = () => {
       previousViewRef.current = activeView;
     }
     setActiveView('bag');
+    pushHomeUrl({ mobileView: 'bag' });
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, [activeView]);
 
   // Close Shopping Bag / Continue Shopping
   const handleCloseBag = useCallback(() => {
-    setActiveView(previousViewRef.current || 'home');
-    if (previousViewRef.current === 'category') {
+    const targetView = previousViewRef.current || 'home';
+    setActiveView(targetView);
+    if (targetView === 'product' && selectedProduct) {
+      pushProductUrl(selectedProduct, {
+        mobileView: 'product',
+        category: getCategoryIdForProduct(selectedProduct),
+      });
+    } else if (targetView === 'category') {
+      pushHomeUrl({ mobileView: 'category', category: selectedCategory });
       if (scrollTimerRef.current !== null) window.clearTimeout(scrollTimerRef.current);
       scrollTimerRef.current = window.setTimeout(() => {
         scrollTimerRef.current = null;
         window.scrollTo({ top: gridScrollPosition.current, behavior: 'auto' });
       }, 40);
+    } else {
+      pushHomeUrl({ mobileView: targetView });
     }
-  }, []);
+  }, [selectedCategory, selectedProduct]);
 
   // Return to home
   const handleGoHome = useCallback(() => {
     setActiveView('home');
     setSelectedProduct(null);
+    pushHomeUrl({ mobileView: 'home' });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  // Synchronize browser history for natural back-button support on mobile
+  // Synchronize browser Back/Forward with URL and mobile views
   useEffect(() => {
-    const handlePopState = () => {
-      if (activeView === 'bag') {
-        handleCloseBag();
-      } else if (activeView === 'pair') {
-        handleBackFromPair();
-      } else if (activeView === 'product') {
-        handleBackToCategory();
-      } else if (activeView === 'category') {
-        handleBackToCategories();
+    const handlePopState = (event: PopStateEvent) => {
+      const urlProduct = findProductByPath(window.location.pathname);
+      if (urlProduct) {
+        const cat = getCategoryIdForProduct(urlProduct);
+        setSelectedCategory(cat);
+        setSelectedProduct(urlProduct);
+        setActiveView('product');
+        window.scrollTo({ top: 0, behavior: 'auto' });
+        return;
+      }
+
+      const state = (event.state || {}) as {
+        mobileView?: MobileActiveView;
+        category?: CategoryId;
+      };
+      if (state.mobileView === 'category') {
+        if (state.category) setSelectedCategory(state.category);
+        setSelectedProduct(null);
+        setActiveView('category');
+      } else if (state.mobileView === 'pair') {
+        setSelectedProduct(null);
+        setActiveView('pair');
+      } else if (state.mobileView === 'bag') {
+        setActiveView('bag');
+      } else {
+        setSelectedProduct(null);
+        setActiveView('home');
       }
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [activeView, handleCloseBag, handleBackFromPair, handleBackToCategory, handleBackToCategories]);
+  }, []);
 
   return (
     <div className={`relative w-full text-white min-h-[100dvh] overflow-x-clip selection:bg-white/20 transition-colors duration-300 ${

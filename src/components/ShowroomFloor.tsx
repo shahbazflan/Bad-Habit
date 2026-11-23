@@ -40,6 +40,14 @@ import {
   preloadNextCarouselPage,
   preloadNextGalleryItem,
 } from '../utils/preloadImages';
+import { clearLastViewContentKey, trackPageView, trackViewContent } from '../utils/metaPixel';
+import {
+  findProductByPath,
+  getShowroomSectionForProduct,
+  pushHomeUrl,
+  pushProductUrl,
+  replaceProductUrl,
+} from '../utils/productRouting';
 
 const PairStudio = lazy(() =>
   import('./PairStudio').then((m) => ({ default: m.PairStudio }))
@@ -58,8 +66,9 @@ interface ShowroomFloorProps {
 export function ShowroomFloor({
   onReturnToHero,
   isFullyInView,
+  activeFloor = 'hero',
 }: ShowroomFloorProps) {
-  const { cartCount, addToCart, isAdding, setIsBagOpen } = useCart();
+  const { cartCount, addToCart, isAdding, setIsBagOpen, isCheckoutOpen, confirmedOrder } = useCart();
   const {
     member,
     wishlistItems,
@@ -70,9 +79,16 @@ export function ShowroomFloor({
   } = useMember();
   const wishlistCount = wishlistItems.length;
 
+  const initialUrlProduct = React.useMemo(
+    () => (typeof window !== 'undefined' ? findProductByPath(window.location.pathname) : null),
+    []
+  );
+
   // Navigation state within showroom floor: 'categories' | 'trousers' | 'hoodies' | 'shirts' | 'pair'
-  const [activeSection, setActiveSection] = useState<'categories' | 'trousers' | 'hoodies' | 'shirts' | 'pair'>('categories');
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [activeSection, setActiveSection] = useState<'categories' | 'trousers' | 'hoodies' | 'shirts' | 'pair'>(() =>
+    initialUrlProduct ? getShowroomSectionForProduct(initialUrlProduct) : 'categories'
+  );
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(() => initialUrlProduct);
   const [pairSeedShirt, setPairSeedShirt] = useState<Product | null>(null);
   const [pairSeedTrouser, setPairSeedTrouser] = useState<Product | null>(null);
   const [pairInitialMode, setPairInitialMode] = useState<'summer' | 'winter'>('summer');
@@ -157,6 +173,50 @@ export function ShowroomFloor({
     setIsSizeGuideOpen(false);
   }, [selectedProduct, activeGallery.length]);
 
+  useEffect(() => {
+    if (initialUrlProduct) {
+      replaceProductUrl(initialUrlProduct);
+    }
+  }, [initialUrlProduct]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const nextProduct = findProductByPath(window.location.pathname);
+      if (nextProduct) {
+        setActiveSection(getShowroomSectionForProduct(nextProduct));
+        setSelectedProduct(nextProduct);
+      } else {
+        setSelectedProduct(null);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
+    if (selectedProduct) {
+      document.title = `${selectedProduct.name} — BAD HABIT`;
+      trackViewContent({
+        id: selectedProduct.id,
+        name: selectedProduct.name,
+        category: selectedProduct.category,
+        price: selectedProduct.price,
+      });
+    } else {
+      document.title = 'BAD HABIT';
+      clearLastViewContentKey();
+    }
+  }, [selectedProduct]);
+
+  useEffect(() => {
+    if (activeFloor !== 'showroom' || isCheckoutOpen || confirmedOrder) return;
+    if (selectedProduct) {
+      trackPageView(`desktop:product:${selectedProduct.id}`);
+    } else {
+      trackPageView(`desktop:${activeSection}`);
+    }
+  }, [activeFloor, activeSection, selectedProduct, isCheckoutOpen, confirmedOrder]);
+
   // Smart preloading: only preload immediate next gallery item when detail reveal is open
   useEffect(() => {
     if (selectedProduct && activeGallery.length > 1) {
@@ -222,6 +282,17 @@ export function ShowroomFloor({
     }
   }, [itemsPerPage, totalPages, currentPage]);
 
+  const openProductRoute = (product: Product) => {
+    preloadProductDetailImages(product);
+    setSelectedProduct(product);
+    pushProductUrl(product);
+  };
+
+  const closeProductRoute = () => {
+    setSelectedProduct(null);
+    pushHomeUrl();
+  };
+
   const handleSelectCategory = (cat: 'categories' | 'trousers' | 'hoodies' | 'shirts' | 'pair') => {
     if (cat !== 'categories') {
       preloadCategoryImages(cat, PRODUCTS);
@@ -233,7 +304,7 @@ export function ShowroomFloor({
       pairReturnProductRef.current = null;
     }
     setActiveSection(cat);
-    setSelectedProduct(null);
+    closeProductRoute();
     setCurrentPage(0);
     setMobileIndex(0);
   };
@@ -254,7 +325,7 @@ export function ShowroomFloor({
       setPairSeedTrouser(product);
       setPairInitialMode('summer');
     }
-    setSelectedProduct(null);
+    closeProductRoute();
     setActiveSection('pair');
   };
 
@@ -262,13 +333,13 @@ export function ShowroomFloor({
     preloadCategoryImages(cat.id, PRODUCTS);
     if (cat.id === 'trousers') {
       setActiveSection('trousers');
-      setSelectedProduct(null);
+      closeProductRoute();
     } else if (cat.id === 'hoodies') {
       setActiveSection('hoodies');
-      setSelectedProduct(null);
+      closeProductRoute();
     } else if (cat.id === 'shirts') {
       setActiveSection('shirts');
-      setSelectedProduct(null);
+      closeProductRoute();
     } else if (cat.id === 'pair') {
       handleSelectCategory('pair');
     } else {
@@ -339,7 +410,7 @@ export function ShowroomFloor({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isFullyInView) return;
       if (selectedProduct) {
-        if (e.key === 'Escape') setSelectedProduct(null);
+        if (e.key === 'Escape') closeProductRoute();
         return;
       }
       if (e.key === 'ArrowLeft') {
@@ -423,7 +494,7 @@ export function ShowroomFloor({
           <div className="pointer-events-auto select-none">
             <BrandLogo
               onClick={() => {
-                setSelectedProduct(null);
+                closeProductRoute();
                 setActiveSection('categories');
                 onReturnToHero();
               }}
@@ -815,7 +886,7 @@ export function ShowroomFloor({
                     if (pairReturnProductRef.current) {
                       const p = pairReturnProductRef.current;
                       pairReturnProductRef.current = null;
-                      setSelectedProduct(p);
+                      openProductRoute(p);
                       setActiveSection(
                         p.category === 'Shirts'
                           ? 'shirts'
@@ -870,7 +941,7 @@ export function ShowroomFloor({
                             <div
                               key={product.id}
                               className="w-[215px] lg:w-[clamp(176px,18.4vw,275px)] shrink-0 flex flex-col items-center justify-start group cursor-pointer transition-transform duration-300 ease-out hover:-translate-y-2 relative"
-                              onClick={() => setSelectedProduct(product)}
+                              onClick={() => openProductRoute(product)}
                               onPointerEnter={() => preloadProductDetailImages(product)}
                             >
                               {/* Wishlist Heart Toggle */}
@@ -1132,7 +1203,7 @@ export function ShowroomFloor({
 
               <button
                 type="button"
-                onClick={() => setSelectedProduct(null)}
+                onClick={() => closeProductRoute()}
                 className="selected-reveal-capsule min-w-[180px] sm:min-w-[198px] px-5 py-2 text-[13px] sm:text-[15px] font-grotesk font-semibold tracking-wide text-white transition-all cursor-pointer outline-none shadow-[0_6px_20px_rgba(4,15,34,0.18)] active:scale-95 mt-2"
                 aria-label="Return to list"
               >
@@ -1189,7 +1260,7 @@ export function ShowroomFloor({
                     <ColorSwatchRail
                       currentProduct={selectedProduct}
                       variants={selectedColorVariants}
-                      onSelectVariant={(variant) => setSelectedProduct(variant)}
+                      onSelectVariant={(variant) => openProductRoute(variant)}
                     />
                   </div>
                 )}
@@ -1432,7 +1503,7 @@ export function ShowroomFloor({
           {/* Centered Garment Cutout + Product Name + Price (Zero Models) */}
           <div
             className="flex-1 w-full max-w-[340px] flex flex-col items-center justify-center cursor-pointer group my-auto z-25 pointer-events-auto relative"
-            onClick={() => setSelectedProduct(currentMobileProduct)}
+            onClick={() => openProductRoute(currentMobileProduct)}
           >
             {currentMobileProduct.soldOut && (
               <div className="mb-2">
@@ -1573,7 +1644,7 @@ export function ShowroomFloor({
                     <ColorSwatchRail
                       currentProduct={selectedProduct}
                       variants={selectedColorVariants}
-                      onSelectVariant={(variant) => setSelectedProduct(variant)}
+                      onSelectVariant={(variant) => openProductRoute(variant)}
                     />
                   </div>
                 )}
@@ -1744,7 +1815,7 @@ export function ShowroomFloor({
 
               <button
                 type="button"
-                onClick={() => setSelectedProduct(null)}
+                onClick={() => closeProductRoute()}
                 className="glass-capsule glass-capsule-hover w-full py-2 px-5 rounded-[0.25rem] text-[13px] font-grotesk font-semibold text-white transition-all cursor-pointer"
               >
                 Back to Collection

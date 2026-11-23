@@ -7,6 +7,11 @@ import { BrandLogo } from './BrandLogo';
 import { PolicyModal, PolicyType } from './PolicyModal';
 import { CleanPlatePicture } from './CleanPlatePicture';
 import { SmartImage } from './SmartImage';
+import {
+  trackInitiateCheckout,
+  trackPageView,
+  trackPurchase,
+} from '../utils/metaPixel';
 
 export const CheckoutView: React.FC = () => {
   const {
@@ -82,6 +87,7 @@ export const CheckoutView: React.FC = () => {
   const promoAbortRef = useRef<AbortController | null>(null);
   const orderAbortRef = useRef<AbortController | null>(null);
   const mountedRef = useRef<boolean>(true);
+  const hasTrackedCheckoutRef = useRef<boolean>(false);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -91,6 +97,15 @@ export const CheckoutView: React.FC = () => {
       orderAbortRef.current?.abort();
     };
   }, []);
+
+  useEffect(() => {
+    if (!isCheckoutOpen || hasTrackedCheckoutRef.current) return;
+    hasTrackedCheckoutRef.current = true;
+    trackPageView('checkout');
+    if (items.length > 0) {
+      trackInitiateCheckout(items, subtotal);
+    }
+  }, [isCheckoutOpen, items, subtotal]);
 
   // Field refs for error autofocus
   const emailRef = useRef<HTMLInputElement>(null);
@@ -434,8 +449,11 @@ export const CheckoutView: React.FC = () => {
         void refreshMember();
       }
 
-      // Success! Set confirmed order & transition
-      if (data.order) {
+      // Success! Trigger Meta Pixel Purchase strictly from server-confirmed order, then transition
+      if (data.order?.orderNumber) {
+        trackPurchase(data.order, {
+          duplicatePrevented: Boolean(data?.duplicatePrevented),
+        });
         setConfirmedOrder(data.order);
       } else {
         const orderNum = data.orderId || `BH-26-${Math.floor(10000 + Math.random() * 90000)}`;

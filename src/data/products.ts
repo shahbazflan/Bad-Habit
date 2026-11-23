@@ -41,7 +41,7 @@ export const HERO_PLATE_WEBP_1376 = '/clean_plate_1376.webp?v=opt26';
 export const HERO_PLATE_AVIF_800 = '/clean_plate_800.avif?v=opt26';
 export const HERO_PLATE_AVIF_1376 = '/clean_plate_1376.avif?v=opt26';
 export const HERO_LOGO_URL = '/bad_habit_transparent.webp?v=opt26';
-export const HERO_MODEL_URL = '/assets/aistudio/hero_mobile_model_cutout.webp?v=opt27';
+export const HERO_MODEL_URL = '/assets/aistudio/hero_landing_model_cutout.webp?v=opt28';
 
 export const ASSET_CACHE_VERSION =
   typeof __ASSET_VERSION__ !== 'undefined' ? __ASSET_VERSION__ : '20261121-v8';
@@ -77,7 +77,7 @@ export function getSmallVariantUrl(url: string): string {
     base.startsWith('/assets/categories/category_hoodies_v4') ||
     base.startsWith('/assets/size_guides/') ||
     base === '/bad_habit_transparent.webp' ||
-    base === '/assets/aistudio/hero_mobile_model_cutout.webp';
+    base === '/assets/aistudio/hero_landing_model_cutout.webp';
 
   if (!isEligible) return url;
   return `${base.replace(/\.webp$/, '_sm.webp')}${query}`;
@@ -98,8 +98,8 @@ export function getResponsiveSrcSet(url: string): string | undefined {
   if (base === '/bad_habit_transparent.webp') {
     return `${smUrl} 560w, ${url} 1000w`;
   }
-  if (base === '/assets/aistudio/hero_mobile_model_cutout.webp') {
-    return `${smUrl} 240w, ${url} 375w`;
+  if (base === '/assets/aistudio/hero_landing_model_cutout.webp') {
+    return `${smUrl} 320w, ${url} 522w`;
   }
   if (base.startsWith('/assets/categories/')) {
     return `${smUrl} 400w, ${url} 740w`;
@@ -371,14 +371,14 @@ const RAW_PRODUCTS: Product[] = [
   {
     id: 'BH-H08',
     backImage: '/assets/hoodies/washed_umber_hoodie_back_v2.webp',
-    name: 'Washed Umber Hoodie',
+    name: 'Chocolate Hoodie',
     category: 'Hoodies',
-    color: 'Washed Umber',
+    color: 'Chocolate',
     colorHex: '#5d585b',
     colorGroup: 'hoodies',
     image: '/assets/hoodies/washed_umber_hoodie_front_v2.webp',
     price: 'PKR 4,499',
-    fabric: '480 GSM enzyme-washed brushed cotton fleece in deep umber with cord-free structured hood, dropped shoulder seams, and deep kangaroo pocket',
+    fabric: '480 GSM enzyme-washed brushed cotton fleece in deep chocolate with cord-free structured hood, dropped shoulder seams, and deep kangaroo pocket',
   },
   {
     id: 'BH-H09',

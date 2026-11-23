@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { HeroFloor } from './HeroFloor';
 import { useCart } from '../context/CartContext';
 import { ErrorBoundary } from './ErrorBoundary';
+import { trackPageView } from '../utils/metaPixel';
+
+import { findProductByPath } from '../utils/productRouting';
 
 const ShowroomFloor = lazy(() =>
   import('./ShowroomFloor').then((m) => ({ default: m.ShowroomFloor }))
@@ -15,14 +18,25 @@ const SCROLL_RUNWAY_PX = 900;
  * Signature architectural elevator experience for desktop screens (>= 768px).
  */
 export function DesktopShowroomExperience() {
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const [initialHasProductUrl] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? Boolean(findProductByPath(window.location.pathname)) : false
+  );
+  const [scrollProgress, setScrollProgress] = useState(() => (initialHasProductUrl ? 1 : 0));
   const [viewportHeight, setViewportHeight] = useState(800);
-  const [activeFloor, setActiveFloor] = useState<'hero' | 'showroom'>('hero');
+  const [activeFloor, setActiveFloor] = useState<'hero' | 'showroom'>(() =>
+    initialHasProductUrl ? 'showroom' : 'hero'
+  );
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const [showroomMounted, setShowroomMounted] = useState(false);
+  const [showroomMounted, setShowroomMounted] = useState(() => initialHasProductUrl);
 
   const { isCheckoutOpen, confirmedOrder } = useCart();
   const isDedicatedViewActive = isCheckoutOpen || confirmedOrder !== null;
+
+  useEffect(() => {
+    if (!isDedicatedViewActive && activeFloor === 'hero') {
+      trackPageView('desktop:hero');
+    }
+  }, [activeFloor, isDedicatedViewActive]);
 
   useEffect(() => {
     const updateSize = () => {
@@ -43,6 +57,7 @@ export function DesktopShowroomExperience() {
 
   // Pre-warm and mount lower showroom right after first paint so initial hero load stays instant
   useEffect(() => {
+    if (showroomMounted) return;
     const mountShowroom = () => {
       void import('./ShowroomFloor');
       setShowroomMounted(true);
@@ -53,7 +68,26 @@ export function DesktopShowroomExperience() {
     }
     const timer = globalThis.setTimeout(mountShowroom, 100);
     return () => globalThis.clearTimeout(timer);
-  }, []);
+  }, [showroomMounted]);
+
+  useEffect(() => {
+    if (initialHasProductUrl && !isDedicatedViewActive) {
+      window.scrollTo({ top: SCROLL_RUNWAY_PX, behavior: 'auto' });
+    }
+  }, [initialHasProductUrl, isDedicatedViewActive]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (findProductByPath(window.location.pathname)) {
+        setShowroomMounted(true);
+        if (!isDedicatedViewActive) {
+          window.scrollTo({ top: SCROLL_RUNWAY_PX, behavior: 'auto' });
+        }
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isDedicatedViewActive]);
 
   useEffect(() => {
     if (isDedicatedViewActive) return;

@@ -89,12 +89,12 @@ export const MobileHero: React.FC<MobileHeroProps> = ({
 
       {/* 3. LAYER: Model & Grounded Contact Shadows on White Architectural Floor */}
       <div
-        className="absolute left-1/2 -translate-x-1/2 bottom-[78px] sm:bottom-[86px] h-[calc(100svh-164px)] max-h-[560px] aspect-[375/1116] flex items-end justify-center pointer-events-none z-10"
+        className="absolute left-1/2 -translate-x-1/2 bottom-[78px] sm:bottom-[86px] h-[calc(100svh-164px)] max-h-[560px] aspect-[522/1047] flex items-end justify-center pointer-events-none z-10"
       >
         {/* Precision Contact Shadow Locked Directly Under Both Shoe Soles */}
         <svg
           className="absolute inset-0 w-full h-full pointer-events-none z-[1] overflow-visible"
-          viewBox="0 0 375 1116"
+          viewBox="0 0 522 1047"
           preserveAspectRatio="xMidYMid meet"
           aria-hidden="true"
         >
@@ -143,26 +143,26 @@ export const MobileHero: React.FC<MobileHeroProps> = ({
           </defs>
 
           {/* Stance ambient floor falloff */}
-          <ellipse cx="195" cy="1088" rx="125" ry="20" fill="url(#hero-keyblue-bridge)" filter="url(#hero-keyblue-blur-diffuse)" />
+          <ellipse cx="262" cy="1002" rx="185" ry="22" fill="url(#hero-keyblue-bridge)" filter="url(#hero-keyblue-blur-diffuse)" />
 
-          {/* Left foreground shoe: sole bottom sits at y=1110, centered x=114 */}
-          <ellipse cx="114" cy="1112" rx="84" ry="12" fill="url(#hero-keyblue-left-cast)" filter="url(#hero-keyblue-blur-soft)" />
-          <ellipse cx="114" cy="1110" rx="68" ry="4.5" fill="url(#hero-keyblue-left-cast)" filter="url(#hero-keyblue-blur-tight)" />
-          <ellipse cx="114" cy="1110" rx="54" ry="2.6" fill="url(#hero-keyblue-left-contact)" filter="url(#hero-keyblue-blur-tight)" />
+          {/* Left rear shoe: sole bottom sits at y=952, centered x=106 */}
+          <ellipse cx="106" cy="954" rx="108" ry="13" fill="url(#hero-keyblue-left-cast)" filter="url(#hero-keyblue-blur-soft)" />
+          <ellipse cx="106" cy="952" rx="94" ry="5" fill="url(#hero-keyblue-left-cast)" filter="url(#hero-keyblue-blur-tight)" />
+          <ellipse cx="106" cy="952" rx="82" ry="3.2" fill="url(#hero-keyblue-left-contact)" filter="url(#hero-keyblue-blur-tight)" />
 
-          {/* Right angled stance shoe: sole bottom sits at y=1062, centered x=276 */}
-          <ellipse cx="276" cy="1064" rx="80" ry="11" fill="url(#hero-keyblue-right-cast)" filter="url(#hero-keyblue-blur-soft)" />
-          <ellipse cx="276" cy="1062" rx="64" ry="4.2" fill="url(#hero-keyblue-right-cast)" filter="url(#hero-keyblue-blur-tight)" />
-          <ellipse cx="276" cy="1062" rx="50" ry="2.4" fill="url(#hero-keyblue-right-contact)" filter="url(#hero-keyblue-blur-tight)" />
+          {/* Right foreground shoe: sole bottom sits at y=1046, centered x=418 */}
+          <ellipse cx="418" cy="1048" rx="112" ry="14" fill="url(#hero-keyblue-right-cast)" filter="url(#hero-keyblue-blur-soft)" />
+          <ellipse cx="418" cy="1046" rx="96" ry="5.5" fill="url(#hero-keyblue-right-cast)" filter="url(#hero-keyblue-blur-tight)" />
+          <ellipse cx="418" cy="1046" rx="84" ry="3.5" fill="url(#hero-keyblue-right-contact)" filter="url(#hero-keyblue-blur-tight)" />
         </svg>
 
         {/* Model Cutout Image (Foreground Hero) */}
         <img
           src={HERO_MODEL_URL}
           srcSet={getResponsiveSrcSet(HERO_MODEL_URL)}
-          sizes="(max-width: 480px) 210px, 240px"
-          width={375}
-          height={1116}
+          sizes="(max-width: 480px) 280px, 320px"
+          width={522}
+          height={1047}
           alt="BAD HABIT Model"
           className="relative z-[2] w-full h-full object-contain object-bottom select-none pointer-events-none"
           loading="eager"

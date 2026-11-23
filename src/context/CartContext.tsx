@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { calculateBagTotals } from '../utils/pairPricing';
+import { trackAddToCart } from '../utils/metaPixel';
 import {
   safeStorageGet,
   safeStorageRemove,
@@ -219,6 +220,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         setRecentlyAddedItem(targetItem);
+        trackAddToCart([targetItem]);
         return true;
       } finally {
         scheduleAddUnlock();
@@ -260,10 +262,32 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       try {
+        const normalizeAddedItem = (data: Omit<CartItem, 'quantity'> & { quantity?: number }): CartItem => {
+          const qtyToAdd = Math.min(Math.max(1, Math.floor(Number(data.quantity) || 1)), 5);
+          const validSize =
+            data.size === 'S' || data.size === 'M' || data.size === 'L' || data.size === 'XL' ? data.size : 'M';
+          const numericPrice = Math.max(0, Number(data.price) || 0);
+          return {
+            productId: String(data.productId),
+            name: String(data.name || data.productId),
+            price: numericPrice,
+            formattedPrice: data.formattedPrice || `PKR ${numericPrice.toLocaleString()}`,
+            size: validSize,
+            quantity: qtyToAdd,
+            image: String(data.image || ''),
+          };
+        };
+
+        const targetShirt = normalizeAddedItem(shirtData);
+        const targetTrouser = normalizeAddedItem(trouserData);
+
         setItems((prev) => {
           const list = Array.isArray(prev) ? prev : [];
-          return upsertItem(upsertItem(list, shirtData), trouserData);
+          return upsertItem(upsertItem(list, targetShirt), targetTrouser);
         });
+
+        const pairValue = calculateBagTotals([targetShirt, targetTrouser]).discountedSubtotal;
+        trackAddToCart([targetShirt, targetTrouser], pairValue);
         return true;
       } finally {
         scheduleAddUnlock();

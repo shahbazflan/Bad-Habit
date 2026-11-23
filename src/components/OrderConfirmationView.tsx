@@ -1,12 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { getProductSubtitle } from '../data/products';
 import { BrandLogo } from './BrandLogo';
 import { CleanPlatePicture } from './CleanPlatePicture';
 import { SmartImage } from './SmartImage';
+import { trackPageView } from '../utils/metaPixel';
 
 export const OrderConfirmationView: React.FC = () => {
   const { confirmedOrder, setConfirmedOrder } = useCart();
+
+  useEffect(() => {
+    if (confirmedOrder?.orderNumber) {
+      trackPageView(`order-confirmation:${confirmedOrder.orderNumber}`);
+    }
+  }, [confirmedOrder?.orderNumber]);
 
   if (!confirmedOrder) return null;
 

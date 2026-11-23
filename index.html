@@ -43,8 +43,8 @@
       rel="preload"
       as="image"
       type="image/webp"
-      imagesrcset="/assets/aistudio/hero_mobile_model_cutout_sm.webp?v=opt27 240w, /assets/aistudio/hero_mobile_model_cutout.webp?v=opt27 375w"
-      imagesizes="(max-width: 767px) 220px, 290px"
+      imagesrcset="/assets/aistudio/hero_landing_model_cutout_sm.webp?v=opt28 320w, /assets/aistudio/hero_landing_model_cutout.webp?v=opt28 522w"
+      imagesizes="(max-width: 767px) 280px, 430px"
       fetchpriority="high"
     />
     <link
@@ -69,8 +69,54 @@
         rel="stylesheet"
       />
     </noscript>
+    <!-- Meta Pixel Code -->
+    <script>
+      (function() {
+        var consentDenied = false;
+        try {
+          var keys = ['bad_habit_cookie_consent', 'cookie_consent', 'cookieConsent'];
+          for (var i = 0; i < keys.length; i++) {
+            var raw = window.localStorage.getItem(keys[i]);
+            if (!raw) continue;
+            var lower = raw.trim().toLowerCase();
+            if (lower === 'false' || lower === 'denied' || lower === 'rejected' || lower === 'necessary') {
+              consentDenied = true;
+              break;
+            }
+            if (lower.charAt(0) === '{') {
+              var parsed = JSON.parse(raw);
+              if (parsed && (parsed.marketing === false || parsed.analytics === false || parsed.consent === false)) {
+                consentDenied = true;
+                break;
+              }
+            }
+          }
+        } catch (e) {
+          // Ignore storage read errors
+        }
+
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        if (consentDenied) {
+          fbq('consent', 'revoke');
+        }
+        fbq('init', '1876320856885682');
+        if (!consentDenied) {
+          fbq('track', 'PageView');
+          window.__bhMetaPixelInitialTracked = true;
+        }
+      })();
+    </script>
+    <!-- End Meta Pixel Code -->
   </head>
   <body class="bg-[#1f486d] text-white antialiased overflow-x-hidden m-0 p-0" style="background-color: #1f486d;">
+    <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1876320856885682&ev=PageView&noscript=1" alt="" /></noscript>
     <div id="root">
       <div style="position: fixed; inset: 0; width: 100%; height: 100vh; overflow: hidden; background: linear-gradient(180deg, #5a94c6 0%, #376d9e 58%, #e8eef4 74%, #dce4ec 100%); display: flex; flex-direction: column; justify-content: space-between; padding: 24px; box-sizing: border-box;">
         <header style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; padding: 12px 20px;">

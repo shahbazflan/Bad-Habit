@@ -180,12 +180,12 @@ export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProp
 
       {/* 3. LAYER: Model & Contact Shadows Grounded on White Floor (Z-Index 10) */}
       <div
-        className="flex character-wrapper character-wrapper-mobile absolute left-1/2 -translate-x-1/2 bottom-[76px] md:bottom-[4.5vh] h-[calc(100dvh-165px)] md:h-[78dvh] max-h-[540px] md:max-h-[860px] aspect-[375/1116] items-end justify-center pointer-events-none z-10"
+        className="flex character-wrapper character-wrapper-mobile absolute left-1/2 -translate-x-1/2 bottom-[76px] md:bottom-[4.5vh] h-[calc(100dvh-165px)] md:h-[78dvh] max-h-[540px] md:max-h-[860px] aspect-[522/1047] items-end justify-center pointer-events-none z-10"
       >
         {/* Precision Perspective Contact & Cast Shadow Layer matched directly to model soles */}
         <svg
           className="absolute inset-0 w-full h-full pointer-events-none z-[1] overflow-visible"
-          viewBox="0 0 375 1116"
+          viewBox="0 0 522 1047"
           preserveAspectRatio="xMidYMid meet"
           aria-hidden="true"
         >
@@ -209,11 +209,11 @@ export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProp
             </radialGradient>
 
             <filter id="hero-model-tight-blur" x="-50%" y="-100%" width="200%" height="300%">
-              <feGaussianBlur stdDeviation="1.5" />
+              <feGaussianBlur stdDeviation="1.6" />
             </filter>
 
             <filter id="hero-model-soft-blur" x="-50%" y="-100%" width="200%" height="300%">
-              <feGaussianBlur stdDeviation="5.0" />
+              <feGaussianBlur stdDeviation="5.5" />
             </filter>
 
             <filter id="hero-model-diffuse-blur" x="-50%" y="-100%" width="200%" height="300%">
@@ -221,24 +221,24 @@ export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProp
             </filter>
           </defs>
 
-          {/* Left foreground shoe: sole bottom at y=1110, centered x=114 */}
-          <ellipse cx="114" cy="1113" rx="88" ry="14" fill="url(#hero-model-ambient)" filter="url(#hero-model-diffuse-blur)" />
-          <ellipse cx="114" cy="1111" rx="74" ry="6.5" fill="url(#hero-model-cast)" filter="url(#hero-model-soft-blur)" />
-          <ellipse cx="114" cy="1110" rx="56" ry="2.8" fill="url(#hero-model-contact)" filter="url(#hero-model-tight-blur)" />
+          {/* Left rear shoe: sole bottom at y=952, centered x=106 */}
+          <ellipse cx="106" cy="955" rx="116" ry="14" fill="url(#hero-model-ambient)" filter="url(#hero-model-diffuse-blur)" />
+          <ellipse cx="106" cy="953" rx="102" ry="7" fill="url(#hero-model-cast)" filter="url(#hero-model-soft-blur)" />
+          <ellipse cx="106" cy="952" rx="88" ry="3.2" fill="url(#hero-model-contact)" filter="url(#hero-model-tight-blur)" />
 
-          {/* Right angled stance shoe: sole bottom at y=1062, centered x=276 */}
-          <ellipse cx="276" cy="1065" rx="76" ry="12" fill="url(#hero-model-ambient)" filter="url(#hero-model-diffuse-blur)" />
-          <ellipse cx="276" cy="1063" rx="64" ry="5.5" fill="url(#hero-model-cast)" filter="url(#hero-model-soft-blur)" />
-          <ellipse cx="276" cy="1062" rx="50" ry="2.5" fill="url(#hero-model-contact)" filter="url(#hero-model-tight-blur)" />
+          {/* Right foreground shoe: sole bottom at y=1046, centered x=418 */}
+          <ellipse cx="418" cy="1049" rx="118" ry="15" fill="url(#hero-model-ambient)" filter="url(#hero-model-diffuse-blur)" />
+          <ellipse cx="418" cy="1047" rx="104" ry="7.5" fill="url(#hero-model-cast)" filter="url(#hero-model-soft-blur)" />
+          <ellipse cx="418" cy="1046" rx="90" ry="3.5" fill="url(#hero-model-contact)" filter="url(#hero-model-tight-blur)" />
         </svg>
 
         {/* Shared Model Cutout Image */}
         <img
           src={HERO_MODEL_URL}
           srcSet={getResponsiveSrcSet(HERO_MODEL_URL)}
-          sizes="(max-width: 767px) 220px, 290px"
-          width={375}
-          height={1116}
+          sizes="(max-width: 767px) 280px, 430px"
+          width={522}
+          height={1047}
           alt="BAD HABIT fashion model"
           className="relative z-[2] w-full h-full object-contain object-bottom select-none pointer-events-none"
           loading="eager"

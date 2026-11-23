@@ -6,6 +6,7 @@ import { CategoryId } from './MobileCategorySection';
 import { ColorSwatchRail } from './ColorSwatchRail';
 import { preloadNextGalleryItem } from '../utils/preloadImages';
 import { SmartImage } from './SmartImage';
+import { clearLastViewContentKey, trackViewContent } from '../utils/metaPixel';
 
 const SizeGuideModal = lazy(() =>
   import('./SizeGuideModal').then((m) => ({ default: m.SizeGuideModal }))
@@ -98,6 +99,18 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
   useEffect(() => {
     preloadNextGalleryItem(galleryImages, activeImageIndex);
   }, [galleryImages, activeImageIndex]);
+
+  useEffect(() => {
+    trackViewContent({
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      price: product.price,
+    });
+    return () => {
+      clearLastViewContentKey();
+    };
+  }, [product.id, product.name, product.category, product.price]);
 
   const currentImage = galleryImages[activeImageIndex]?.src || product.image;
 

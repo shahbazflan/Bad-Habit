@@ -24,7 +24,7 @@ const CATALOG_ITEMS = [
   { id: 'BH-H05', name: 'Off-White Hoodie', price: 4499, stock: 10 },
   { id: 'BH-H06', name: 'Charcoal Raglan Hoodie', price: 4499, stock: 10 },
   { id: 'BH-H07', name: 'Slate Grey Sweatshirt', price: 4499, stock: 10 },
-  { id: 'BH-H08', name: 'Washed Umber Hoodie', price: 4499, stock: 10 },
+  { id: 'BH-H08', name: 'Chocolate Hoodie', price: 4499, stock: 10 },
   { id: 'BH-H09', name: 'Oatmeal Hoodie', price: 4499, stock: 12 },
 
   // Authoritative Shirts Collection
