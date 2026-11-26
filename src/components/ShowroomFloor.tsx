@@ -603,14 +603,14 @@ export function ShowroomFloor({
           <div className="hidden md:flex w-full justify-start px-5 sm:px-8 lg:px-10 mt-3 pointer-events-none">
             <nav
               aria-label="Showroom categories"
-              className="pointer-events-auto glass-capsule p-1 rounded-[0.25rem] flex items-center gap-1 select-none shadow-[0_12px_34px_rgba(4,24,43,0.22)] backdrop-blur-xl"
+              className="pointer-events-auto glass-capsule p-1 rounded-[0.25rem] flex items-center gap-1 select-none shadow-[0_12px_34px_rgba(4,24,43,0.22)]"
             >
               <button
                 type="button"
                 onClick={() => handleSelectCategory('categories')}
                 className={`px-3 lg:px-4 py-1.5 lg:py-2 rounded-[0.25rem] font-grotesk text-[13px] lg:text-[15px] font-semibold tracking-tight whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeSection === 'categories'
-                    ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white font-bold shadow-sm'
+                    ? 'bg-white/28 border border-white/80 text-white font-bold shadow-sm'
                     : 'text-white/80 hover:text-white hover:bg-white/15'
                 }`}
               >
@@ -625,13 +625,13 @@ export function ShowroomFloor({
                 onClick={() => handleSelectCategory('pair')}
                 className={`px-3 lg:px-4 py-1.5 lg:py-2 rounded-[0.25rem] font-grotesk text-[13px] lg:text-[15px] font-semibold tracking-tight whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeSection === 'pair'
-                    ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white font-bold shadow-sm'
+                    ? 'bg-white/28 border border-white/80 text-white font-bold shadow-sm'
                     : 'text-white/80 hover:text-white hover:bg-white/15'
                 }`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${activeSection === 'pair' ? 'bg-white' : 'bg-white/60'}`} />
                 <span>Make a pair</span>
-                <span className="text-[12px] lg:text-[14px] font-grotesk font-extrabold px-2.5 lg:px-3 py-0.5 rounded-[0.25rem] bg-white/25 backdrop-blur-md text-white border border-white/75">
+                <span className="text-[12px] lg:text-[14px] font-grotesk font-extrabold px-2.5 lg:px-3 py-0.5 rounded-[0.25rem] bg-white/25 text-white border border-white/75">
                   15% OFF
                 </span>
               </button>
@@ -641,7 +641,7 @@ export function ShowroomFloor({
                 onClick={() => handleSelectCategory('trousers')}
                 className={`px-3 lg:px-4 py-1.5 lg:py-2 rounded-[0.25rem] font-grotesk text-[13px] lg:text-[15px] font-semibold tracking-tight whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeSection === 'trousers'
-                    ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white font-bold shadow-sm'
+                    ? 'bg-white/28 border border-white/80 text-white font-bold shadow-sm'
                     : 'text-white/80 hover:text-white hover:bg-white/15'
                 }`}
               >
@@ -655,7 +655,7 @@ export function ShowroomFloor({
                 onClick={() => handleSelectCategory('shirts')}
                 className={`px-3 lg:px-4 py-1.5 lg:py-2 rounded-[0.25rem] font-grotesk text-[13px] lg:text-[15px] font-semibold tracking-tight whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeSection === 'shirts'
-                    ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white font-bold shadow-sm'
+                    ? 'bg-white/28 border border-white/80 text-white font-bold shadow-sm'
                     : 'text-white/80 hover:text-white hover:bg-white/15'
                 }`}
               >
@@ -669,7 +669,7 @@ export function ShowroomFloor({
                 onClick={() => handleSelectCategory('hoodies')}
                 className={`px-3 lg:px-4 py-1.5 lg:py-2 rounded-[0.25rem] font-grotesk text-[13px] lg:text-[15px] font-semibold tracking-tight whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeSection === 'hoodies'
-                    ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white font-bold shadow-sm'
+                    ? 'bg-white/28 border border-white/80 text-white font-bold shadow-sm'
                     : 'text-white/80 hover:text-white hover:bg-white/15'
                 }`}
               >
@@ -955,10 +955,10 @@ export function ShowroomFloor({
                                 onPointerDown={(e) => e.stopPropagation()}
                                 onMouseDown={(e) => e.stopPropagation()}
                                 onTouchStart={(e) => e.stopPropagation()}
-                                className={`absolute top-1 left-2 z-30 pointer-events-auto w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-all cursor-pointer active:scale-90 shadow-md ${
+                                className={`absolute top-1 left-2 z-30 pointer-events-auto w-10 h-10 rounded-full border flex items-center justify-center transition-transform cursor-pointer active:scale-90 shadow-md ${
                                   saved
-                                    ? 'bg-white/95 border-white text-red-500'
-                                    : 'bg-white/80 border-white/85 text-red-500 hover:bg-white/95'
+                                    ? 'bg-white border-white text-red-500'
+                                    : 'bg-white/90 border-white text-red-500 hover:bg-white'
                                 }`}
                                 aria-label={
                                   saved
@@ -1272,9 +1272,9 @@ export function ShowroomFloor({
                   <button
                     type="button"
                     onClick={() => setSelectedImageIndex(0)}
-                    className={`px-2.5 py-[2px] rounded-[0.2rem] text-[10.5px] sm:text-[11px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-all cursor-pointer ${
+                    className={`px-2.5 py-[2px] rounded-[0.2rem] text-[10.5px] sm:text-[11px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-colors cursor-pointer ${
                       selectedImageIndex === 0
-                        ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
+                        ? 'bg-white/28 border border-white/80 text-white shadow-sm'
                         : 'text-white/80 hover:text-white hover:bg-white/15'
                     }`}
                   >
@@ -1283,9 +1283,9 @@ export function ShowroomFloor({
                   <button
                     type="button"
                     onClick={() => setSelectedImageIndex(1)}
-                    className={`px-2.5 py-[2px] rounded-[0.2rem] text-[10.5px] sm:text-[11px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-all cursor-pointer ${
+                    className={`px-2.5 py-[2px] rounded-[0.2rem] text-[10.5px] sm:text-[11px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-colors cursor-pointer ${
                       selectedImageIndex === 1
-                        ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
+                        ? 'bg-white/28 border border-white/80 text-white shadow-sm'
                         : 'text-white/80 hover:text-white hover:bg-white/15'
                     }`}
                   >
@@ -1300,9 +1300,9 @@ export function ShowroomFloor({
                         key={detailIdx}
                         type="button"
                         onClick={() => setSelectedImageIndex(detailIdx)}
-                        className={`px-2.5 py-[2px] rounded-[0.2rem] text-[10.5px] sm:text-[11px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-all cursor-pointer ${
+                        className={`px-2.5 py-[2px] rounded-[0.2rem] text-[10.5px] sm:text-[11px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-colors cursor-pointer ${
                           selectedImageIndex === detailIdx
-                            ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
+                            ? 'bg-white/28 border border-white/80 text-white shadow-sm'
                             : 'text-white/80 hover:text-white hover:bg-white/15'
                         }`}
                       >

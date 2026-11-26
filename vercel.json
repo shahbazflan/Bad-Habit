@@ -40,7 +40,7 @@
       ]
     },
     {
-      "source": "/(clean_plate\\.jpg|bad_habit_transparent\\.webp)",
+      "source": "/(clean_plate.*\\.(?:jpg|webp|avif)|bad_habit_transparent.*\\.webp|og-bad-habit\\.jpg)",
       "headers": [
         {
           "key": "Cache-Control",

@@ -18,12 +18,13 @@ import {
   replaceProductUrl,
 } from '../utils/productRouting';
 
-const MobileProductGrid = lazy(() =>
-  import('./MobileProductGrid').then((m) => ({ default: m.MobileProductGrid }))
-);
-const MobileProductDetail = lazy(() =>
-  import('./MobileProductDetail').then((m) => ({ default: m.MobileProductDetail }))
-);
+const loadMobileProductGrid = () =>
+  import('./MobileProductGrid').then((m) => ({ default: m.MobileProductGrid }));
+const loadMobileProductDetail = () =>
+  import('./MobileProductDetail').then((m) => ({ default: m.MobileProductDetail }));
+
+const MobileProductGrid = lazy(loadMobileProductGrid);
+const MobileProductDetail = lazy(loadMobileProductDetail);
 const MobileShoppingBag = lazy(() =>
   import('./MobileShoppingBag').then((m) => ({ default: m.MobileShoppingBag }))
 );
@@ -36,6 +37,15 @@ const PolicyModal = lazy(() =>
 const PairStudio = lazy(() =>
   import('./PairStudio').then((m) => ({ default: m.PairStudio }))
 );
+
+// Immediately fetch product detail bundle & garment image on direct product ad links
+if (typeof window !== 'undefined') {
+  const deepLinkProduct = findProductByPath(window.location.pathname);
+  if (deepLinkProduct) {
+    void loadMobileProductDetail();
+    preloadProductDetailImages(deepLinkProduct);
+  }
+}
 
 export type MobileActiveView = 'home' | 'category' | 'product' | 'bag' | 'pair';
 
@@ -348,7 +358,7 @@ export const MobileExperience: React.FC = () => {
       activeView === 'home' ? 'bg-[#244b70]' : 'bg-[#1a3a5a]'
     }`}>
       {/* GLOBAL BACKGROUND: Keyblue architectural sky runway matching desktop exactly */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden transform-gpu will-change-transform" aria-hidden="true">
         <CleanPlatePicture
           alt="Architectural sky runway"
           className="w-full h-full object-cover object-center"

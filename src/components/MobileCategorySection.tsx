@@ -142,6 +142,7 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
           <CleanPlatePicture
             alt=""
             ariaHidden={true}
+            variant="thumbnail"
             className="w-full h-full object-cover object-center select-none pointer-events-none transition-transform duration-300 group-hover:scale-105"
             sizes="(max-width: 640px) 94vw, 600px"
             loading="lazy"
@@ -154,8 +155,8 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
             <SmartImage
               src={POSTER_SHIRT.image}
               alt={POSTER_SHIRT.name}
+              responsive={false}
               className="relative z-10 h-[78%] sm:h-[82%] w-auto object-contain drop-shadow-[0_10px_18px_rgba(4,24,43,0.28)] transition-transform duration-300 group-hover:scale-105"
-              sizes="(max-width: 640px) 150px, 200px"
               showSkeleton={false}
               loading="lazy"
               decoding="async"
@@ -164,8 +165,8 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
             <SmartImage
               src={POSTER_TROUSER.image}
               alt={POSTER_TROUSER.name}
+              responsive={false}
               className="h-[84%] sm:h-[88%] w-auto object-contain drop-shadow-[0_10px_18px_rgba(4,24,43,0.28)] transition-transform duration-300 group-hover:scale-105"
-              sizes="(max-width: 640px) 150px, 200px"
               showSkeleton={false}
               loading="lazy"
               decoding="async"
@@ -233,6 +234,7 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
               <CleanPlatePicture
                 alt=""
                 ariaHidden={true}
+                variant="thumbnail"
                 className="w-full h-full object-cover object-center select-none pointer-events-none transition-transform duration-300 group-hover:scale-105"
                 sizes="(max-width: 640px) 32vw, 220px"
                 loading="lazy"
@@ -246,8 +248,8 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
                   <SmartImage
                     src={cat.image}
                     alt={cat.alt}
+                    responsive={false}
                     className={`${cat.imageClass} select-none transition-transform duration-300 group-hover:scale-105 ${cat.imageOriginClass ?? 'origin-bottom'}`}
-                    sizes="(max-width: 640px) 32vw, 220px"
                     skeletonClassName="inset-1 rounded-[0.5rem]"
                     loading="lazy"
                     decoding="async"

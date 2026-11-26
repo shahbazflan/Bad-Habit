@@ -14,14 +14,14 @@ export default defineConfig(() => {
       tailwindcss(),
       ViteImageOptimizer({
         includePublic: true,
-        exclude: /(?:Screenshot_|IMG_|BAD-HABIT-|Shop_by_category__|_sm\.webp|_v2\.webp|clean_plate_|size_guide)/i,
+        exclude: /(?:Screenshot_|IMG_|BAD-HABIT-|Shop_by_category__|_sm\.webp|_v2\.webp|clean_plate_|size_guide|hero_landing_model_cutout|bad_habit_transparent|og-bad-habit|assets\/aistudio\/.*\.(?:png|jpg|jpeg))/i,
         png: {
           compressionLevel: 9,
           palette: false,
           effort: 8,
         },
         webp: {
-          quality: 82,
+          quality: 88,
           effort: 5,
         },
         jpeg: {
@@ -54,6 +54,9 @@ export default defineConfig(() => {
           manualChunks(id) {
             if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
               return 'vendor-react';
+            }
+            if (id.includes('node_modules/firebase') || id.includes('node_modules/@firebase')) {
+              return 'vendor-firebase';
             }
           },
         },

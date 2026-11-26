@@ -1,11 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
+import type { User as FirebaseUser } from 'firebase/auth';
 import { Product } from '../data/products';
-import {
-  auth,
-  syncFirebaseMemberProfile,
-  syncFirebaseWishlistItem,
-} from '../firebase';
+
+let firebaseModulePromise: Promise<typeof import('../firebase')> | null = null;
+const loadFirebase = () => {
+  if (!firebaseModulePromise) {
+    firebaseModulePromise = import('../firebase');
+  }
+  return firebaseModulePromise;
+};
 import { isValidPhoneNumber, normalizePhoneToE164 } from '../utils/phone';
 import {
   safeStorageGet,
@@ -241,15 +244,37 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     []
   );
 
-  // Track Firebase Auth user state cleanly
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (mountedRef.current) {
-        setFirebaseUser(user);
-      }
-    });
-    return () => unsubscribe();
+  // Lazily attach Firebase Auth listener only when a member session exists or member modal opens
+  const authSubscribedRef = useRef(false);
+  const ensureFirebaseAuthListener = useCallback(() => {
+    if (authSubscribedRef.current || typeof window === 'undefined') return;
+    authSubscribedRef.current = true;
+    let active = true;
+    let unsubscribe: (() => void) | undefined;
+
+    void Promise.all([loadFirebase(), import('firebase/auth')])
+      .then(([{ auth }, { onAuthStateChanged }]) => {
+        if (!active || !mountedRef.current) return;
+        unsubscribe = onAuthStateChanged(auth, (user) => {
+          if (mountedRef.current) {
+            setFirebaseUser(user);
+          }
+        });
+      })
+      .catch(() => {
+        authSubscribedRef.current = false;
+      });
+
+    return () => {
+      active = false;
+      unsubscribe?.();
+    };
   }, []);
+
+  useEffect(() => {
+    if (!isMemberModalOpen) return;
+    return ensureFirebaseAuthListener();
+  }, [isMemberModalOpen, ensureFirebaseAuthListener]);
 
   // Hydrate persisted member profile from backend (deduplicated & cancellable)
   const refreshMember = useCallback(async () => {
@@ -300,9 +325,18 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [member?.id, member?.email, member?.phone, hasOrderedIdentity, persistMember]);
 
   useEffect(() => {
-    if (member?.id) {
+    if (!member?.id || typeof window === 'undefined') return;
+    const runDeferredRefresh = () => {
+      if (!mountedRef.current) return;
       void refreshMember();
+      ensureFirebaseAuthListener();
+    };
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(runDeferredRefresh, { timeout: 1500 });
+      return () => window.cancelIdleCallback(id);
     }
+    const timer = globalThis.setTimeout(runDeferredRefresh, 700);
+    return () => globalThis.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -376,16 +410,21 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             });
           }
 
-          if (auth.currentUser) {
-            void syncFirebaseWishlistItem({
-              uid: auth.currentUser.uid,
-              productId: product.id,
-              name: product.name,
-              price: product.price,
-              image: product.image,
-              category: product.category,
-              action: 'add',
-            }).catch(() => {});
+          if (firebaseUser) {
+            void loadFirebase()
+              .then(({ auth, syncFirebaseWishlistItem }) => {
+                if (!auth.currentUser) return;
+                return syncFirebaseWishlistItem({
+                  uid: auth.currentUser.uid,
+                  productId: product.id,
+                  name: product.name,
+                  price: product.price,
+                  image: product.image,
+                  category: product.category,
+                  action: 'add',
+                });
+              })
+              .catch(() => {});
           }
         }
       } catch {
@@ -459,16 +498,19 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           return { ok: false, error: 'Received an invalid member profile response.' };
         }
 
-        if (auth.currentUser) {
+        if (firebaseUser) {
           try {
-            await syncFirebaseMemberProfile({
-              uid: auth.currentUser.uid,
-              email: savedMember.email,
-              phone: savedMember.phone,
-              displayName: savedMember.displayName,
-              orderCount: savedMember.orderCount,
-              firstOrderDiscountUsed: savedMember.firstOrderDiscountUsed,
-            });
+            const { auth, syncFirebaseMemberProfile } = await loadFirebase();
+            if (auth.currentUser) {
+              await syncFirebaseMemberProfile({
+                uid: auth.currentUser.uid,
+                email: savedMember.email,
+                phone: savedMember.phone,
+                displayName: savedMember.displayName,
+                orderCount: savedMember.orderCount,
+                firstOrderDiscountUsed: savedMember.firstOrderDiscountUsed,
+              });
+            }
           } catch (fbErr) {
             if (fbErr instanceof Error && fbErr.message.includes('Already registered')) {
               return { ok: false, error: fbErr.message };
@@ -590,16 +632,19 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           return { ok: false, error: 'Invalid response received while saving profile.' };
         }
 
-        if (auth.currentUser) {
+        if (firebaseUser) {
           try {
-            await syncFirebaseMemberProfile({
-              uid: auth.currentUser.uid,
-              email: updated.email,
-              phone: updated.phone,
-              displayName: updated.displayName,
-              orderCount: updated.orderCount,
-              firstOrderDiscountUsed: updated.firstOrderDiscountUsed,
-            });
+            const { auth, syncFirebaseMemberProfile } = await loadFirebase();
+            if (auth.currentUser) {
+              await syncFirebaseMemberProfile({
+                uid: auth.currentUser.uid,
+                email: updated.email,
+                phone: updated.phone,
+                displayName: updated.displayName,
+                orderCount: updated.orderCount,
+                firstOrderDiscountUsed: updated.firstOrderDiscountUsed,
+              });
+            }
           } catch (fbErr) {
             if (fbErr instanceof Error && fbErr.message.includes('Already registered')) {
               return { ok: false, error: fbErr.message };
@@ -623,7 +668,7 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       }
     },
-    [member, persistMember]
+    [member, firebaseUser, persistMember]
   );
 
   const logoutMember = useCallback(async () => {
@@ -633,14 +678,16 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     persistMember(null);
     setJustRegistered(false);
     setPendingWishlistProduct(null);
+    if (!firebaseUser) return;
     try {
+      const [{ auth }, { signOut }] = await Promise.all([loadFirebase(), import('firebase/auth')]);
       if (auth.currentUser) {
         await signOut(auth);
       }
     } catch {
       // Ignore signOut errors
     }
-  }, [persistMember]);
+  }, [firebaseUser, persistMember]);
 
   const wishlistItems = React.useMemo(
     () => (member ? member.wishlist || [] : guestWishlist),
@@ -687,16 +734,21 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const data = await res.json().catch(() => null);
         if (res.ok && data?.success && data.member && mountedRef.current) {
           persistMember(data.member);
-          if (auth.currentUser) {
-            void syncFirebaseWishlistItem({
-              uid: auth.currentUser.uid,
-              productId,
-              name: '',
-              price: '',
-              image: '',
-              category: '',
-              action: 'remove',
-            }).catch(() => {});
+          if (firebaseUser) {
+            void loadFirebase()
+              .then(({ auth, syncFirebaseWishlistItem }) => {
+                if (!auth.currentUser) return;
+                return syncFirebaseWishlistItem({
+                  uid: auth.currentUser.uid,
+                  productId,
+                  name: '',
+                  price: '',
+                  image: '',
+                  category: '',
+                  action: 'remove',
+                });
+              })
+              .catch(() => {});
           }
         }
       } catch {
@@ -707,7 +759,7 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       }
     },
-    [member, guestWishlist, persistGuestWishlist, persistMember]
+    [member, firebaseUser, guestWishlist, persistGuestWishlist, persistMember]
   );
 
   const toggleWishlist = useCallback(

@@ -25,47 +25,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>BAD HABIT</title>
     <meta name="description" content="BAD HABIT — Luxury architectural fashion runway and clothing showroom. YOU KNOW YOU WANT IT." />
+    <meta property="og:site_name" content="BAD HABIT" />
     <meta property="og:title" content="BAD HABIT" />
     <meta property="og:description" content="BAD HABIT — Luxury architectural fashion runway and clothing showroom. YOU KNOW YOU WANT IT." />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://storebadhabit.com/" />
+    <meta property="og:image" content="https://storebadhabit.com/og-bad-habit.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="BAD HABIT architectural sky runway" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="BAD HABIT" />
+    <meta name="twitter:description" content="BAD HABIT — Luxury architectural fashion runway and clothing showroom. YOU KNOW YOU WANT IT." />
+    <meta name="twitter:image" content="https://storebadhabit.com/og-bad-habit.jpg" />
 
-    <!-- Preload critical hero assets cleanly matched to viewport width -->
+    <!-- Fast DNS resolution for Facebook / Instagram Pixel & In-App Browser -->
+    <link rel="dns-prefetch" href="https://connect.facebook.net" />
+    <link rel="dns-prefetch" href="https://www.facebook.com" />
+
+    <!-- HERO_PRELOAD_START -->
     <link
       rel="preload"
       as="image"
-      type="image/webp"
-      imagesrcset="/clean_plate_800.webp?v=opt26 800w, /clean_plate_1376.webp?v=opt26 1376w"
-      imagesizes="100vw"
+      type="image/avif"
+      href="/clean_plate_mobile_hd.avif?v=opt29"
+      media="(max-width: 767px)"
+      fetchpriority="high"
+    />
+    <link
+      rel="preload"
+      as="image"
+      type="image/avif"
+      href="/clean_plate_1376.avif?v=opt26"
+      media="(min-width: 768px)"
       fetchpriority="high"
     />
     <link
       rel="preload"
       as="image"
       type="image/webp"
-      imagesrcset="/assets/aistudio/hero_landing_model_cutout_sm.webp?v=opt28 320w, /assets/aistudio/hero_landing_model_cutout.webp?v=opt28 522w"
-      imagesizes="(max-width: 767px) 280px, 430px"
+      href="/assets/aistudio/hero_landing_model_cutout.webp?v=opt28"
       fetchpriority="high"
     />
     <link
       rel="preload"
       as="image"
       type="image/webp"
-      imagesrcset="/bad_habit_transparent_sm.webp?v=opt26 560w, /bad_habit_transparent.webp?v=opt26 1000w"
-      imagesizes="(max-width: 640px) 86vw, 680px"
+      href="/bad_habit_transparent.webp?v=opt26"
       fetchpriority="high"
     />
+    <!-- HERO_PRELOAD_END -->
 
     <!-- Google Fonts Preconnect & Non-Blocking Stylesheets -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Bebas+Neue&family=Big+Shoulders+Display:wght@800;900&family=Manrope:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=Syne:wght@700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Big+Shoulders+Display:wght@800;900&family=Manrope:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
     <noscript>
       <link
-        href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Bebas+Neue&family=Big+Shoulders+Display:wght@800;900&family=Manrope:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=Syne:wght@700;800&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Big+Shoulders+Display:wght@800;900&family=Manrope:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap"
         rel="stylesheet"
       />
     </noscript>
@@ -125,7 +148,7 @@
           </div>
         </header>
         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translateY(-4vh);">
-          <img src="/bad_habit_transparent.webp?v=opt26" srcset="/bad_habit_transparent_sm.webp?v=opt26 560w, /bad_habit_transparent.webp?v=opt26 1000w" sizes="(max-width: 640px) 86vw, 680px" width="1000" height="500" alt="BAD HABIT" style="width: 58vw; max-width: 680px; height: auto; object-fit: contain; pointer-events: none;" fetchpriority="high" decoding="async" />
+          <img src="/bad_habit_transparent.webp?v=opt26" width="1000" height="500" alt="BAD HABIT" style="width: 88vw; max-width: 680px; height: auto; object-fit: contain; pointer-events: none;" fetchpriority="high" decoding="async" />
         </div>
         <div style="width: 100%; height: 60px;"></div>
       </div>

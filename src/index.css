@@ -35,16 +35,11 @@
 
 /* Custom font utilities */
 .font-display {
-  font-family: 'Outfit', 'Plus Jakarta Sans', 'Manrope', system-ui, -apple-system, sans-serif;
-}
-
-.font-condensed {
-  font-family: 'Barlow Condensed', 'Outfit', sans-serif;
-  font-style: normal;
+  font-family: 'Outfit', 'Manrope', system-ui, -apple-system, sans-serif;
 }
 
 .font-poster-condensed {
-  font-family: 'Big Shoulders Display', 'Barlow Condensed', sans-serif;
+  font-family: 'Big Shoulders Display', sans-serif;
   font-style: normal;
 }
 
@@ -53,7 +48,7 @@
 }
 
 .font-ribbon {
-  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 400;
 }
 
@@ -72,24 +67,24 @@
   .glass-capsule {
     border-radius: 0.25rem;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    background: linear-gradient(135deg, rgba(16, 46, 82, 0.24) 0%, rgba(255, 255, 255, 0.16) 100%);
+    background: linear-gradient(135deg, rgba(16, 46, 82, 0.28) 0%, rgba(255, 255, 255, 0.16) 100%);
     border: 1px solid rgba(255, 255, 255, 0.65);
     color: #ffffff;
     text-shadow: 0 1px 3px rgba(6, 24, 48, 0.42);
-    -webkit-backdrop-filter: blur(16px) saturate(140%) contrast(104%);
-    backdrop-filter: blur(16px) saturate(140%) contrast(104%);
+    -webkit-backdrop-filter: blur(10px) saturate(125%);
+    backdrop-filter: blur(10px) saturate(125%);
     box-shadow:
-      0 10px 28px rgba(4, 24, 43, 0.14),
+      0 8px 22px rgba(4, 24, 43, 0.14),
       0 2px 6px rgba(4, 24, 43, 0.06),
       inset 0 1px 0 rgba(255, 255, 255, 0.72),
       inset 0 -1px 0 rgba(191, 219, 254, 0.30);
   }
 
   .glass-capsule-hover:hover {
-    background: linear-gradient(135deg, rgba(16, 46, 82, 0.34) 0%, rgba(255, 255, 255, 0.26) 100%);
+    background: linear-gradient(135deg, rgba(16, 46, 82, 0.36) 0%, rgba(255, 255, 255, 0.24) 100%);
     transform: translateY(-2px) scale(1.02);
     box-shadow:
-      0 14px 32px rgba(4, 24, 43, 0.18),
+      0 12px 26px rgba(4, 24, 43, 0.18),
       0 4px 10px rgba(4, 24, 43, 0.09),
       inset 0 1px 0 rgba(255, 255, 255, 0.88),
       inset 0 -1px 0 rgba(191, 219, 254, 0.42);
@@ -104,27 +99,27 @@
     justify-content: center;
     border-radius: 0.25rem;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    background: linear-gradient(135deg, rgba(16, 46, 82, 0.26) 0%, rgba(255, 255, 255, 0.18) 100%);
+    background: linear-gradient(135deg, rgba(16, 46, 82, 0.28) 0%, rgba(255, 255, 255, 0.18) 100%);
     border: 1px solid rgba(255, 255, 255, 0.68);
     color: #ffffff;
     text-shadow: 0 1px 3px rgba(6, 24, 48, 0.45);
-    -webkit-backdrop-filter: blur(14px) saturate(135%);
-    backdrop-filter: blur(14px) saturate(135%);
+    -webkit-backdrop-filter: blur(10px) saturate(125%);
+    backdrop-filter: blur(10px) saturate(125%);
     box-shadow:
       inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.75),
       inset 0 -1.5px 2px 0 rgba(186, 230, 253, 0.28),
-      0 6px 20px rgba(4, 24, 43, 0.12);
-    transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+      0 6px 18px rgba(4, 24, 43, 0.12);
+    transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), background 0.22s ease, border-color 0.22s ease;
   }
 
   .showroom-glass-capsule:hover {
-    background: linear-gradient(135deg, rgba(16, 46, 82, 0.36) 0%, rgba(255, 255, 255, 0.28) 100%);
+    background: linear-gradient(135deg, rgba(16, 46, 82, 0.38) 0%, rgba(255, 255, 255, 0.26) 100%);
     border-color: rgba(255, 255, 255, 0.88);
     transform: translateY(-2px);
     box-shadow:
       inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.88),
       inset 0 -1.5px 2px 0 rgba(186, 230, 253, 0.40),
-      0 10px 24px rgba(4, 24, 43, 0.18);
+      0 10px 22px rgba(4, 24, 43, 0.18);
   }
 
   /* Selected Product In-Scene Sheer Frosted Glass Capsule */
@@ -135,26 +130,26 @@
     justify-content: center;
     border-radius: 0.25rem;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    background: linear-gradient(135deg, rgba(16, 46, 82, 0.30) 0%, rgba(255, 255, 255, 0.22) 100%);
+    background: linear-gradient(135deg, rgba(16, 46, 82, 0.32) 0%, rgba(255, 255, 255, 0.22) 100%);
     border: 1.2px solid rgba(255, 255, 255, 0.74);
-    -webkit-backdrop-filter: blur(16px) saturate(140%);
-    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(125%);
+    backdrop-filter: blur(10px) saturate(125%);
     box-shadow:
       inset 0 1px 2px 0 rgba(255, 255, 255, 0.80),
       inset 0 -1px 2px 0 rgba(186, 230, 253, 0.32),
-      0 8px 24px rgba(4, 24, 43, 0.15);
+      0 8px 22px rgba(4, 24, 43, 0.15);
     color: #ffffff;
     text-shadow: 0 1px 3px rgba(6, 24, 48, 0.45);
-    transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), background 0.22s ease, border-color 0.22s ease;
   }
 
   .selected-reveal-capsule:hover {
-    background: linear-gradient(135deg, rgba(16, 46, 82, 0.40) 0%, rgba(255, 255, 255, 0.30) 100%);
+    background: linear-gradient(135deg, rgba(16, 46, 82, 0.42) 0%, rgba(255, 255, 255, 0.28) 100%);
     border-color: rgba(255, 255, 255, 0.92);
     box-shadow:
       inset 0 1.5px 2.5px 0 rgba(255, 255, 255, 0.92),
       inset 0 -1px 2px 0 rgba(186, 230, 253, 0.45),
-      0 12px 28px rgba(4, 24, 43, 0.20);
+      0 10px 24px rgba(4, 24, 43, 0.20);
     transform: translateY(-1.5px);
   }
 
@@ -166,13 +161,13 @@
     justify-content: center;
     border-radius: 0.25rem;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    background: linear-gradient(135deg, rgba(16, 46, 82, 0.28) 0%, rgba(255, 255, 255, 0.18) 100%);
+    background: linear-gradient(135deg, rgba(16, 46, 82, 0.34) 0%, rgba(255, 255, 255, 0.20) 100%);
     border: 1.2px solid rgba(255, 255, 255, 0.68);
-    -webkit-backdrop-filter: blur(14px) saturate(135%);
-    backdrop-filter: blur(14px) saturate(135%);
+    -webkit-backdrop-filter: blur(8px) saturate(120%);
+    backdrop-filter: blur(8px) saturate(120%);
     box-shadow:
       inset 0 1px 2px 0 rgba(255, 255, 255, 0.78),
-      0 6px 18px rgba(4, 24, 43, 0.14);
+      0 6px 16px rgba(4, 24, 43, 0.14);
     color: #ffffff;
     text-shadow: 0 1px 3px rgba(6, 24, 48, 0.45);
   }
@@ -183,60 +178,6 @@
   color: transparent;
   -webkit-text-stroke: clamp(1.8px, 0.26vw, 3.2px) #ffffff;
   text-stroke: clamp(1.8px, 0.26vw, 3.2px) #ffffff;
-}
-
-/* Tagline Left-to-Right Glow Sweep Animation:
-   - 2 seconds sweep from left ("Y") to right ("T")
-   - 2 seconds pause (highlight parked off right)
-   - Total period: 4 seconds
-   - Brightens only letters beneath travelling highlight
-   - Remaining letters clearly readable throughout
-   - Luminous glow with subtle cool-blue halo
-   - No backwards sweep, no flashing, no pulsing
-   - Confined strictly to text glyphs
-*/
-@keyframes tagline-sweep {
-  0% {
-    -webkit-mask-position: -40% 0;
-    mask-position: -40% 0;
-  }
-  50% {
-    -webkit-mask-position: 140% 0;
-    mask-position: 140% 0;
-  }
-  100% {
-    -webkit-mask-position: 140% 0;
-    mask-position: 140% 0;
-  }
-}
-
-.tagline-sweep-glow {
-  position: absolute;
-  inset: 0;
-  color: #ffffff;
-  pointer-events: none;
-  filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 12px rgba(125, 211, 252, 0.85));
-  -webkit-mask-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    transparent 35%,
-    rgba(0, 0, 0, 1) 50%,
-    transparent 65%,
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    transparent 35%,
-    rgba(0, 0, 0, 1) 50%,
-    transparent 65%,
-    transparent 100%
-  );
-  -webkit-mask-size: 250% 100%;
-  mask-size: 250% 100%;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  animation: tagline-sweep 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 /* Structural Slab Linear Underside Light */
@@ -298,9 +239,6 @@
 
 /* Reduced Motion Override */
 @media (prefers-reduced-motion: reduce) {
-  .tagline-sweep-glow {
-    display: none !important;
-  }
   .hero-strip-track {
     animation: none !important;
   }

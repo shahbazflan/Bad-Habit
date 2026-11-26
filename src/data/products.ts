@@ -40,6 +40,8 @@ export const HERO_PLATE_WEBP_800 = '/clean_plate_800.webp?v=opt26';
 export const HERO_PLATE_WEBP_1376 = '/clean_plate_1376.webp?v=opt26';
 export const HERO_PLATE_AVIF_800 = '/clean_plate_800.avif?v=opt26';
 export const HERO_PLATE_AVIF_1376 = '/clean_plate_1376.avif?v=opt26';
+export const HERO_PLATE_MOBILE_AVIF = '/clean_plate_mobile_hd.avif?v=opt29';
+export const HERO_PLATE_MOBILE_WEBP = '/clean_plate_mobile_hd.webp?v=opt29';
 export const HERO_LOGO_URL = '/bad_habit_transparent.webp?v=opt26';
 export const HERO_MODEL_URL = '/assets/aistudio/hero_landing_model_cutout.webp?v=opt28';
 
@@ -55,7 +57,7 @@ export function withAssetVersion(assetPath: string): string {
 
 /**
  * Maps an active studio WebP URL to its pre-generated lightweight `_sm.webp`
- * responsive variant (400px-560px) while preserving any query cache key.
+ * responsive variant (240px-560px) while preserving any query cache key.
  */
 export function getSmallVariantUrl(url: string): string {
   if (!url) return url;
@@ -84,8 +86,8 @@ export function getSmallVariantUrl(url: string): string {
 }
 
 /**
- * Generates an accurate width-descriptor `srcSet` string matched to the
- * pre-generated WebP widths so mobile/thumbnail slots download 10-25 KB WebPs.
+ * Generates an accurate width-descriptor `srcSet` string matched to the actual
+ * pre-generated WebP widths so browsers never stretch a small thumbnail onto a HD slot.
  */
 export function getResponsiveSrcSet(url: string): string | undefined {
   if (!url) return undefined;
@@ -102,13 +104,16 @@ export function getResponsiveSrcSet(url: string): string | undefined {
     return `${smUrl} 320w, ${url} 522w`;
   }
   if (base.startsWith('/assets/categories/')) {
-    return `${smUrl} 400w, ${url} 740w`;
+    return `${smUrl} 400w, ${url} 700w`;
   }
   if (base.startsWith('/assets/size_guides/')) {
     return `${smUrl} 480w, ${url} 900w`;
   }
+  if (base.startsWith('/assets/trousers_v2/') && base.endsWith('_v2.webp')) {
+    return `${smUrl} 260w, ${url} 550w`;
+  }
   if (base.endsWith('_v2.webp')) {
-    return `${smUrl} 440w, ${url} 900w`;
+    return `${smUrl} 400w, ${url} 840w`;
   }
   return `${smUrl} 400w, ${url} 720w`;
 }

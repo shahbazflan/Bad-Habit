@@ -2,7 +2,7 @@ import React from 'react';
 import { MobileHeader } from './MobileHeader';
 import { HeroCloudOffer } from './HeroCloudOffer';
 import { CleanPlatePicture } from './CleanPlatePicture';
-import { HERO_LOGO_URL, HERO_MODEL_URL, getResponsiveSrcSet } from '../data/products';
+import { HERO_LOGO_URL, HERO_MODEL_URL } from '../data/products';
 
 interface MobileHeroProps {
   onExplore: () => void;
@@ -74,8 +74,6 @@ export const MobileHero: React.FC<MobileHeroProps> = ({
         <div className="w-[88vw] max-w-[420px] aspect-[1774/887] relative flex items-center justify-center opacity-85">
           <img
             src={HERO_LOGO_URL}
-            srcSet={getResponsiveSrcSet(HERO_LOGO_URL)}
-            sizes="(max-width: 480px) 88vw, 420px"
             width={1000}
             height={500}
             alt="BAD HABIT"
@@ -101,66 +99,56 @@ export const MobileHero: React.FC<MobileHeroProps> = ({
           <defs>
             <radialGradient id="hero-keyblue-left-cast" cx="50%" cy="45%" r="50%">
               <stop offset="0%" stopColor="#071b2c" stopOpacity="0.46" />
-              <stop offset="60%" stopColor="#082236" stopOpacity="0.18" />
+              <stop offset="50%" stopColor="#082236" stopOpacity="0.18" />
+              <stop offset="82%" stopColor="#082236" stopOpacity="0.04" />
               <stop offset="100%" stopColor="#082236" stopOpacity="0" />
             </radialGradient>
 
             <radialGradient id="hero-keyblue-left-contact" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#03101c" stopOpacity="0.92" />
-              <stop offset="65%" stopColor="#03101c" stopOpacity="0.60" />
+              <stop offset="48%" stopColor="#03101c" stopOpacity="0.60" />
+              <stop offset="80%" stopColor="#03101c" stopOpacity="0.16" />
               <stop offset="100%" stopColor="#03101c" stopOpacity="0" />
             </radialGradient>
 
             <radialGradient id="hero-keyblue-right-cast" cx="50%" cy="45%" r="50%">
               <stop offset="0%" stopColor="#071b2c" stopOpacity="0.44" />
-              <stop offset="60%" stopColor="#082236" stopOpacity="0.16" />
+              <stop offset="50%" stopColor="#082236" stopOpacity="0.16" />
+              <stop offset="82%" stopColor="#082236" stopOpacity="0.04" />
               <stop offset="100%" stopColor="#082236" stopOpacity="0" />
             </radialGradient>
 
             <radialGradient id="hero-keyblue-right-contact" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#03101c" stopOpacity="0.90" />
-              <stop offset="60%" stopColor="#03101c" stopOpacity="0.58" />
+              <stop offset="48%" stopColor="#03101c" stopOpacity="0.58" />
+              <stop offset="80%" stopColor="#03101c" stopOpacity="0.16" />
               <stop offset="100%" stopColor="#03101c" stopOpacity="0" />
             </radialGradient>
 
             <radialGradient id="hero-keyblue-bridge" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#082033" stopOpacity="0.16" />
-              <stop offset="60%" stopColor="#082033" stopOpacity="0.05" />
+              <stop offset="55%" stopColor="#082033" stopOpacity="0.05" />
               <stop offset="100%" stopColor="#082033" stopOpacity="0" />
             </radialGradient>
-
-            <filter id="hero-keyblue-blur-tight" x="-50%" y="-100%" width="200%" height="300%">
-              <feGaussianBlur stdDeviation="1.6" />
-            </filter>
-
-            <filter id="hero-keyblue-blur-soft" x="-50%" y="-100%" width="200%" height="300%">
-              <feGaussianBlur stdDeviation="5.5" />
-            </filter>
-
-            <filter id="hero-keyblue-blur-diffuse" x="-50%" y="-100%" width="200%" height="300%">
-              <feGaussianBlur stdDeviation="12" />
-            </filter>
           </defs>
 
           {/* Stance ambient floor falloff */}
-          <ellipse cx="262" cy="1002" rx="185" ry="22" fill="url(#hero-keyblue-bridge)" filter="url(#hero-keyblue-blur-diffuse)" />
+          <ellipse cx="262" cy="1002" rx="196" ry="26" fill="url(#hero-keyblue-bridge)" />
 
           {/* Left rear shoe: sole bottom sits at y=952, centered x=106 */}
-          <ellipse cx="106" cy="954" rx="108" ry="13" fill="url(#hero-keyblue-left-cast)" filter="url(#hero-keyblue-blur-soft)" />
-          <ellipse cx="106" cy="952" rx="94" ry="5" fill="url(#hero-keyblue-left-cast)" filter="url(#hero-keyblue-blur-tight)" />
-          <ellipse cx="106" cy="952" rx="82" ry="3.2" fill="url(#hero-keyblue-left-contact)" filter="url(#hero-keyblue-blur-tight)" />
+          <ellipse cx="106" cy="954" rx="114" ry="16" fill="url(#hero-keyblue-left-cast)" />
+          <ellipse cx="106" cy="952" rx="96" ry="6.5" fill="url(#hero-keyblue-left-cast)" />
+          <ellipse cx="106" cy="952" rx="84" ry="4" fill="url(#hero-keyblue-left-contact)" />
 
           {/* Right foreground shoe: sole bottom sits at y=1046, centered x=418 */}
-          <ellipse cx="418" cy="1048" rx="112" ry="14" fill="url(#hero-keyblue-right-cast)" filter="url(#hero-keyblue-blur-soft)" />
-          <ellipse cx="418" cy="1046" rx="96" ry="5.5" fill="url(#hero-keyblue-right-cast)" filter="url(#hero-keyblue-blur-tight)" />
-          <ellipse cx="418" cy="1046" rx="84" ry="3.5" fill="url(#hero-keyblue-right-contact)" filter="url(#hero-keyblue-blur-tight)" />
+          <ellipse cx="418" cy="1048" rx="118" ry="17" fill="url(#hero-keyblue-right-cast)" />
+          <ellipse cx="418" cy="1046" rx="98" ry="7" fill="url(#hero-keyblue-right-cast)" />
+          <ellipse cx="418" cy="1046" rx="86" ry="4.2" fill="url(#hero-keyblue-right-contact)" />
         </svg>
 
         {/* Model Cutout Image (Foreground Hero) */}
         <img
           src={HERO_MODEL_URL}
-          srcSet={getResponsiveSrcSet(HERO_MODEL_URL)}
-          sizes="(max-width: 480px) 280px, 320px"
           width={522}
           height={1047}
           alt="BAD HABIT Model"

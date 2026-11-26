@@ -52,9 +52,11 @@ export const SmartImage: React.FC<SmartImageProps> = ({
     }
   }, [src]);
 
+  const shouldAnimateFade = showSkeleton && loading !== 'eager';
+
   return (
     <>
-      {showSkeleton && !loaded && !errored && (
+      {shouldAnimateFade && !loaded && !errored && (
         <span
           aria-hidden="true"
           className={`pointer-events-none absolute ${skeletonClassName} bg-white/[0.08] animate-pulse`}
@@ -102,9 +104,11 @@ export const SmartImage: React.FC<SmartImageProps> = ({
             setErrored(true);
             onError?.(e);
           }}
-          className={`${className} transition-opacity duration-200 ${
-            loaded ? 'opacity-100' : 'opacity-0'
-          }`}
+          className={
+            shouldAnimateFade
+              ? `${className} transition-opacity duration-150 ${loaded ? 'opacity-100' : 'opacity-0'}`
+              : className
+          }
           {...rest}
         />
       )}

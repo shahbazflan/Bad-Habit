@@ -2305,7 +2305,8 @@ apiRouter.post(['/orders', '/orders/create'], async (req, res) => {
       };
     }
 
-    if (delivery.country && delivery.country !== 'Pakistan') {
+    const rawCountry = String(delivery.country ?? '').trim();
+    if (rawCountry && !/^(pk|pak|pakistan)$/i.test(rawCountry)) {
       return {
         status: 400,
         payload: {

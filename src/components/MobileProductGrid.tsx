@@ -63,7 +63,7 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
         onPointerEnter={() => preloadProductDetailImages(product)}
         onTouchStart={() => preloadProductDetailImages(product)}
         onFocus={() => preloadProductDetailImages(product)}
-        className="group relative w-full rounded-[0.5rem] bg-white/[0.12] hover:bg-white/[0.18] active:scale-[0.98] border border-white/20 backdrop-blur-md p-2.5 sm:p-3 flex flex-col items-center justify-between transition-[transform,background-color] duration-150 cursor-pointer outline-none text-center shadow-[0_4px_16px_rgba(4,24,43,0.15)]"
+        className="group relative w-full rounded-[0.5rem] bg-white/[0.14] hover:bg-white/[0.18] active:scale-[0.98] border border-white/25 backdrop-blur-[6px] [contain:layout_style] p-2.5 sm:p-3 flex flex-col items-center justify-between transition-[transform,background-color] duration-150 cursor-pointer outline-none text-center shadow-[0_4px_16px_rgba(4,24,43,0.15)]"
         aria-label={`${product.name} — ${product.soldOut ? 'Sold Out' : product.price}`}
       >
         {/* Wishlist Heart Toggle */}
@@ -77,10 +77,10 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
           onPointerDown={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
           onTouchStart={(e) => e.stopPropagation()}
-          className={`absolute top-2.5 left-2.5 z-30 pointer-events-auto w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-all cursor-pointer active:scale-90 shadow-sm ${
+          className={`absolute top-2.5 left-2.5 z-30 pointer-events-auto w-10 h-10 rounded-full border flex items-center justify-center transition-transform cursor-pointer active:scale-90 shadow-sm ${
             saved
-              ? 'bg-white/95 border-white text-red-500'
-              : 'bg-white/80 border-white/85 text-red-500 hover:bg-white/95'
+              ? 'bg-white border-white text-red-500'
+              : 'bg-white/90 border-white text-red-500 hover:bg-white'
           }`}
           aria-label={saved ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
         >
@@ -115,10 +115,10 @@ export const MobileProductGrid: React.FC<MobileProductGridProps> = ({
           <SmartImage
             src={product.image}
             alt={product.name}
+            responsive={false}
             className={`${frame.mobileGridImgClass} h-full object-contain object-center select-none transition-transform duration-150 group-hover:scale-[1.02] ${
               product.soldOut ? 'opacity-85' : ''
             }`}
-            sizes="(max-width: 639px) 88vw, 44vw"
             skeletonClassName="inset-3 rounded-[0.5rem]"
             loading={index < 2 ? 'eager' : 'lazy'}
             fetchPriority={index < 2 ? 'high' : 'low'}

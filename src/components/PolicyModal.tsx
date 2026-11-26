@@ -96,10 +96,10 @@ export const PolicyModal: React.FC<PolicyModalProps> = ({ type, onClose }) => {
             <div className="pb-3.5">
               <div className="rounded-2xl bg-[#071320]/90 border border-white/15 px-3 py-3 sm:px-4 sm:py-3.5 shadow-inner">
                 <img
-                  src="/assets/aistudio/Black_Fabric_Tags_With_White_Text__1__5871c2a8.png"
+                  src="/assets/aistudio/black_fabric_tags_surplus.webp"
                   alt="BAD HABIT — We resell carefully selected export surplus from brands such as Zara, Essentials, Wrangler, and Pull&Bear. Stock varies by availability. We handpick the best pieces from each batch."
                   className="w-full h-auto object-contain mx-auto pointer-events-none select-none"
-                  loading="eager"
+                  loading="lazy"
                   decoding="async"
                 />
               </div>

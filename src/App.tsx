@@ -12,14 +12,24 @@ import { MemberProvider, useMember } from './context/MemberContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { preloadGarmentImages } from './utils/preloadImages';
 
-const MobileExperience = lazy(() =>
-  import('./components/MobileExperience').then((m) => ({ default: m.MobileExperience }))
-);
-const DesktopShowroomExperience = lazy(() =>
+const loadMobileExperience = () =>
+  import('./components/MobileExperience').then((m) => ({ default: m.MobileExperience }));
+const loadDesktopExperience = () =>
   import('./components/DesktopShowroomExperience').then((m) => ({
     default: m.DesktopShowroomExperience,
-  }))
-);
+  }));
+
+// Start downloading the active viewport experience immediately in parallel with boot
+if (typeof window !== 'undefined') {
+  if (window.innerWidth < 768) {
+    void loadMobileExperience();
+  } else {
+    void loadDesktopExperience();
+  }
+}
+
+const MobileExperience = lazy(loadMobileExperience);
+const DesktopShowroomExperience = lazy(loadDesktopExperience);
 const AddToCartModal = lazy(() =>
   import('./components/AddToCartModal').then((m) => ({ default: m.AddToCartModal }))
 );

@@ -13,6 +13,48 @@ import {
   trackPurchase,
 } from '../utils/metaPixel';
 
+const VALID_PROVINCES = [
+  'Punjab',
+  'Sindh',
+  'Islamabad Capital Territory',
+  'Khyber Pakhtunkhwa',
+  'Balochistan',
+  'Gilgit-Baltistan',
+  'Azad Kashmir',
+] as const;
+
+function normalizeCountryValue(raw?: string | null): string {
+  const cleaned = String(raw ?? '').trim();
+  if (!cleaned || /^(pk|pak|pakistan)$/i.test(cleaned)) {
+    return 'Pakistan';
+  }
+  return cleaned;
+}
+
+function normalizeProvinceValue(raw?: string | null, fallback = 'Punjab'): string {
+  const cleaned = String(raw ?? '').trim();
+  if (!cleaned) return fallback;
+  const exact = VALID_PROVINCES.find((p) => p.toLowerCase() === cleaned.toLowerCase());
+  if (exact) return exact;
+
+  const lower = cleaned.toLowerCase();
+  if (lower === 'sd' || lower.includes('sindh')) return 'Sindh';
+  if (lower === 'pb' || lower.includes('punjab')) return 'Punjab';
+  if (lower === 'is' || lower === 'ict' || lower.includes('islamabad')) {
+    return 'Islamabad Capital Territory';
+  }
+  if (lower === 'kp' || lower === 'kpk' || lower === 'nwfp' || lower.includes('khyber')) {
+    return 'Khyber Pakhtunkhwa';
+  }
+  if (lower === 'ba' || lower === 'bl' || lower.includes('baloch')) return 'Balochistan';
+  if (lower === 'gb' || lower.includes('gilgit')) return 'Gilgit-Baltistan';
+  if (lower === 'jk' || lower === 'ajk' || lower.includes('kashmir')) return 'Azad Kashmir';
+
+  return VALID_PROVINCES.includes(fallback as (typeof VALID_PROVINCES)[number])
+    ? fallback
+    : 'Punjab';
+}
+
 export const CheckoutView: React.FC = () => {
   const {
     items,
@@ -110,10 +152,12 @@ export const CheckoutView: React.FC = () => {
   // Field refs for error autofocus
   const emailRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
+  const countryRef = useRef<HTMLSelectElement>(null);
   const firstNameRef = useRef<HTMLInputElement>(null);
   const lastNameRef = useRef<HTMLInputElement>(null);
   const addressRef = useRef<HTMLInputElement>(null);
   const cityRef = useRef<HTMLInputElement>(null);
+  const provinceRef = useRef<HTMLSelectElement>(null);
   const termsRef = useRef<HTMLInputElement>(null);
 
   // Scroll to top & assign fresh idempotency key whenever checkout opens; pre-fill member info
@@ -269,6 +313,15 @@ export const CheckoutView: React.FC = () => {
   // Validation
   const validateForm = () => {
     const errors: Record<string, string> = {};
+    const safeCountry = normalizeCountryValue(country);
+    const safeProvince = normalizeProvinceValue(province);
+
+    if (country !== safeCountry) {
+      setCountry(safeCountry);
+    }
+    if (province !== safeProvince) {
+      setProvince(safeProvince);
+    }
 
     if (!email.trim()) {
       errors.email = 'Email address is required.';
@@ -282,11 +335,14 @@ export const CheckoutView: React.FC = () => {
       errors.phone = 'Enter a valid mobile number (e.g. 0300 1234567 or +92 300 1234567).';
     }
 
+    if (safeCountry !== 'Pakistan') {
+      errors.country = 'Delivery is currently available exclusively within Pakistan.';
+    }
     if (!firstName.trim()) errors.firstName = 'First name is required.';
     if (!lastName.trim()) errors.lastName = 'Last name is required.';
     if (!address.trim()) errors.address = 'Street delivery address is required.';
     if (!city.trim()) errors.city = 'City is required.';
-    if (!country.trim()) errors.country = 'Country is required.';
+    if (!safeProvince.trim()) errors.province = 'Province / region is required.';
 
     if (!agreedToTerms) {
       errors.terms = 'Please accept the Terms of Service to place your order.';
@@ -298,10 +354,12 @@ export const CheckoutView: React.FC = () => {
     const firstErrorEl =
       (errors.email && emailRef.current) ||
       (errors.phone && phoneRef.current) ||
+      (errors.country && countryRef.current) ||
       (errors.firstName && firstNameRef.current) ||
       (errors.lastName && lastNameRef.current) ||
       (errors.address && addressRef.current) ||
       (errors.city && cityRef.current) ||
+      (errors.province && provinceRef.current) ||
       (errors.terms && termsRef.current) ||
       null;
 
@@ -331,6 +389,8 @@ export const CheckoutView: React.FC = () => {
     }
 
     const normalizedPhone = normalizePhoneToE164(phone) || phone.trim();
+    const safeCountry = normalizeCountryValue(country);
+    const safeProvince = normalizeProvinceValue(province);
     isSubmittingRef.current = true;
     setIsSubmitting(true);
     orderAbortRef.current?.abort();
@@ -353,13 +413,13 @@ export const CheckoutView: React.FC = () => {
           marketingConsent,
         },
         delivery: {
-          country,
+          country: safeCountry,
           firstName: firstName.trim(),
           lastName: lastName.trim(),
           address: address.trim(),
           apartment: apartment.trim(),
           city: city.trim(),
-          province,
+          province: safeProvince,
           postalCode: postalCode.trim(),
           landmark: landmark.trim(),
           instructions: instructions.trim(),
@@ -466,13 +526,13 @@ export const CheckoutView: React.FC = () => {
             phone: phone.trim(),
           },
           delivery: {
-            country,
+            country: safeCountry,
             firstName: firstName.trim(),
             lastName: lastName.trim(),
             address: address.trim(),
             apartment: apartment.trim(),
             city: city.trim(),
-            province,
+            province: safeProvince,
             postalCode: postalCode.trim(),
             landmark: landmark.trim(),
             instructions: instructions.trim(),
@@ -939,9 +999,16 @@ export const CheckoutView: React.FC = () => {
                     </label>
                     <div className="relative">
                       <select
+                        ref={countryRef}
                         id="checkout-country"
-                        value={country}
-                        onChange={(e) => setCountry(e.target.value)}
+                        autoComplete="off"
+                        value={normalizeCountryValue(country)}
+                        onChange={(e) => {
+                          setCountry(normalizeCountryValue(e.target.value));
+                          if (fieldErrors.country) {
+                            setFieldErrors((prev) => ({ ...prev, country: '' }));
+                          }
+                        }}
                         className="w-full px-5 py-3.5 rounded-2xl bg-black/35 hover:bg-black/45 text-white border border-white/25 focus:border-white/60 focus:outline-none focus:ring-1 focus:ring-white/40 text-sm font-display cursor-pointer shadow-inner appearance-none pr-10 backdrop-blur-md"
                       >
                         <option value="Pakistan" className="bg-slate-800 text-white font-display">Pakistan</option>
@@ -1085,10 +1152,16 @@ export const CheckoutView: React.FC = () => {
                       </label>
                       <div className="relative">
                         <select
+                          ref={provinceRef}
                           id="checkout-province"
                           autoComplete="address-level1"
-                          value={province}
-                          onChange={(e) => setProvince(e.target.value)}
+                          value={normalizeProvinceValue(province)}
+                          onChange={(e) => {
+                            setProvince(normalizeProvinceValue(e.target.value, province));
+                            if (fieldErrors.province) {
+                              setFieldErrors((prev) => ({ ...prev, province: '' }));
+                            }
+                          }}
                           className="w-full px-5 py-3.5 rounded-2xl bg-black/35 hover:bg-black/45 text-white border border-white/25 focus:border-white/60 focus:outline-none focus:ring-1 focus:ring-white/40 text-sm font-display cursor-pointer shadow-inner appearance-none pr-10 backdrop-blur-md"
                         >
                           <option value="Punjab" className="bg-slate-800 text-white font-display">Punjab</option>

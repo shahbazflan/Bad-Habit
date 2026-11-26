@@ -527,8 +527,8 @@ export const PairStudio: React.FC<PairStudioProps> = ({
               <SmartImage
                 src={topImageSrc}
                 alt={selectedTop.name}
+                responsive={false}
                 className="h-full w-auto object-contain select-none transition-transform duration-200 group-hover:scale-[1.03]"
-                sizes="(max-width: 640px) 220px, 380px"
                 showSkeleton={false}
                 loading="eager"
                 decoding="async"
@@ -555,10 +555,10 @@ export const PairStudio: React.FC<PairStudioProps> = ({
               <SmartImage
                 src={trouserImageSrc}
                 alt={selectedTrouser.name}
+                responsive={false}
                 className={`h-full w-auto object-contain select-none transition-transform duration-200 group-hover:scale-[1.02] ${
                   isTrouserSoldOut ? 'opacity-75' : ''
                 }`}
-                sizes="(max-width: 640px) 220px, 380px"
                 showSkeleton={false}
                 loading="eager"
                 decoding="async"

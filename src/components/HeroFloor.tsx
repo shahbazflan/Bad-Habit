@@ -13,7 +13,7 @@ import { useMember } from '../context/MemberContext';
 import { BrandLogo } from './BrandLogo';
 import { HeroCloudOffer } from './HeroCloudOffer';
 import { CleanPlatePicture } from './CleanPlatePicture';
-import { HERO_LOGO_URL, HERO_MODEL_URL, getResponsiveSrcSet } from '../data/products';
+import { HERO_LOGO_URL, HERO_MODEL_URL } from '../data/products';
 
 interface HeroFloorProps {
   onViewCollection: () => void;
@@ -165,8 +165,6 @@ export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProp
         <div className="w-[86vw] sm:w-[58vw] max-w-[840px] aspect-[1774/887] relative flex items-center justify-center -translate-y-8 md:translate-y-0">
           <img
             src={HERO_LOGO_URL}
-            srcSet={getResponsiveSrcSet(HERO_LOGO_URL)}
-            sizes="(max-width: 640px) 86vw, (max-width: 1450px) 58vw, 840px"
             width={1000}
             height={500}
             alt="BAD HABIT"
@@ -192,51 +190,39 @@ export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProp
           <defs>
             <radialGradient id="hero-model-contact" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#0a0e17" stopOpacity="0.90" />
-              <stop offset="65%" stopColor="#0f172a" stopOpacity="0.56" />
+              <stop offset="45%" stopColor="#0f172a" stopOpacity="0.58" />
+              <stop offset="78%" stopColor="#0f172a" stopOpacity="0.18" />
               <stop offset="100%" stopColor="#0f172a" stopOpacity="0" />
             </radialGradient>
 
             <radialGradient id="hero-model-cast" cx="50%" cy="45%" r="50%">
               <stop offset="0%" stopColor="#0f172a" stopOpacity="0.44" />
-              <stop offset="55%" stopColor="#1e293b" stopOpacity="0.18" />
+              <stop offset="50%" stopColor="#1e293b" stopOpacity="0.18" />
+              <stop offset="82%" stopColor="#1e293b" stopOpacity="0.04" />
               <stop offset="100%" stopColor="#1e293b" stopOpacity="0" />
             </radialGradient>
 
             <radialGradient id="hero-model-ambient" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#1e293b" stopOpacity="0.16" />
-              <stop offset="60%" stopColor="#334155" stopOpacity="0.05" />
+              <stop offset="55%" stopColor="#334155" stopOpacity="0.06" />
               <stop offset="100%" stopColor="#334155" stopOpacity="0" />
             </radialGradient>
-
-            <filter id="hero-model-tight-blur" x="-50%" y="-100%" width="200%" height="300%">
-              <feGaussianBlur stdDeviation="1.6" />
-            </filter>
-
-            <filter id="hero-model-soft-blur" x="-50%" y="-100%" width="200%" height="300%">
-              <feGaussianBlur stdDeviation="5.5" />
-            </filter>
-
-            <filter id="hero-model-diffuse-blur" x="-50%" y="-100%" width="200%" height="300%">
-              <feGaussianBlur stdDeviation="12" />
-            </filter>
           </defs>
 
           {/* Left rear shoe: sole bottom at y=952, centered x=106 */}
-          <ellipse cx="106" cy="955" rx="116" ry="14" fill="url(#hero-model-ambient)" filter="url(#hero-model-diffuse-blur)" />
-          <ellipse cx="106" cy="953" rx="102" ry="7" fill="url(#hero-model-cast)" filter="url(#hero-model-soft-blur)" />
-          <ellipse cx="106" cy="952" rx="88" ry="3.2" fill="url(#hero-model-contact)" filter="url(#hero-model-tight-blur)" />
+          <ellipse cx="106" cy="955" rx="124" ry="18" fill="url(#hero-model-ambient)" />
+          <ellipse cx="106" cy="953" rx="106" ry="9" fill="url(#hero-model-cast)" />
+          <ellipse cx="106" cy="952" rx="90" ry="4" fill="url(#hero-model-contact)" />
 
           {/* Right foreground shoe: sole bottom at y=1046, centered x=418 */}
-          <ellipse cx="418" cy="1049" rx="118" ry="15" fill="url(#hero-model-ambient)" filter="url(#hero-model-diffuse-blur)" />
-          <ellipse cx="418" cy="1047" rx="104" ry="7.5" fill="url(#hero-model-cast)" filter="url(#hero-model-soft-blur)" />
-          <ellipse cx="418" cy="1046" rx="90" ry="3.5" fill="url(#hero-model-contact)" filter="url(#hero-model-tight-blur)" />
+          <ellipse cx="418" cy="1049" rx="126" ry="19" fill="url(#hero-model-ambient)" />
+          <ellipse cx="418" cy="1047" rx="108" ry="9.5" fill="url(#hero-model-cast)" />
+          <ellipse cx="418" cy="1046" rx="92" ry="4.2" fill="url(#hero-model-contact)" />
         </svg>
 
         {/* Shared Model Cutout Image */}
         <img
           src={HERO_MODEL_URL}
-          srcSet={getResponsiveSrcSet(HERO_MODEL_URL)}
-          sizes="(max-width: 767px) 280px, 430px"
           width={522}
           height={1047}
           alt="BAD HABIT fashion model"

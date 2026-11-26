@@ -177,12 +177,12 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
           <SmartImage
             src={currentImage}
             alt={`${product.name} ${galleryImages[activeImageIndex]?.label || 'garment view'}`}
+            responsive={false}
             className={`${
               activeImageIndex <= 1
                 ? getShirtDetailImageClass(product.id, activeImageIndex === 1, 'mobile')
                 : 'w-full h-full'
             } object-contain object-center select-none`}
-            sizes="(max-width: 640px) 84vw, 480px"
             skeletonClassName="inset-6 rounded-[0.5rem]"
             loading="eager"
             decoding="async"
@@ -229,9 +229,9 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
             <button
               type="button"
               onClick={() => setActiveImageIndex(0)}
-              className={`px-2.5 py-[2px] rounded-[0.2rem] text-[10.5px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-all cursor-pointer ${
+              className={`px-2.5 py-[2px] rounded-[0.2rem] text-[10.5px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-colors cursor-pointer ${
                 activeImageIndex === 0
-                  ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
+                  ? 'bg-white/28 border border-white/80 text-white shadow-sm'
                   : 'text-white/80 hover:text-white'
               }`}
             >
@@ -240,9 +240,9 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
             <button
               type="button"
               onClick={() => setActiveImageIndex(1)}
-              className={`px-2.5 py-[2px] rounded-[0.2rem] text-[10.5px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-all cursor-pointer ${
+              className={`px-2.5 py-[2px] rounded-[0.2rem] text-[10.5px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-colors cursor-pointer ${
                 activeImageIndex === 1
-                  ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
+                  ? 'bg-white/28 border border-white/80 text-white shadow-sm'
                   : 'text-white/80 hover:text-white'
               }`}
             >
@@ -257,9 +257,9 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
                   key={detailIdx}
                   type="button"
                   onClick={() => setActiveImageIndex(detailIdx)}
-                  className={`px-2.5 py-[2px] rounded-[0.2rem] text-[10.5px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-all cursor-pointer ${
+                  className={`px-2.5 py-[2px] rounded-[0.2rem] text-[10.5px] font-grotesk font-semibold tracking-[0.08em] uppercase transition-colors cursor-pointer ${
                     activeImageIndex === detailIdx
-                      ? 'bg-white/28 backdrop-blur-md border border-white/80 text-white shadow-sm'
+                      ? 'bg-white/28 border border-white/80 text-white shadow-sm'
                       : 'text-white/80 hover:text-white'
                   }`}
                 >

@@ -95,9 +95,9 @@ export function preloadGarmentImages() {
   const startWarmup = () => {
     if (isConstrainedNetwork()) return;
     const categoryCovers = [
-      getSmallVariantUrl(withAssetVersion('/assets/categories/category_trousers_hd.webp')),
-      getSmallVariantUrl(withAssetVersion('/assets/categories/category_shirts_v3.webp')),
-      getSmallVariantUrl(withAssetVersion('/assets/categories/category_hoodies_v4.webp')),
+      withAssetVersion('/assets/categories/category_trousers_hd.webp'),
+      withAssetVersion('/assets/categories/category_shirts_v3.webp'),
+      withAssetVersion('/assets/categories/category_hoodies_v4.webp'),
     ];
     preloadUrls(categoryCovers, 2);
   };
@@ -118,7 +118,7 @@ export function preloadGarmentImages() {
 }
 
 /**
- * Warms only the first visible viewport batch (up to 4 small-variant fronts) when
+ * Warms only the first visible viewport batch (up to 3 full-HD fronts) when
  * hovering or entering a category—never downloads hidden tabs or full-res backs.
  */
 export function preloadCategoryImages(
@@ -136,7 +136,7 @@ export function preloadCategoryImages(
 
   if (category === 'pair') {
     const heroPlate =
-      typeof window !== 'undefined' && window.innerWidth <= 800
+      typeof window !== 'undefined' && window.innerWidth < 768
         ? HERO_PLATE_WEBP_800
         : HERO_PLATE_WEBP_1376;
     preloadUrls([heroPlate], 1);
@@ -146,8 +146,8 @@ export function preloadCategoryImages(
   if (products && products.length > 0) {
     const firstBatch = products
       .filter((p) => p.category.toLowerCase() === category)
-      .slice(0, 4)
-      .map((p) => getSmallVariantUrl(p.image));
+      .slice(0, 3)
+      .map((p) => p.image);
     preloadUrls(firstBatch, 2);
   }
 }
