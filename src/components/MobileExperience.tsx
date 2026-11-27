@@ -19,16 +19,15 @@ import {
   replaceProductUrl,
 } from '../utils/productRouting';
 
+import { MobileProductDetail } from './MobileProductDetail';
+
 const loadMobileProductGrid = () =>
   import('./MobileProductGrid').then((m) => ({ default: m.MobileProductGrid }));
-const loadMobileProductDetail = () =>
-  import('./MobileProductDetail').then((m) => ({ default: m.MobileProductDetail }));
+const loadMobileShoppingBag = () =>
+  import('./MobileShoppingBag').then((m) => ({ default: m.MobileShoppingBag }));
 
 const MobileProductGrid = lazyWithRetry(loadMobileProductGrid);
-const MobileProductDetail = lazyWithRetry(loadMobileProductDetail);
-const MobileShoppingBag = lazyWithRetry(() =>
-  import('./MobileShoppingBag').then((m) => ({ default: m.MobileShoppingBag }))
-);
+const MobileShoppingBag = lazyWithRetry(loadMobileShoppingBag);
 const MobileNavDrawer = lazyWithRetry(() =>
   import('./MobileNavDrawer').then((m) => ({ default: m.MobileNavDrawer }))
 );
@@ -39,11 +38,10 @@ const PairStudio = lazyWithRetry(() =>
   import('./PairStudio').then((m) => ({ default: m.PairStudio }))
 );
 
-// Immediately fetch product detail bundle & garment image on direct product ad links
+// Immediately warm garment image on direct product ad links
 if (typeof window !== 'undefined') {
   const deepLinkProduct = findProductByPath(window.location.pathname);
   if (deepLinkProduct) {
-    void loadMobileProductDetail().catch(() => {});
     preloadProductDetailImages(deepLinkProduct);
   }
 }
@@ -130,12 +128,15 @@ export const MobileExperience: React.FC = () => {
     };
   }, []);
 
-  // Pre-warm grid chunk gently after landing paint so navigation feels instant without slowing initial hero load
+  // Pre-warm grid (and bag if non-empty) gently after landing paint without slowing initial hero load
   useEffect(() => {
     if (isConstrainedNetwork()) return;
     const warmChunks = () => {
       if (isConstrainedNetwork()) return;
-      void import('./MobileProductGrid');
+      void import('./MobileProductGrid').catch(() => {});
+      if (cartCount > 0) {
+        void loadMobileShoppingBag().catch(() => {});
+      }
     };
     const timer = globalThis.setTimeout(() => {
       if (typeof window.requestIdleCallback === 'function') {
@@ -145,7 +146,7 @@ export const MobileExperience: React.FC = () => {
       }
     }, 1500);
     return () => globalThis.clearTimeout(timer);
-  }, []);
+  }, [cartCount]);
 
   // Filter products by category
   const categoryProducts = React.useMemo(() => {
@@ -172,10 +173,9 @@ export const MobileExperience: React.FC = () => {
   const handlePrefetchCategory = useCallback((catId: CategoryId) => {
     preloadCategoryImages(catId, PRODUCTS);
     if (catId === 'pair') {
-      void import('./PairStudio');
+      void import('./PairStudio').catch(() => {});
     } else {
-      void import('./MobileProductGrid');
-      void import('./MobileProductDetail');
+      void import('./MobileProductGrid').catch(() => {});
     }
   }, []);
 
@@ -183,7 +183,7 @@ export const MobileExperience: React.FC = () => {
   const handleSelectCategory = useCallback((catId: CategoryId) => {
     preloadCategoryImages(catId, PRODUCTS);
     if (catId === 'pair') {
-      void import('./PairStudio');
+      void import('./PairStudio').catch(() => {});
       setPairSeedShirt(null);
       setPairSeedTrouser(null);
       setPairInitialMode('summer');
@@ -193,8 +193,7 @@ export const MobileExperience: React.FC = () => {
       window.scrollTo({ top: 0, behavior: 'auto' });
       return;
     }
-    void import('./MobileProductGrid');
-    void import('./MobileProductDetail');
+    void import('./MobileProductGrid').catch(() => {});
     setSelectedCategory(catId);
     setSelectedProduct(null);
     setActiveView('category');

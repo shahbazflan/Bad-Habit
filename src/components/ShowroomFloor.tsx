@@ -161,7 +161,7 @@ export function ShowroomFloor({
       return;
     }
     if (selectedProduct.category === 'Trousers' || selectedProduct.category === 'Shirts') {
-      void import('./SizeGuideModal');
+      void import('./SizeGuideModal').catch(() => {});
     }
     const sameGroup = prevColorGroupRef.current === selectedProduct.colorGroup;
     prevColorGroupRef.current = selectedProduct.colorGroup;
@@ -335,7 +335,7 @@ export function ShowroomFloor({
     if (cat === 'categories') return;
     preloadCategoryImages(cat, PRODUCTS);
     if (cat === 'pair') {
-      void import('./PairStudio');
+      void import('./PairStudio').catch(() => {});
     }
   };
 

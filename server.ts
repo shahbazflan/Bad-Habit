@@ -100,7 +100,11 @@ function injectSocialAndPreloadMeta(html: string, req: express.Request): string 
     const title = `${product.name} — BAD HABIT`;
     const safeTitle = escapeHtmlAttr(title);
     const safeDesc = escapeHtmlAttr(product.description);
-    const productImagePreload = `<link rel="preload" as="image" type="image/webp" href="${escapeHtmlAttr(product.image)}" fetchpriority="high" />`;
+    const productImagePreload = [
+      `<link rel="preload" as="image" type="image/webp" href="/clean_plate_mobile_hd.webp?v=opt30" media="(max-width: 767px)" fetchpriority="high" />`,
+      `<link rel="preload" as="image" type="image/avif" href="/clean_plate_1376.avif?v=opt26" media="(min-width: 768px)" fetchpriority="high" />`,
+      `<link rel="preload" as="image" type="image/webp" href="${escapeHtmlAttr(product.image)}" fetchpriority="high" />`,
+    ].join('\n    ');
 
     out = out
       .replace(/<title>.*?<\/title>/i, `<title>${safeTitle}</title>`)

@@ -1,17 +1,22 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import { useCart } from '../context/CartContext';
 import { useMember } from '../context/MemberContext';
 import { getProductSubtitle } from '../data/products';
 import { normalizePhoneToE164, isValidPhoneNumber } from '../utils/phone';
 import { BrandLogo } from './BrandLogo';
-import { PolicyModal, PolicyType } from './PolicyModal';
+import type { PolicyType } from './PolicyModal';
 import { CleanPlatePicture } from './CleanPlatePicture';
 import { SmartImage } from './SmartImage';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
 import {
   trackInitiateCheckout,
   trackPageView,
   trackPurchase,
 } from '../utils/metaPixel';
+
+const PolicyModal = lazyWithRetry(() =>
+  import('./PolicyModal').then((m) => ({ default: m.PolicyModal }))
+);
 
 const VALID_PROVINCES = [
   'Punjab',
@@ -141,12 +146,37 @@ export const CheckoutView: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!isCheckoutOpen || hasTrackedCheckoutRef.current) return;
-    hasTrackedCheckoutRef.current = true;
-    trackPageView('checkout');
-    if (items.length > 0) {
-      trackInitiateCheckout(items, subtotal);
+    if (!isCheckoutOpen) return;
+    void import('./OrderConfirmationView').catch(() => {});
+
+    if (!hasTrackedCheckoutRef.current) {
+      hasTrackedCheckoutRef.current = true;
+      trackPageView('checkout');
+      if (items.length > 0) {
+        trackInitiateCheckout(items, subtotal);
+      }
     }
+
+    if (items.length === 0) return;
+    const validateCtrl = new AbortController();
+    void fetch('/api/cart/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items }),
+      signal: validateCtrl.signal,
+    })
+      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
+      .then(({ ok, data }) => {
+        if (!mountedRef.current) return;
+        if (!ok || data?.valid === false) {
+          setSubmissionError(data?.error || 'One or more items in your bag are unavailable. Please review your bag.');
+        }
+      })
+      .catch(() => {
+        // Authoritative validation still runs on order submit
+      });
+
+    return () => validateCtrl.abort();
   }, [isCheckoutOpen, items, subtotal]);
 
   // Field refs for error autofocus
@@ -1653,7 +1683,11 @@ export const CheckoutView: React.FC = () => {
       </main>
 
       {/* Policy Modal */}
-      <PolicyModal type={policyType} onClose={() => setPolicyType(null)} />
+      {policyType && (
+        <Suspense fallback={null}>
+          <PolicyModal type={policyType} onClose={() => setPolicyType(null)} />
+        </Suspense>
+      )}
     </div>
   );
 };

@@ -7,15 +7,22 @@ let globalHandlersInitialized = false;
 const IGNORED_ERROR_PATTERNS = [
   'ResizeObserver loop limit exceeded',
   'ResizeObserver loop completed with undelivered notifications',
+  'WebSocket closed without opened',
+  'Cannot set property fetch of',
+  'Failed to fetch dynamically imported module',
 ];
 
 function shouldIgnoreErrorMessage(msg: string): boolean {
+  if (!msg) return false;
   return IGNORED_ERROR_PATTERNS.some((pattern) => msg.includes(pattern));
 }
 
-function isBrowserExtensionSource(source: string): boolean {
-  return /^(?:chrome-extension|moz-extension|safari-extension|safari-web-extension):\/\//i.test(source) ||
-    /(?:chrome-extension|moz-extension|safari-extension|safari-web-extension):\/\//i.test(source);
+function isBenignRuntimeSource(source: string): boolean {
+  if (!source) return false;
+  return (
+    /(?:chrome-extension|moz-extension|safari-extension|safari-web-extension):\/\//i.test(source) ||
+    source.includes('/@vite/client')
+  );
 }
 
 export function initGlobalErrorHandlers(): void {
@@ -25,7 +32,12 @@ export function initGlobalErrorHandlers(): void {
   window.addEventListener('error', (event: ErrorEvent) => {
     const filename = String(event?.filename || '');
     const message = String(event?.message || event?.error?.message || '');
-    if (isBrowserExtensionSource(filename) || shouldIgnoreErrorMessage(message)) {
+    const stack = String(event?.error?.stack || '');
+    if (
+      isBenignRuntimeSource(filename) ||
+      isBenignRuntimeSource(stack) ||
+      shouldIgnoreErrorMessage(message)
+    ) {
       event.preventDefault();
       return;
     }
@@ -40,15 +52,26 @@ export function initGlobalErrorHandlers(): void {
   window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
     const reason = event?.reason;
     const message =
-      reason instanceof Error ? reason.message : typeof reason === 'string' ? reason : 'Unhandled promise rejection';
+      reason instanceof Error
+        ? reason.message
+        : typeof reason === 'string'
+        ? reason
+        : reason && typeof reason === 'object' && 'message' in reason
+        ? String((reason as { message?: unknown }).message || '')
+        : '';
     const stack = reason instanceof Error ? String(reason.stack || '') : '';
 
-    if (isBrowserExtensionSource(stack) || shouldIgnoreErrorMessage(message)) {
+    if (
+      !reason ||
+      isBenignRuntimeSource(stack) ||
+      shouldIgnoreErrorMessage(message) ||
+      shouldIgnoreErrorMessage(stack)
+    ) {
       event.preventDefault();
       return;
     }
 
-    // Prevent aborted fetch errors or benign WebSocket HMR closes from crashing runtime
+    // Prevent aborted fetch errors from crashing or spamming console
     if (
       (reason instanceof DOMException && reason.name === 'AbortError') ||
       (reason instanceof Error && reason.name === 'AbortError')
@@ -57,7 +80,7 @@ export function initGlobalErrorHandlers(): void {
       return;
     }
 
-    console.error('[BAD HABIT] Unhandled promise rejection captured:', message);
+    console.error('[BAD HABIT] Unhandled promise rejection captured:', message || 'Unhandled promise rejection');
     event.preventDefault();
   });
 

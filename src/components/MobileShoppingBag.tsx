@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useMember } from '../context/MemberContext';
-import { getProductSubtitle } from '../data/products';
+import { PRODUCTS, getProductSubtitle } from '../data/products';
 import { SmartImage } from './SmartImage';
+
+const prefetchCheckoutView = () => {
+  void import('./CheckoutView').catch(() => {});
+};
 
 interface MobileShoppingBagProps {
   onContinueShopping: () => void;
@@ -34,46 +38,31 @@ export const MobileShoppingBag: React.FC<MobileShoppingBagProps> = ({
 
   useEffect(() => {
     mountedRef.current = true;
+    if (items.length > 0) {
+      prefetchCheckoutView();
+    }
     return () => {
       mountedRef.current = false;
       validateAbortRef.current?.abort();
     };
-  }, []);
+  }, [items.length]);
 
-  const handleCheckout = async () => {
+  const handleCheckout = () => {
     if (items.length === 0 || validating) return;
-    validateAbortRef.current?.abort();
-    const controller = new AbortController();
-    validateAbortRef.current = controller;
-    setValidating(true);
+    prefetchCheckoutView();
     setValidationError(null);
 
-    try {
-      const res = await fetch('/api/cart/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items }),
-        signal: controller.signal,
-      });
+    const invalidItem = items.find((item) => {
+      const product = PRODUCTS.find((p) => p.id === item.productId);
+      return !product || product.soldOut || !['S', 'M', 'L', 'XL'].includes(item.size) || item.quantity <= 0;
+    });
 
-      const data = await res.json().catch(() => null);
-      if (!mountedRef.current) return;
-      if (!res.ok || !data?.valid) {
-        setValidationError(data?.error || 'Cart validation failed. Please check your items.');
-        setValidating(false);
-        return;
-      }
-      onProceedToCheckout();
-    } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') return;
-      if (!mountedRef.current) return;
-      // Proceed gracefully if server temporarily unreachable
-      onProceedToCheckout();
-    } finally {
-      if (mountedRef.current) {
-        setValidating(false);
-      }
+    if (invalidItem) {
+      setValidationError(`${invalidItem.name} is currently unavailable or sold out. Please remove it to proceed.`);
+      return;
     }
+
+    onProceedToCheckout();
   };
 
   return (
@@ -251,6 +240,9 @@ export const MobileShoppingBag: React.FC<MobileShoppingBagProps> = ({
             <button
               type="button"
               onClick={handleCheckout}
+              onPointerEnter={prefetchCheckoutView}
+              onTouchStart={prefetchCheckoutView}
+              onFocus={prefetchCheckoutView}
               disabled={validating}
               className="selected-reveal-capsule w-full py-3 px-5 rounded-[0.25rem] text-white font-grotesk font-semibold text-[15px] sm:text-[16.5px] tracking-tight flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer outline-none mt-5"
               aria-label="Proceed to checkout"

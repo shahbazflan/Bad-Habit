@@ -1248,6 +1248,22 @@ const sendOrderNotifications = async (
   };
 };
 
+// Keep background email/webhook jobs alive on Vercel serverless while responding to the customer immediately
+const runInBackground = (promise: Promise<unknown>) => {
+  const safePromise = Promise.resolve(promise).catch((err: any) => {
+    console.error('[BAD HABIT] Background notification error:', err?.message || err);
+  });
+  try {
+    const requestContext = (globalThis as Record<symbol, any>)[Symbol.for('@vercel/request-context')];
+    const ctx = requestContext?.get?.();
+    if (ctx && typeof ctx.waitUntil === 'function') {
+      ctx.waitUntil(safePromise);
+    }
+  } catch {
+    // Standard Node/Express keeps running background promises natively
+  }
+};
+
 // Shared notification sender for non-order events (new member registration, wishlist updates)
 const dispatchStoreEventEmail = async ({
   toEmail,
@@ -1877,14 +1893,13 @@ apiRouter.post('/members/session', async (req, res) => {
     const proto = req.get('x-forwarded-proto') || req.protocol || 'https';
     const reqOrigin = host ? `${proto}://${host}` : '';
 
-    let notification: any = null;
     if (!dryRun && sessionResult.member) {
-      notification = await sendMemberSignupNotification(sessionResult.member, reqOrigin);
+      runInBackground(sendMemberSignupNotification(sessionResult.member, reqOrigin));
     }
 
     return res.status(201).json({
       ...sessionResult.payload,
-      emailNotification: notification?.storeNotification || null,
+      emailNotification: { sent: false, deferred: true },
     });
   } catch (err: any) {
     console.error('[BAD HABIT] /members/session error:', err?.message || err);
@@ -2125,23 +2140,21 @@ apiRouter.post('/wishlist/add', async (req, res) => {
     const proto = req.get('x-forwarded-proto') || req.protocol || 'https';
     const reqOrigin = host ? `${proto}://${host}` : '';
 
-    let emailNotification: any = null;
     if (!dryRun && lockResult.member) {
-      emailNotification = await Promise.race([
+      runInBackground(
         sendWishlistNotification({
           member: lockResult.member,
           item: wishlistEntry,
           baseOrigin: reqOrigin,
-        }).catch(() => ({ sent: false, provider: 'none' })),
-        new Promise((resolve) => setTimeout(() => resolve({ sent: false, deferred: true }), 2500)),
-      ]);
+        })
+      );
     }
 
     return res.json({
       success: true,
       member: lockResult.member,
       item: wishlistEntry,
-      emailNotification,
+      emailNotification: { sent: false, deferred: true },
     });
   } catch (err: any) {
     console.error('[BAD HABIT] /wishlist/add error:', err?.message || err);
@@ -2551,44 +2564,51 @@ apiRouter.post(['/orders', '/orders/create'], async (req, res) => {
     const host = req.get('x-forwarded-host') || req.get('host');
     const proto = req.get('x-forwarded-proto') || req.protocol || 'https';
     const reqOrigin = host ? `${proto}://${host}` : '';
-    const {
-      storeNotification,
-      automationNotification,
-      customerNotification,
-      webhookSent,
-    } = await sendOrderNotifications(newOrder, sendOrderSummaryToEmail !== false, reqOrigin);
-
-    const enrichedOrder = {
-      ...newOrder,
-      notifications: {
-        storeEmailSent: storeNotification.sent,
-        customerEmailSent: Boolean(customerNotification?.sent),
-        automationEmailSent: Boolean(automationNotification?.sent),
-        webhookSent,
-        provider: customerNotification?.provider || storeNotification.provider,
-        storeResult: storeNotification,
-        customerResult: customerNotification,
-      },
-    };
-
-    await withStoreLock(async () => {
-      await saveOrderAsync(enrichedOrder);
-    });
 
     if (idempotencyKey) {
-      setCachedIdempotentOrder(idempotencyKey, enrichedOrder);
+      setCachedIdempotentOrder(idempotencyKey, newOrder);
     }
+
+    // Dispatch order emails & webhook asynchronously so mobile/desktop checkout completes in <50ms
+    runInBackground(
+      (async () => {
+        const {
+          storeNotification,
+          automationNotification,
+          customerNotification,
+          webhookSent,
+        } = await sendOrderNotifications(newOrder, sendOrderSummaryToEmail !== false, reqOrigin);
+
+        const enrichedOrder = {
+          ...newOrder,
+          notifications: {
+            storeEmailSent: storeNotification.sent,
+            customerEmailSent: Boolean(customerNotification?.sent),
+            automationEmailSent: Boolean(automationNotification?.sent),
+            webhookSent,
+            provider: customerNotification?.provider || storeNotification.provider,
+            storeResult: storeNotification,
+            customerResult: customerNotification,
+          },
+        };
+
+        await withStoreLock(async () => {
+          await saveOrderAsync(enrichedOrder);
+        });
+
+        if (idempotencyKey) {
+          setCachedIdempotentOrder(idempotencyKey, enrichedOrder);
+        }
+      })()
+    );
 
     return {
       status: 201,
       payload: {
         success: true,
-        order: enrichedOrder,
+        order: newOrder,
         member: returnedMember,
-        emailNotification: storeNotification,
-        customerEmailNotification: customerNotification,
-        automationNotification,
-        webhookSent,
+        emailNotification: { sent: false, deferred: true },
       },
     };
   };

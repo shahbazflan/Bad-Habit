@@ -40,9 +40,30 @@
           document.addEventListener('DOMContentLoaded', ensureFetchWritable, { once: true });
         }
 
+        function isIgnorableNoise(src, msg) {
+          return (
+            /(?:chrome-extension|moz-extension|safari-extension|safari-web-extension):\/\//i.test(src) ||
+            src.indexOf('/@vite/client') !== -1 ||
+            msg.indexOf('WebSocket closed without opened') !== -1 ||
+            msg.indexOf('Cannot set property fetch of') !== -1
+          );
+        }
+
         window.addEventListener('error', function(event) {
           var src = String((event && event.filename) || '');
-          if (/^(?:chrome-extension|moz-extension|safari-extension|safari-web-extension):\/\//i.test(src)) {
+          var msg = String((event && event.message) || '');
+          if (isIgnorableNoise(src, msg)) {
+            if (event && typeof event.preventDefault === 'function') {
+              event.preventDefault();
+            }
+          }
+        }, true);
+
+        window.addEventListener('unhandledrejection', function(event) {
+          var reason = event && event.reason;
+          var msg = reason && reason.message ? String(reason.message) : String(reason || '');
+          var stack = reason && reason.stack ? String(reason.stack) : '';
+          if (isIgnorableNoise(stack, msg)) {
             if (event && typeof event.preventDefault === 'function') {
               event.preventDefault();
             }
@@ -76,11 +97,6 @@
     <meta name="twitter:title" content="BAD HABIT" />
     <meta name="twitter:description" content="BAD HABIT — Luxury architectural fashion runway and clothing showroom. YOU KNOW YOU WANT IT." />
     <meta name="twitter:image" content="https://storebadhabit.com/og-bad-habit.jpg" />
-
-    <!-- Fast DNS resolution for Facebook / Instagram Pixel & In-App Browser -->
-    <link rel="preconnect" href="https://connect.facebook.net" crossorigin />
-    <link rel="dns-prefetch" href="https://connect.facebook.net" />
-    <link rel="dns-prefetch" href="https://www.facebook.com" />
 
     <!-- HERO_PRELOAD_START -->
     <link
@@ -139,7 +155,11 @@
         rel="stylesheet"
       />
     </noscript>
-    <!-- Meta Pixel Code -->
+
+    <!-- Fast DNS resolution for Facebook / Instagram Pixel & In-App Browser -->
+    <link rel="dns-prefetch" href="https://connect.facebook.net" />
+    <link rel="dns-prefetch" href="https://www.facebook.com" />
+    <!-- Meta Pixel Code (synchronous queue so zero events drop; script loads after DOM parse for faster Meta IAB FCP) -->
     <script>
       (function() {
         var consentDenied = false;
@@ -166,15 +186,16 @@
         }
 
         try {
-          !function(f,b,e,v,n,t,s)
-          {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-          n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-          if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-          n.queue=[];t=b.createElement(e);t.async=!0;
-          t.src=v;s=b.getElementsByTagName(e)[0];
-          if(s&&s.parentNode)s.parentNode.insertBefore(t,s);
-          else if(b.head)b.head.appendChild(t);}(window, document,'script',
-          'https://connect.facebook.net/en_US/fbevents.js');
+          if (!window.fbq) {
+            var n = window.fbq = function() {
+              n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+            };
+            if (!window._fbq) window._fbq = n;
+            n.push = n;
+            n.loaded = !0;
+            n.version = '2.0';
+            n.queue = [];
+          }
           if (typeof window.fbq === 'function') {
             if (consentDenied) {
               window.fbq('consent', 'revoke');
@@ -184,6 +205,21 @@
               window.fbq('track', 'PageView');
               window.__bhMetaPixelInitialTracked = true;
             }
+          }
+          var injectPixelScript = function() {
+            if (document.getElementById('bh-meta-pixel-script')) return;
+            var t = document.createElement('script');
+            t.id = 'bh-meta-pixel-script';
+            t.async = true;
+            t.src = 'https://connect.facebook.net/en_US/fbevents.js';
+            var s = document.getElementsByTagName('script')[0];
+            if (s && s.parentNode) s.parentNode.insertBefore(t, s);
+            else if (document.head) document.head.appendChild(t);
+          };
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() { setTimeout(injectPixelScript, 0); }, { once: true });
+          } else {
+            setTimeout(injectPixelScript, 0);
           }
         } catch (e) {
           // Never allow third-party pixel setup to interrupt initial render
@@ -201,11 +237,9 @@
             <div style="font-family: system-ui, -apple-system, sans-serif; font-size: 22px; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; color: #ffffff;">BAD HABIT</div>
           </div>
         </header>
-        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translateY(-4vh);">
-          <picture>
-            <source media="(max-width: 767px)" srcset="/bad_habit_transparent_sm.webp?v=opt26" type="image/webp" />
-            <img src="/bad_habit_transparent.webp?v=opt26" width="1000" height="500" alt="BAD HABIT" style="width: 88vw; max-width: 680px; height: auto; object-fit: contain; pointer-events: none;" fetchpriority="high" decoding="async" />
-          </picture>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translateY(-4vh); text-align: center;">
+          <div style="font-family: system-ui, -apple-system, sans-serif; font-size: clamp(44px, 12vw, 96px); font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255, 255, 255, 0.92); line-height: 0.95;">BAD HABIT</div>
+          <div style="font-family: system-ui, -apple-system, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.28em; text-transform: uppercase; color: rgba(255, 255, 255, 0.8); margin-top: 10px;">YOU KNOW YOU WANT IT</div>
         </div>
         <div style="width: 100%; height: 60px;"></div>
       </div>

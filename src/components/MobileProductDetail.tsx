@@ -85,7 +85,7 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
   // Clamp gallery index and reset state when switching products
   useEffect(() => {
     if (product.category === 'Trousers' || product.category === 'Shirts') {
-      void import('./SizeGuideModal');
+      void import('./SizeGuideModal').catch(() => {});
     }
     setActiveImageIndex((prev) => {
       if (prev < galleryImages.length) return prev;
@@ -115,8 +115,14 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
 
   const currentImage = galleryImages[activeImageIndex]?.src || product.image;
 
+  const prefetchBagAndCheckout = () => {
+    void import('./MobileShoppingBag').catch(() => {});
+    void import('./CheckoutView').catch(() => {});
+  };
+
   const handleAddToCart = async () => {
     if (isAdding || product.soldOut) return;
+    prefetchBagAndCheckout();
 
     // Parse numeric price from PKR string e.g. "PKR 6,499" -> 6499
     const numericPrice = parseInt(product.price.replace(/[^\d]/g, ''), 10) || 6499;
@@ -372,6 +378,8 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
         <button
           type="button"
           onClick={handleAddToCart}
+          onPointerEnter={prefetchBagAndCheckout}
+          onTouchStart={prefetchBagAndCheckout}
           disabled={isAdding || product.soldOut}
           className={`w-full py-2.5 px-4.5 rounded-[0.25rem] border backdrop-blur-md font-grotesk font-semibold text-[15px] sm:text-[16.5px] tracking-tight flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(4,15,34,0.20)] transition-all outline-none ${
             product.soldOut

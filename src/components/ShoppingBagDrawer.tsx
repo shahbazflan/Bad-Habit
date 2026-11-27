@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useMember } from '../context/MemberContext';
-import { getProductSubtitle } from '../data/products';
+import { PRODUCTS, getProductSubtitle } from '../data/products';
 import { SmartImage } from './SmartImage';
+
+const prefetchCheckoutView = () => {
+  void import('./CheckoutView').catch(() => {});
+};
 
 export const ShoppingBagDrawer: React.FC = () => {
   const {
@@ -28,11 +32,14 @@ export const ShoppingBagDrawer: React.FC = () => {
 
   useEffect(() => {
     mountedRef.current = true;
+    if (isBagOpen && items.length > 0) {
+      prefetchCheckoutView();
+    }
     return () => {
       mountedRef.current = false;
       validateAbortRef.current?.abort();
     };
-  }, []);
+  }, [isBagOpen, items.length]);
 
   // On mobile (< 768px), shopping bag is handled as dedicated Screen 5 in MobileExperience
   const [isDesktop, setIsDesktop] = useState(() => {
@@ -54,44 +61,23 @@ export const ShoppingBagDrawer: React.FC = () => {
     setValidationError(null);
   };
 
-  const handleProceedToCheckout = async () => {
+  const handleProceedToCheckout = () => {
     if (items.length === 0 || validating) return;
-    validateAbortRef.current?.abort();
-    const controller = new AbortController();
-    validateAbortRef.current = controller;
-    setValidating(true);
+    prefetchCheckoutView();
     setValidationError(null);
 
-    try {
-      // Revalidate prices and availability with server before checkout
-      const res = await fetch('/api/cart/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items }),
-        signal: controller.signal,
-      });
+    const invalidItem = items.find((item) => {
+      const product = PRODUCTS.find((p) => p.id === item.productId);
+      return !product || product.soldOut || !['S', 'M', 'L', 'XL'].includes(item.size) || item.quantity <= 0;
+    });
 
-      const data = await res.json().catch(() => null);
-      if (!mountedRef.current) return;
-      if (!res.ok || !data?.valid) {
-        setValidationError(data?.error || 'Cart validation failed. Please check your items.');
-        setValidating(false);
-        return;
-      }
-
-      setIsBagOpen(false);
-      setIsCheckoutOpen(true);
-    } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') return;
-      if (!mountedRef.current) return;
-      // If server unreachable, proceed gracefully
-      setIsBagOpen(false);
-      setIsCheckoutOpen(true);
-    } finally {
-      if (mountedRef.current) {
-        setValidating(false);
-      }
+    if (invalidItem) {
+      setValidationError(`${invalidItem.name} is currently unavailable or sold out. Please remove it to proceed.`);
+      return;
     }
+
+    setIsBagOpen(false);
+    setIsCheckoutOpen(true);
   };
 
   return (
@@ -306,6 +292,8 @@ export const ShoppingBagDrawer: React.FC = () => {
               <button
                 type="button"
                 onClick={handleProceedToCheckout}
+                onPointerEnter={prefetchCheckoutView}
+                onFocus={prefetchCheckoutView}
                 disabled={validating}
                 className="selected-reveal-capsule w-full py-3.5 px-5 rounded-[0.25rem] text-white font-grotesk text-[15px] font-bold tracking-wider transition-all cursor-pointer active:scale-98 disabled:opacity-50 flex items-center justify-center gap-1.5 uppercase"
               >
