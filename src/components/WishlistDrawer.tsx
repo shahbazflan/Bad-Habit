@@ -160,7 +160,8 @@ export const WishlistDrawer: React.FC = () => {
                       alt={item.name}
                       className="w-full h-full object-contain"
                       sizes="80px"
-                      skeletonClassName="inset-1 rounded-xl"
+                      skeletonClassName="inset-1 rounded-[0.35rem]"
+                      skeletonVariant="compact"
                       loading="lazy"
                       decoding="async"
                     />

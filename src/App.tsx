@@ -13,6 +13,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { preloadGarmentImages } from './utils/preloadImages';
 import { lazyWithRetry } from './utils/lazyWithRetry';
 import { OfflineIndicator } from './components/OfflineIndicator';
+import { OverlayPanelSkeleton } from './components/LabSkeleton';
 import { MobileExperience } from './components/MobileExperience';
 import { DesktopShowroomExperience } from './components/DesktopShowroomExperience';
 const AddToCartModal = lazyWithRetry(() =>
@@ -58,7 +59,7 @@ function MainRouter() {
   }, []);
 
   return (
-    <Suspense fallback={null}>
+    <>
       {isMobile ? (
         <ErrorBoundary sectionName="Mobile Showroom">
           <MobileExperience />
@@ -69,35 +70,47 @@ function MainRouter() {
         </ErrorBoundary>
       )}
 
-      {/* On-demand Cart & Checkout Overlay Chunks */}
+      {/* On-demand Cart & Checkout Overlay Chunks with Scoped Architectural Skeletons */}
       {!isMobile && recentlyAddedItem && (
         <ErrorBoundary compact sectionName="Added to Bag">
-          <AddToCartModal />
+          <Suspense fallback={<OverlayPanelSkeleton variant="modal" />}>
+            <AddToCartModal />
+          </Suspense>
         </ErrorBoundary>
       )}
       {!isMobile && isBagOpen && (
         <ErrorBoundary compact sectionName="Shopping Bag">
-          <ShoppingBagDrawer />
+          <Suspense fallback={<OverlayPanelSkeleton variant="drawer" />}>
+            <ShoppingBagDrawer />
+          </Suspense>
         </ErrorBoundary>
       )}
       {isMemberModalOpen && (
         <ErrorBoundary compact sectionName="Member Pass">
-          <MemberAuthModal />
+          <Suspense fallback={<OverlayPanelSkeleton variant="modal" />}>
+            <MemberAuthModal />
+          </Suspense>
         </ErrorBoundary>
       )}
       {isWishlistOpen && (
         <ErrorBoundary compact sectionName="Wishlist">
-          <WishlistDrawer />
+          <Suspense fallback={<OverlayPanelSkeleton variant="drawer" />}>
+            <WishlistDrawer />
+          </Suspense>
         </ErrorBoundary>
       )}
       {isCheckoutOpen && (
         <ErrorBoundary sectionName="Checkout">
-          <CheckoutView />
+          <Suspense fallback={<OverlayPanelSkeleton variant="page" />}>
+            <CheckoutView />
+          </Suspense>
         </ErrorBoundary>
       )}
       {confirmedOrder && (
         <ErrorBoundary sectionName="Order Confirmation">
-          <OrderConfirmationView />
+          <Suspense fallback={<OverlayPanelSkeleton variant="page" />}>
+            <OrderConfirmationView />
+          </Suspense>
         </ErrorBoundary>
       )}
 
@@ -114,7 +127,7 @@ function MainRouter() {
       )}
 
       <OfflineIndicator />
-    </Suspense>
+    </>
   );
 }
 

@@ -6,6 +6,7 @@ import { MobileCategorySection, CategoryId } from './MobileCategorySection';
 import { MobileHeader } from './MobileHeader';
 import { CleanPlatePicture } from './CleanPlatePicture';
 import { ErrorBoundary } from './ErrorBoundary';
+import { ProductGridSkeleton, PairStudioSkeleton, OverlayPanelSkeleton } from './LabSkeleton';
 import type { PolicyType } from './PolicyModal';
 import { isConstrainedNetwork, preloadCategoryImages, preloadProductDetailImages } from '../utils/preloadImages';
 import { trackPageView } from '../utils/metaPixel';
@@ -401,7 +402,17 @@ export const MobileExperience: React.FC = () => {
           </div>
         )}
 
-        <Suspense fallback={null}>
+        <Suspense
+          fallback={
+            activeView === 'category' ? (
+              <ProductGridSkeleton />
+            ) : activeView === 'pair' ? (
+              <PairStudioSkeleton />
+            ) : activeView === 'bag' ? (
+              <OverlayPanelSkeleton variant="page" />
+            ) : null
+          }
+        >
           {/* 2. CATEGORY VIEW: SCREEN 3 (2-COLUMN PRODUCT GRID) */}
           {activeView === 'category' && (
             <div className="w-full flex flex-col min-h-[100dvh]">
@@ -491,7 +502,7 @@ export const MobileExperience: React.FC = () => {
       </div>
 
       {/* Slideout Mobile Navigation Drawer */}
-      <Suspense fallback={null}>
+      <Suspense fallback={isNavDrawerOpen ? <OverlayPanelSkeleton variant="drawer" /> : activePolicy ? <OverlayPanelSkeleton variant="modal" /> : null}>
         {isNavDrawerOpen && (
           <ErrorBoundary compact sectionName="Navigation Menu">
             <MobileNavDrawer

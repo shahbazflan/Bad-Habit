@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { GarmentSkeletonFrame } from './LabSkeleton';
+import { SmartImage } from './SmartImage';
 
 interface PairModelCanvasProps {
   shirtSrc: string;
@@ -238,14 +240,16 @@ export const PairModelCanvas: React.FC<PairModelCanvasProps> = ({
         <button
           type="button"
           onClick={onClickShirt}
-          className="relative z-10 h-[145px] sm:h-[164px] flex items-center justify-center cursor-pointer outline-none group"
+          className="relative z-10 h-[145px] sm:h-[164px] min-w-[140px] flex items-center justify-center cursor-pointer outline-none group"
           title={`Change shirt (${shirtAlt})`}
           aria-label={`Selected shirt: ${shirtAlt}. Click to change shirt.`}
         >
-          <img
+          <SmartImage
             src={shirtSrc}
             alt={shirtAlt}
+            responsive={false}
             className="h-full w-auto object-contain select-none transition-transform duration-200 group-hover:scale-[1.03]"
+            skeletonClassName="inset-1 rounded-[0.5rem]"
             loading="eager"
           />
         </button>
@@ -253,7 +257,7 @@ export const PairModelCanvas: React.FC<PairModelCanvasProps> = ({
         <button
           type="button"
           onClick={onClickTrouser}
-          className="relative z-0 -mt-1.5 h-[212px] sm:h-[238px] -translate-x-[2px] flex items-center justify-center cursor-pointer outline-none group"
+          className="relative z-0 -mt-1.5 h-[212px] sm:h-[238px] min-w-[120px] -translate-x-[2px] flex items-center justify-center cursor-pointer outline-none group"
           title={`Change trousers (${trouserAlt})`}
           aria-label={`Selected trousers: ${trouserAlt}. Click to change trousers.`}
         >
@@ -262,12 +266,14 @@ export const PairModelCanvas: React.FC<PairModelCanvasProps> = ({
               SOLD OUT
             </span>
           )}
-          <img
+          <SmartImage
             src={trouserSrc}
             alt={trouserAlt}
+            responsive={false}
             className={`h-full w-auto object-contain select-none transition-transform duration-200 group-hover:scale-[1.02] ${
               trouserSoldOut ? 'opacity-75' : ''
             }`}
+            skeletonClassName="inset-1 rounded-[0.5rem]"
             loading="eager"
           />
         </button>
@@ -278,6 +284,10 @@ export const PairModelCanvas: React.FC<PairModelCanvasProps> = ({
   return (
     <div className="relative h-[385px] sm:h-[435px] w-full flex items-center justify-center select-none">
       <div className="relative h-full aspect-[503/1231] flex items-center justify-center">
+        {!ready && (
+          <GarmentSkeletonFrame variant="canvas" className="inset-1 rounded-[0.5rem]" />
+        )}
+
         {trouserSoldOut && (
           <span className="absolute top-[52%] left-1/2 -translate-x-1/2 z-20 px-3 py-0.5 rounded-[0.25rem] bg-red-600/95 border border-white/60 text-white font-grotesk font-black text-[10px] tracking-[0.16em] uppercase shadow-md pointer-events-none">
             SOLD OUT
@@ -288,7 +298,7 @@ export const PairModelCanvas: React.FC<PairModelCanvasProps> = ({
           ref={canvasRef}
           width={MODEL_W}
           height={MODEL_H}
-          className={`h-full w-full object-contain transition-opacity duration-200 ${
+          className={`relative z-10 h-full w-full object-contain transition-opacity duration-200 ${
             ready ? 'opacity-100' : 'opacity-0'
           }`}
           aria-label={`Model wearing ${shirtAlt} and ${trouserAlt}`}

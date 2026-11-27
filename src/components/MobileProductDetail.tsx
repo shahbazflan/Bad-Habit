@@ -6,6 +6,7 @@ import { CategoryId } from './MobileCategorySection';
 import { ColorSwatchRail } from './ColorSwatchRail';
 import { preloadNextGalleryItem } from '../utils/preloadImages';
 import { SmartImage } from './SmartImage';
+import { OverlayPanelSkeleton } from './LabSkeleton';
 import { clearLastViewContentKey, trackViewContent } from '../utils/metaPixel';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 
@@ -300,7 +301,8 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
                   alt={img.label}
                   className="w-full h-full object-contain"
                   sizes="56px"
-                  skeletonClassName="inset-1 rounded-lg"
+                  skeletonClassName="inset-1 rounded-[0.35rem]"
+                  skeletonVariant="compact"
                   loading="lazy"
                   decoding="async"
                   fetchPriority="low"
@@ -468,7 +470,7 @@ export const MobileProductDetail: React.FC<MobileProductDetailProps> = ({
       </div>
 
       {isSizeGuideOpen && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<OverlayPanelSkeleton variant="modal" />}>
           <SizeGuideModal
             isOpen={isSizeGuideOpen}
             category={product.category}

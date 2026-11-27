@@ -33,6 +33,7 @@ import { BrandLogo } from './BrandLogo';
 import { CleanPlatePicture } from './CleanPlatePicture';
 import { SmartImage } from './SmartImage';
 import { PrecisionZoomStage } from './PrecisionZoomStage';
+import { PairStudioSkeleton, OverlayPanelSkeleton } from './LabSkeleton';
 import { ErrorBoundary } from './ErrorBoundary';
 import {
   preloadCategoryImages,
@@ -901,7 +902,7 @@ export function ShowroomFloor({
         {activeSection === 'pair' && !isRevealed && (
           <div className="absolute inset-0 z-25 pointer-events-auto">
             <ErrorBoundary compact sectionName="Make a Pair Studio">
-              <Suspense fallback={null}>
+              <Suspense fallback={<PairStudioSkeleton isDesktopShowroom />}>
                 <PairStudio
                   initialTop={pairSeedShirt}
                   initialTrouser={pairSeedTrouser}
@@ -1460,7 +1461,8 @@ export function ShowroomFloor({
                         alt={img.label}
                         className="w-full h-full object-contain"
                         sizes="48px"
-                        skeletonClassName="inset-1 rounded-lg"
+                        skeletonClassName="inset-1 rounded-[0.35rem]"
+                        skeletonVariant="compact"
                         loading="lazy"
                         decoding="async"
                         fetchPriority="low"
@@ -1888,7 +1890,7 @@ export function ShowroomFloor({
       )}
 
       {isSizeGuideOpen && Boolean(selectedProduct) && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<OverlayPanelSkeleton variant="modal" />}>
           <SizeGuideModal
             isOpen={isSizeGuideOpen && Boolean(selectedProduct)}
             category={selectedProduct?.category || 'Trousers'}

@@ -124,7 +124,8 @@ export const MobileShoppingBag: React.FC<MobileShoppingBagProps> = ({
                         alt={item.name}
                         className="max-h-full max-w-full object-contain"
                         sizes="64px"
-                        skeletonClassName="inset-1 rounded-md"
+                        skeletonClassName="inset-1 rounded-[0.35rem]"
+                        skeletonVariant="compact"
                         loading="lazy"
                         decoding="async"
                       />

@@ -1,5 +1,6 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { getResponsiveSrcSet } from '../data/products';
+import { GarmentSkeletonFrame, SkeletonVariant } from './LabSkeleton';
 
 export interface SmartImageProps
   extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'src'> {
@@ -7,17 +8,19 @@ export interface SmartImageProps
   alt: string;
   /** Responsive `sizes` attribute tailored to rendered slot width. */
   sizes?: string;
-  /** Show subtle keyblue glass pulse inside parent while image is decoding. */
+  /** Show CSS-only architectural laboratory skeleton inside parent while image is loading/decoding. */
   showSkeleton?: boolean;
-  /** Extra classes for the subtle skeleton placeholder overlay. */
+  /** Extra classes for the architectural skeleton placeholder overlay. */
   skeletonClassName?: string;
+  /** Structural detail level for the skeleton frame ('specimen' | 'compact' | 'canvas'). */
+  skeletonVariant?: SkeletonVariant;
   /** Set false to bypass automatic `_sm.webp` srcSet resolution. */
   responsive?: boolean;
 }
 
 /**
- * Responsive, CLS-safe image component with subtle decode placeholder and
- * graceful offline/error fallback so broken image icons never render.
+ * Responsive, CLS-safe image component with CSS-only architectural laboratory
+ * skeleton placeholders and graceful offline/error fallback.
  */
 export const SmartImage: React.FC<SmartImageProps> = ({
   src,
@@ -26,7 +29,8 @@ export const SmartImage: React.FC<SmartImageProps> = ({
   srcSet: explicitSrcSet,
   className = '',
   showSkeleton = true,
-  skeletonClassName = 'inset-2 rounded-xl',
+  skeletonClassName = 'inset-2 rounded-[0.5rem]',
+  skeletonVariant = 'specimen',
   responsive = true,
   loading = 'lazy',
   decoding = 'async',
@@ -52,25 +56,22 @@ export const SmartImage: React.FC<SmartImageProps> = ({
     }
   }, [src]);
 
-  const shouldAnimateFade = showSkeleton && loading !== 'eager';
+  const shouldFadeLazy = loading !== 'eager';
 
   return (
     <>
-      {shouldAnimateFade && !loaded && !errored && (
-        <span
-          aria-hidden="true"
-          className={`pointer-events-none absolute ${skeletonClassName} bg-white/[0.08] animate-pulse`}
-        />
+      {showSkeleton && !loaded && !errored && (
+        <GarmentSkeletonFrame variant={skeletonVariant} className={skeletonClassName} />
       )}
 
       {errored ? (
         <span
           role="img"
           aria-label={alt || 'Garment preview unavailable'}
-          className="flex flex-col items-center justify-center gap-1 px-2 py-2 text-center text-white/60 select-none"
+          className="relative z-10 flex flex-col items-center justify-center gap-1.5 px-3 py-3 text-center text-white/70 select-none lab-skeleton-compact rounded-[0.5rem]"
         >
           <svg
-            className="w-6 h-6 opacity-70"
+            className="w-5 h-5 opacity-75"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -105,9 +106,9 @@ export const SmartImage: React.FC<SmartImageProps> = ({
             onError?.(e);
           }}
           className={
-            shouldAnimateFade
-              ? `${className} transition-opacity duration-150 ${loaded ? 'opacity-100' : 'opacity-0'}`
-              : className
+            shouldFadeLazy
+              ? `relative z-10 ${className} transition-opacity duration-150 ${loaded ? 'opacity-100' : 'opacity-0'}`
+              : `relative z-10 ${className}`
           }
           {...rest}
         />

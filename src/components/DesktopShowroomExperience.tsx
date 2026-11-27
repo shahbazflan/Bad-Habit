@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { HeroFloor } from './HeroFloor';
 import { useCart } from '../context/CartContext';
 import { ErrorBoundary } from './ErrorBoundary';
+import { ShowroomStageSkeleton } from './LabSkeleton';
 import { trackPageView } from '../utils/metaPixel';
 import { findProductByPath } from '../utils/productRouting';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
@@ -233,7 +234,7 @@ export function DesktopShowroomExperience() {
           <div className="w-full h-[100vh] h-[100dvh] shrink-0">
             {showroomMounted && (
               <ErrorBoundary compact sectionName="Showroom Collection">
-                <Suspense fallback={null}>
+                <Suspense fallback={<ShowroomStageSkeleton />}>
                   <ShowroomFloor
                     onReturnToHero={handleReturnToHero}
                     isFullyInView={isFullyInView}

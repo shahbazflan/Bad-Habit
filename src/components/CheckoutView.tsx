@@ -7,6 +7,7 @@ import { BrandLogo } from './BrandLogo';
 import type { PolicyType } from './PolicyModal';
 import { CleanPlatePicture } from './CleanPlatePicture';
 import { SmartImage } from './SmartImage';
+import { OverlayPanelSkeleton } from './LabSkeleton';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 import {
   trackInitiateCheckout,
@@ -1684,7 +1685,7 @@ export const CheckoutView: React.FC = () => {
 
       {/* Policy Modal */}
       {policyType && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<OverlayPanelSkeleton variant="modal" />}>
           <PolicyModal type={policyType} onClose={() => setPolicyType(null)} />
         </Suspense>
       )}

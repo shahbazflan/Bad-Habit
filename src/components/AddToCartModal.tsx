@@ -77,7 +77,8 @@ export const AddToCartModal: React.FC = () => {
               alt={recentlyAddedItem.name}
               className="w-full h-full object-contain select-none"
               sizes="64px"
-              skeletonClassName="inset-1 rounded-lg"
+              skeletonClassName="inset-1 rounded-[0.35rem]"
+              skeletonVariant="compact"
               loading="eager"
               decoding="async"
             />

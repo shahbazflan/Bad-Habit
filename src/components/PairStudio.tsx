@@ -516,7 +516,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                 setOpenDropdown(null);
                 setDrawerTab(isWinterTop ? 'hoodies' : 'shirts');
               }}
-              className={`relative z-20 flex items-center justify-center cursor-pointer outline-none group ${
+              className={`relative z-20 min-w-[140px] sm:min-w-[180px] flex items-center justify-center cursor-pointer outline-none group ${
                 selectedTop.id === 'BH-S06' && viewAngle === 'back'
                   ? 'h-[146px] min-[390px]:h-[164px] sm:h-[20vh] lg:h-[23vh] xl:h-[25vh] max-h-[230px] my-[10px] sm:my-[12px]'
                   : 'h-[172px] min-[390px]:h-[192px] sm:h-[23vh] lg:h-[26vh] xl:h-[29vh] max-h-[265px]'
@@ -529,7 +529,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                 alt={selectedTop.name}
                 responsive={false}
                 className="h-full w-auto object-contain select-none transition-transform duration-200 group-hover:scale-[1.03]"
-                showSkeleton={false}
+                skeletonClassName="inset-2 rounded-[0.5rem]"
                 loading="eager"
                 decoding="async"
                 fetchPriority="high"
@@ -543,7 +543,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                 setOpenDropdown(null);
                 setDrawerTab('trousers');
               }}
-              className="relative z-10 -mt-[2px] sm:-mt-[4px] -translate-x-[1px] sm:-translate-x-[2px] h-[238px] min-[390px]:h-[264px] sm:h-[33vh] lg:h-[37vh] xl:h-[40vh] max-h-[375px] flex items-center justify-center cursor-pointer outline-none group transition-transform duration-200"
+              className="relative z-10 -mt-[2px] sm:-mt-[4px] -translate-x-[1px] sm:-translate-x-[2px] min-w-[125px] sm:min-w-[160px] h-[238px] min-[390px]:h-[264px] sm:h-[33vh] lg:h-[37vh] xl:h-[40vh] max-h-[375px] flex items-center justify-center cursor-pointer outline-none group transition-transform duration-200"
               title={`Change trousers (${selectedTrouser.name})`}
               aria-label={`Selected trousers: ${selectedTrouser.name}. Click to change trousers.`}
             >
@@ -559,7 +559,7 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                 className={`h-full w-auto object-contain select-none transition-transform duration-200 group-hover:scale-[1.02] ${
                   isTrouserSoldOut ? 'opacity-75' : ''
                 }`}
-                showSkeleton={false}
+                skeletonClassName="inset-2 rounded-[0.5rem]"
                 loading="eager"
                 decoding="async"
                 fetchPriority="high"
@@ -684,7 +684,8 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                               alt={shirt.name}
                               className="h-full w-auto object-contain select-none"
                               sizes="(max-width: 640px) 42vw, 180px"
-                              skeletonClassName="inset-1 rounded-xl"
+                              skeletonClassName="inset-1 rounded-[0.5rem]"
+                              skeletonVariant="compact"
                               loading={idx < 4 ? 'eager' : 'lazy'}
                               decoding="async"
                             />
@@ -737,7 +738,8 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                               alt={hoodie.name}
                               className="h-full w-auto object-contain select-none"
                               sizes="(max-width: 640px) 42vw, 180px"
-                              skeletonClassName="inset-1 rounded-xl"
+                              skeletonClassName="inset-1 rounded-[0.5rem]"
+                              skeletonVariant="compact"
                               loading={idx < 4 ? 'eager' : 'lazy'}
                               decoding="async"
                             />
@@ -792,7 +794,8 @@ export const PairStudio: React.FC<PairStudioProps> = ({
                                 trouser.soldOut ? 'opacity-65' : ''
                               }`}
                               sizes="(max-width: 640px) 42vw, 180px"
-                              skeletonClassName="inset-1 rounded-xl"
+                              skeletonClassName="inset-1 rounded-[0.5rem]"
+                              skeletonVariant="compact"
                               loading={idx < 4 ? 'eager' : 'lazy'}
                               decoding="async"
                             />
