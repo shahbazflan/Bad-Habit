@@ -1,11 +1,11 @@
 import React from 'react';
 import {
   HERO_PLATE_URL,
+  HERO_PLATE_THUMB_WEBP,
   HERO_PLATE_WEBP_800,
   HERO_PLATE_WEBP_1376,
   HERO_PLATE_AVIF_800,
   HERO_PLATE_AVIF_1376,
-  HERO_PLATE_MOBILE_AVIF,
   HERO_PLATE_MOBILE_WEBP,
 } from '../data/products';
 
@@ -18,16 +18,15 @@ interface CleanPlatePictureProps {
   fetchPriority?: 'high' | 'low' | 'auto';
   ariaHidden?: boolean;
   /**
-   * 'hero' serves the 1152x1536 portrait Retina plate on mobile (<768px) and 1376x768 on desktop.
-   * 'thumbnail' serves compact 800w/1376w assets for small card tiles.
+   * 'hero' serves the 768x1024 portrait Retina WebP on mobile (<768px) and 1376x768 on desktop.
+   * 'thumbnail' serves compact 480w/800w/1376w assets for small card tiles.
    */
   variant?: 'hero' | 'thumbnail';
 }
 
 /**
- * Serves AVIF -> WebP -> Progressive MozJPEG architectural runway plate (`clean_plate`).
- * Full-screen mobile views use the dedicated 1152x1536 Retina portrait plate (19 KB AVIF)
- * so portrait phones remain ultra-sharp without vertical upscaling.
+ * Serves hardware-friendly WebP on mobile social webviews (768x1024, 13.4 KB)
+ * and AVIF -> WebP -> Progressive MozJPEG on desktop (`clean_plate`).
  */
 export const CleanPlatePicture: React.FC<CleanPlatePictureProps> = ({
   alt,
@@ -42,6 +41,11 @@ export const CleanPlatePicture: React.FC<CleanPlatePictureProps> = ({
   if (variant === 'thumbnail') {
     return (
       <picture className="contents">
+        <source
+          media="(max-width: 767px)"
+          type="image/webp"
+          srcSet={HERO_PLATE_THUMB_WEBP}
+        />
         <source
           type="image/avif"
           srcSet={`${HERO_PLATE_AVIF_800} 800w, ${HERO_PLATE_AVIF_1376} 1376w`}
@@ -69,11 +73,6 @@ export const CleanPlatePicture: React.FC<CleanPlatePictureProps> = ({
 
   return (
     <picture className="contents">
-      <source
-        media="(max-width: 767px)"
-        type="image/avif"
-        srcSet={HERO_PLATE_MOBILE_AVIF}
-      />
       <source
         media="(max-width: 767px)"
         type="image/webp"

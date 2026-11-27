@@ -94,20 +94,26 @@ export function preloadGarmentImages() {
 
   const startWarmup = () => {
     if (isConstrainedNetwork()) return;
-    const categoryCovers = [
+    const isSmallViewport = window.innerWidth < 768;
+    const rawCovers = [
       withAssetVersion('/assets/categories/category_trousers_hd.webp'),
       withAssetVersion('/assets/categories/category_shirts_v3.webp'),
       withAssetVersion('/assets/categories/category_hoodies_v4.webp'),
     ];
+    const categoryCovers = isSmallViewport
+      ? rawCovers.map((url) => getSmallVariantUrl(url))
+      : rawCovers;
     preloadUrls(categoryCovers, 2);
   };
 
   const schedule = () => {
-    if ('requestIdleCallback' in window) {
-      window.requestIdleCallback(startWarmup, { timeout: 1200 });
-    } else {
-      setTimeout(startWarmup, 500);
-    }
+    globalThis.setTimeout(() => {
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(startWarmup, { timeout: 2000 });
+      } else {
+        startWarmup();
+      }
+    }, 1800);
   };
 
   if (document.readyState === 'complete') {

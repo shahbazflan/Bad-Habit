@@ -4,6 +4,7 @@ import { PolicyType } from './PolicyModal';
 import { MAIN_COLLECTION, HOODIE_PRODUCTS, SHIRT_PRODUCTS } from '../data/products';
 import { useMember } from '../context/MemberContext';
 import { CleanPlatePicture } from './CleanPlatePicture';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface MobileNavDrawerProps {
   isOpen: boolean;
@@ -288,6 +289,8 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                   ({cartCount})
                 </span>
               </button>
+
+              <PWAInstallButton />
             </div>
           </div>
 

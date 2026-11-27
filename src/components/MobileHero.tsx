@@ -1,7 +1,6 @@
 import React from 'react';
 import { MobileHeader } from './MobileHeader';
 import { HeroCloudOffer } from './HeroCloudOffer';
-import { CleanPlatePicture } from './CleanPlatePicture';
 import { HERO_LOGO_URL, HERO_MODEL_URL } from '../data/products';
 
 interface MobileHeroProps {
@@ -15,13 +14,9 @@ interface MobileHeroProps {
  * MobileHero (Screen 1)
  * 
  * Full-screen opening mobile hero matching desktop's keyblue theme:
- * - 100svh mobile viewport fill
- * - Website's authentic architectural sky runway background (/clean_plate.jpg)
- * - Sky blue / keyblue ambient environment with natural clouds and architectural walls
- * - Pure white reflective floor
+ * - 100svh mobile viewport fill over MobileExperience's shared sky runway plate
  * - Center model grounded on white floor with subtle perspective shadow
  * - Top header with BAD HABIT branding, bag indicator, and navigation
- * - Bottom-left text composition: "YOU KNOW YOU WANT IT"
  * - Frosted glass "Explore collection ->" button
  */
 export const MobileHero: React.FC<MobileHeroProps> = ({
@@ -35,20 +30,8 @@ export const MobileHero: React.FC<MobileHeroProps> = ({
       className="relative w-full h-[100svh] min-h-[580px] overflow-hidden select-none flex flex-col justify-end"
       aria-label="BAD HABIT Mobile Runway Hero"
     >
-      {/* 1. LAYER: Authentic Keyblue Architectural Runway Background (matching Desktop) */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        <CleanPlatePicture
-          alt="BAD HABIT architectural runway"
-          className="w-full h-full object-cover object-center pointer-events-none"
-          sizes="100vw"
-          loading="eager"
-          decoding="async"
-          fetchPriority="high"
-        />
-      </div>
-
       {/* Subtle Keyblue ambient gradient overlay for depth */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#244b70]/18 via-transparent to-[#0e273f]/20 pointer-events-none z-[1]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#244b70]/14 via-transparent to-[#0e273f]/16 pointer-events-none z-[1]" />
 
       {/* 2. LAYER: Top Header pinned strictly at top-0 (Menu, Logo, Member, Wishlist, Bag) */}
       <div className="absolute top-0 left-0 right-0 z-30 w-full">

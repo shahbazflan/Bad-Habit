@@ -40,8 +40,9 @@ export const HERO_PLATE_WEBP_800 = '/clean_plate_800.webp?v=opt26';
 export const HERO_PLATE_WEBP_1376 = '/clean_plate_1376.webp?v=opt26';
 export const HERO_PLATE_AVIF_800 = '/clean_plate_800.avif?v=opt26';
 export const HERO_PLATE_AVIF_1376 = '/clean_plate_1376.avif?v=opt26';
-export const HERO_PLATE_MOBILE_AVIF = '/clean_plate_mobile_hd.avif?v=opt29';
-export const HERO_PLATE_MOBILE_WEBP = '/clean_plate_mobile_hd.webp?v=opt29';
+export const HERO_PLATE_THUMB_WEBP = '/clean_plate_thumb.webp?v=opt30';
+export const HERO_PLATE_MOBILE_AVIF = '/clean_plate_mobile_hd.avif?v=opt30';
+export const HERO_PLATE_MOBILE_WEBP = '/clean_plate_mobile_hd.webp?v=opt30';
 export const HERO_LOGO_URL = '/bad_habit_transparent.webp?v=opt26';
 export const HERO_MODEL_URL = '/assets/aistudio/hero_landing_model_cutout.webp?v=opt28';
 

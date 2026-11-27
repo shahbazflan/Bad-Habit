@@ -13,13 +13,20 @@ function shouldIgnoreErrorMessage(msg: string): boolean {
   return IGNORED_ERROR_PATTERNS.some((pattern) => msg.includes(pattern));
 }
 
+function isBrowserExtensionSource(source: string): boolean {
+  return /^(?:chrome-extension|moz-extension|safari-extension|safari-web-extension):\/\//i.test(source) ||
+    /(?:chrome-extension|moz-extension|safari-extension|safari-web-extension):\/\//i.test(source);
+}
+
 export function initGlobalErrorHandlers(): void {
   if (globalHandlersInitialized || typeof window === 'undefined') return;
   globalHandlersInitialized = true;
 
   window.addEventListener('error', (event: ErrorEvent) => {
+    const filename = String(event?.filename || '');
     const message = String(event?.message || event?.error?.message || '');
-    if (shouldIgnoreErrorMessage(message)) {
+    if (isBrowserExtensionSource(filename) || shouldIgnoreErrorMessage(message)) {
+      event.preventDefault();
       return;
     }
     console.error('[BAD HABIT] Global error captured:', {
@@ -34,8 +41,9 @@ export function initGlobalErrorHandlers(): void {
     const reason = event?.reason;
     const message =
       reason instanceof Error ? reason.message : typeof reason === 'string' ? reason : 'Unhandled promise rejection';
+    const stack = reason instanceof Error ? String(reason.stack || '') : '';
 
-    if (shouldIgnoreErrorMessage(message)) {
+    if (isBrowserExtensionSource(stack) || shouldIgnoreErrorMessage(message)) {
       event.preventDefault();
       return;
     }

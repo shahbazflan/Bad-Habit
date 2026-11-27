@@ -4,30 +4,64 @@
     <meta charset="UTF-8" />
     <script>
       (function() {
-        try {
-          var desc = Object.getOwnPropertyDescriptor(window, 'fetch');
-          if (desc && !desc.writable && !desc.set && desc.configurable) {
-            var nativeFetch = window.fetch;
-            var activeFetch = nativeFetch ? nativeFetch.bind(window) : null;
-            Object.defineProperty(window, 'fetch', {
-              get: function() { return activeFetch; },
-              set: function(fn) { activeFetch = fn; },
-              configurable: true,
-              enumerable: true
-            });
+        function ensureFetchWritable() {
+          try {
+            var ownDesc = Object.getOwnPropertyDescriptor(window, 'fetch');
+            var proto = window;
+            var desc = ownDesc;
+            while (!desc && proto) {
+              proto = Object.getPrototypeOf ? Object.getPrototypeOf(proto) : null;
+              if (proto) {
+                desc = Object.getOwnPropertyDescriptor(proto, 'fetch');
+              }
+            }
+            var isGetterOnly = Boolean(desc && typeof desc.get === 'function' && !desc.set);
+            var isReadOnly = Boolean(desc && !('get' in desc) && desc.writable === false);
+            if ((isGetterOnly || isReadOnly) && (!ownDesc || ownDesc.configurable)) {
+              var activeFetch = typeof window.fetch === 'function' ? window.fetch.bind(window) : null;
+              Object.defineProperty(window, 'fetch', {
+                get: function() { return activeFetch; },
+                set: function(fn) {
+                  if (typeof fn === 'function') {
+                    activeFetch = fn;
+                  }
+                },
+                configurable: true,
+                enumerable: true
+              });
+            }
+          } catch (e) {
+            // Leave native fetch intact in strict webviews
           }
-        } catch (e) {
-          // Leave native fetch intact in strict social in-app webviews
         }
+
+        ensureFetchWritable();
+        if (document && document.addEventListener) {
+          document.addEventListener('DOMContentLoaded', ensureFetchWritable, { once: true });
+        }
+
+        window.addEventListener('error', function(event) {
+          var src = String((event && event.filename) || '');
+          if (/^(?:chrome-extension|moz-extension|safari-extension|safari-web-extension):\/\//i.test(src)) {
+            if (event && typeof event.preventDefault === 'function') {
+              event.preventDefault();
+            }
+          }
+        }, true);
       })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#1f486d" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="BAD HABIT" />
     <meta name="format-detection" content="telephone=no" />
     <title>BAD HABIT</title>
     <meta name="description" content="BAD HABIT — Luxury architectural fashion runway and clothing showroom. YOU KNOW YOU WANT IT." />
     <link rel="canonical" href="https://storebadhabit.com/" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta property="og:site_name" content="BAD HABIT" />
     <meta property="og:title" content="BAD HABIT" />
     <meta property="og:description" content="BAD HABIT — Luxury architectural fashion runway and clothing showroom. YOU KNOW YOU WANT IT." />
@@ -52,8 +86,8 @@
     <link
       rel="preload"
       as="image"
-      type="image/avif"
-      href="/clean_plate_mobile_hd.avif?v=opt29"
+      type="image/webp"
+      href="/clean_plate_mobile_hd.webp?v=opt30"
       media="(max-width: 767px)"
       fetchpriority="high"
     />

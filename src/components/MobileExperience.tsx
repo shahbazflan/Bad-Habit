@@ -368,9 +368,9 @@ export const MobileExperience: React.FC = () => {
           decoding="async"
           fetchPriority="high"
         />
-        {/* Skyblue top mixing cleanly into crisp white bottom on landing & categories */}
+        {/* Skyblue top mixing gently into bright architectural floor */}
         {activeView === 'home' ? (
-          <div className="absolute inset-0 bg-gradient-to-b from-[#1f5685]/28 via-[#66a2cf]/18 to-[#f4f8fc]/92" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1f5685]/18 via-transparent to-[#eef4fa]/70" />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-b from-[#1b3d5f]/15 via-transparent to-[#0a1e30]/15" />
         )}

@@ -3,8 +3,9 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig } from 'vite';
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
+import { VitePWA } from 'vite-plugin-pwa';
 
-export default defineConfig(() => {
+export default defineConfig(({ command }) => {
   return {
     define: {
       __ASSET_VERSION__: JSON.stringify(Date.now().toString(36)),
@@ -14,7 +15,7 @@ export default defineConfig(() => {
       tailwindcss(),
       ViteImageOptimizer({
         includePublic: true,
-        exclude: /(?:Screenshot_|IMG_|BAD-HABIT-|Shop_by_category__|_sm\.webp|_v2\.webp|clean_plate_|size_guide|hero_landing_model_cutout|bad_habit_transparent|og-bad-habit|assets\/aistudio\/.*\.(?:png|jpg|jpeg))/i,
+        exclude: /(?:Screenshot_|IMG_|BAD-HABIT-|Shop_by_category__|_sm\.webp|_v2\.webp|clean_plate_|size_guide|hero_landing_model_cutout|bad_habit_transparent|og-bad-habit|pwa-|apple-touch-icon|assets\/aistudio\/.*\.(?:png|jpg|jpeg))/i,
         png: {
           compressionLevel: 9,
           palette: false,
@@ -33,6 +34,129 @@ export default defineConfig(() => {
           mozjpeg: true,
         },
         cache: true,
+      }),
+      VitePWA({
+        registerType: 'autoUpdate',
+        injectRegister: false,
+        includeAssets: [],
+        manifest: {
+          id: '/',
+          name: 'BAD HABIT',
+          short_name: 'BAD HABIT',
+          description: 'BAD HABIT — Luxury architectural fashion runway and clothing showroom. YOU KNOW YOU WANT IT.',
+          start_url: '/',
+          scope: '/',
+          display: 'standalone',
+          orientation: 'portrait',
+          theme_color: '#1f486d',
+          background_color: '#1f486d',
+          categories: ['shopping', 'fashion', 'lifestyle'],
+          icons: [
+            {
+              src: '/pwa-192x192.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'any',
+            },
+            {
+              src: '/pwa-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'any',
+            },
+            {
+              src: '/pwa-maskable-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'maskable',
+            },
+          ],
+        },
+        workbox: {
+          cleanupOutdatedCaches: true,
+          clientsClaim: true,
+          skipWaiting: true,
+          ignoreURLParametersMatching: [/^v$/, /^utm_/, /^fbclid$/, /^igshid$/],
+          globPatterns: [
+            '**/*.{js,css,html}',
+            'favicon.svg',
+            'apple-touch-icon.png',
+            'clean_plate_mobile_hd.webp',
+            'clean_plate_thumb.webp',
+            'clean_plate_1376.avif',
+            'clean_plate_1376.webp',
+            'bad_habit_transparent.webp',
+            'bad_habit_transparent_sm.webp',
+            'assets/aistudio/hero_landing_model_cutout*.webp',
+            'assets/aistudio/hero_mobile_model_cutout*.webp',
+            'assets/categories/category_*_sm.webp',
+          ],
+          globIgnores: [
+            '**/Screenshot_*',
+            '**/IMG_*',
+            '**/BAD-HABIT-*',
+            '**/Shop_by_category__*',
+            '**/assets/aistudio/*.png',
+            '**/assets/email-thumbs/**',
+          ],
+          navigateFallback: command === 'build' ? 'index.html' : null,
+          navigateFallbackDenylist: [/^\/api\//, /\/[^/]+\.[^/]+$/],
+          runtimeCaching: [
+            {
+              urlPattern: ({ url }) => url.origin === self.location.origin && url.pathname.startsWith('/api/'),
+              handler: 'NetworkOnly',
+            },
+            {
+              urlPattern: ({ url }) =>
+                url.origin === self.location.origin &&
+                /\.(?:webp|avif|jpg|jpeg|png|svg)$/i.test(url.pathname),
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'bad-habit-images-v1',
+                expiration: {
+                  maxEntries: 180,
+                  maxAgeSeconds: 60 * 60 * 24 * 30,
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+            {
+              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+              handler: 'StaleWhileRevalidate',
+              options: {
+                cacheName: 'google-fonts-stylesheets',
+                expiration: {
+                  maxEntries: 10,
+                  maxAgeSeconds: 60 * 60 * 24 * 365,
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+            {
+              urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'google-fonts-webfonts',
+                expiration: {
+                  maxEntries: 30,
+                  maxAgeSeconds: 60 * 60 * 24 * 365,
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+          ],
+        },
+        devOptions: {
+          enabled: true,
+          type: 'module',
+          navigateFallback: '/',
+        },
       }),
     ],
     resolve: {

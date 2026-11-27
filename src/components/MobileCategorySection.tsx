@@ -155,7 +155,7 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
             <SmartImage
               src={POSTER_SHIRT.image}
               alt={POSTER_SHIRT.name}
-              responsive={false}
+              sizes="120px"
               className="relative z-10 h-[78%] sm:h-[82%] w-auto object-contain drop-shadow-[0_10px_18px_rgba(4,24,43,0.28)] transition-transform duration-300 group-hover:scale-105"
               showSkeleton={false}
               loading="lazy"
@@ -165,7 +165,7 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
             <SmartImage
               src={POSTER_TROUSER.image}
               alt={POSTER_TROUSER.name}
-              responsive={false}
+              sizes="90px"
               className="h-[84%] sm:h-[88%] w-auto object-contain drop-shadow-[0_10px_18px_rgba(4,24,43,0.28)] transition-transform duration-300 group-hover:scale-105"
               showSkeleton={false}
               loading="lazy"
@@ -248,7 +248,7 @@ export const MobileCategorySection: React.FC<MobileCategorySectionProps> = ({
                   <SmartImage
                     src={cat.image}
                     alt={cat.alt}
-                    responsive={false}
+                    sizes="120px"
                     className={`${cat.imageClass} select-none transition-transform duration-300 group-hover:scale-105 ${cat.imageOriginClass ?? 'origin-bottom'}`}
                     skeletonClassName="inset-1 rounded-[0.5rem]"
                     loading="lazy"

@@ -225,7 +225,7 @@ async function startServer() {
 
     // Never return SPA HTML for missing static file extensions
     app.use((req, res, next) => {
-      if (/\.(?:js|mjs|css|map|png|jpe?g|webp|avif|gif|svg|ico|woff2?|ttf|json|txt|xml)$/i.test(req.path)) {
+      if (/\.(?:js|mjs|css|map|png|jpe?g|webp|avif|gif|svg|ico|woff2?|ttf|json|webmanifest|txt|xml)$/i.test(req.path)) {
         return res.status(404).end();
       }
       next();
@@ -303,8 +303,12 @@ async function startServer() {
         index: false,
         maxAge: '7d',
         setHeaders: (res, filePath) => {
-          if (filePath.endsWith('.html')) {
+          const baseName = path.basename(filePath);
+          if (filePath.endsWith('.html') || baseName === 'sw.js' || baseName === 'registerSW.js') {
             res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          } else if (baseName === 'manifest.webmanifest') {
+            res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+            res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
           } else if (/\.(js|css|woff2)$/i.test(filePath)) {
             res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
           } else {
@@ -323,7 +327,7 @@ async function startServer() {
       })
     );
     app.use((req, res, next) => {
-      if (/\.(?:js|mjs|css|map|png|jpe?g|webp|avif|gif|svg|ico|woff2?|ttf|json|txt|xml)$/i.test(req.path)) {
+      if (/\.(?:js|mjs|css|map|png|jpe?g|webp|avif|gif|svg|ico|woff2?|ttf|json|webmanifest|txt|xml)$/i.test(req.path)) {
         return res.status(404).end();
       }
       next();

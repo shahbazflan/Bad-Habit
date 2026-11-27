@@ -12,6 +12,7 @@ import { MemberProvider, useMember } from './context/MemberContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { preloadGarmentImages } from './utils/preloadImages';
 import { lazyWithRetry } from './utils/lazyWithRetry';
+import { OfflineIndicator } from './components/OfflineIndicator';
 
 const loadMobileExperience = () =>
   import('./components/MobileExperience').then((m) => ({ default: m.MobileExperience }));
@@ -128,6 +129,8 @@ function MainRouter() {
           <span>{wishlistNotice}</span>
         </div>
       )}
+
+      <OfflineIndicator />
     </Suspense>
   );
 }
