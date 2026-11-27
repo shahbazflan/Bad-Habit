@@ -17,11 +17,12 @@ import { HERO_LOGO_URL, HERO_MODEL_URL } from '../data/products';
 
 interface HeroFloorProps {
   onViewCollection: () => void;
+  onIntentToShowroom?: () => void;
   activeFloor?: 'hero' | 'showroom';
   onNavigateToFloor?: (floor: 'hero' | 'showroom') => void;
 }
 
-export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProps) {
+export function HeroFloor({ onViewCollection, onIntentToShowroom, onNavigateToFloor }: HeroFloorProps) {
   const { cartCount, setIsBagOpen } = useCart();
   const { member, wishlistItems, setIsMemberModalOpen, setIsWishlistOpen } = useMember();
   const wishlistCount = wishlistItems.length;
@@ -136,6 +137,8 @@ export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProp
       <div className="hidden md:inline-flex absolute left-[clamp(20px,6vw,120px)] top-[48%] -translate-y-1/2 z-25">
         <button
           onClick={onViewCollection}
+          onPointerEnter={onIntentToShowroom}
+          onFocus={onIntentToShowroom}
           className="glass-capsule glass-capsule-hover group relative inline-flex items-center justify-center px-5 sm:px-6 py-2.5 sm:py-3 rounded-[0.25rem] text-white font-grotesk font-semibold text-[16.5px] sm:text-[17.5px] tracking-tight cursor-pointer transition-all duration-200 outline-none"
           aria-label="View collection — descend to lower showroom"
         >
@@ -259,6 +262,8 @@ export function HeroFloor({ onViewCollection, onNavigateToFloor }: HeroFloorProp
       <div className="hidden md:flex absolute bottom-6 left-1/2 -translate-x-1/2 z-25 flex-col items-center pointer-events-auto">
         <button
           onClick={onViewCollection}
+          onPointerEnter={onIntentToShowroom}
+          onFocus={onIntentToShowroom}
           className="flex flex-col items-center gap-1.5 text-white/60 hover:text-white transition-colors duration-200 outline-none group cursor-pointer"
           aria-label="Scroll down to lower showroom"
         >

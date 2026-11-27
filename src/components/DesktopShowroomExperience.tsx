@@ -5,10 +5,12 @@ import { ErrorBoundary } from './ErrorBoundary';
 import { trackPageView } from '../utils/metaPixel';
 import { findProductByPath } from '../utils/productRouting';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
+import { isConstrainedNetwork, preloadGarmentImages } from '../utils/preloadImages';
 
-const ShowroomFloor = lazyWithRetry(() =>
-  import('./ShowroomFloor').then((m) => ({ default: m.ShowroomFloor }))
-);
+const loadShowroomFloor = () =>
+  import('./ShowroomFloor').then((m) => ({ default: m.ShowroomFloor }));
+
+const ShowroomFloor = lazyWithRetry(loadShowroomFloor);
 
 const FLOOR_EDGE_PX = 2;
 const SCROLL_RUNWAY_PX = 900;
@@ -71,30 +73,36 @@ export function DesktopShowroomExperience() {
     return () => mediaQuery.removeEventListener('change', handler);
   }, []);
 
-  // Prefetch ShowroomFloor JS chunk on idle immediately; mount gently after hero paint or on scroll/click
+  // Prefetch ShowroomFloor JS chunk gently on idle after hero paint
   useEffect(() => {
+    if (isConstrainedNetwork()) return;
     const prefetch = () => {
-      void import('./ShowroomFloor');
+      void loadShowroomFloor().catch(() => {});
     };
-    if (typeof window.requestIdleCallback === 'function') {
-      const id = window.requestIdleCallback(prefetch, { timeout: 300 });
-      return () => window.cancelIdleCallback(id);
-    }
-    const timer = globalThis.setTimeout(prefetch, 120);
+    const timer = globalThis.setTimeout(() => {
+      if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(prefetch, { timeout: 1200 });
+      } else {
+        prefetch();
+      }
+    }, 600);
     return () => globalThis.clearTimeout(timer);
   }, []);
 
+  // Mount lower showroom gently after hero settles so initial laptop paint stays 100% dedicated to hero
   useEffect(() => {
     if (showroomMounted) return;
     const mountShowroom = () => {
-      void import('./ShowroomFloor');
+      void loadShowroomFloor().catch(() => {});
       setShowroomMounted(true);
     };
-    if (typeof window.requestIdleCallback === 'function') {
-      const id = window.requestIdleCallback(mountShowroom, { timeout: 1600 });
-      return () => window.cancelIdleCallback(id);
-    }
-    const timer = globalThis.setTimeout(mountShowroom, 1200);
+    const timer = globalThis.setTimeout(() => {
+      if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(mountShowroom, { timeout: 2200 });
+      } else {
+        mountShowroom();
+      }
+    }, 1800);
     return () => globalThis.clearTimeout(timer);
   }, [showroomMounted]);
 
@@ -180,6 +188,12 @@ export function DesktopShowroomExperience() {
     scrollToFloor('hero');
   }, [scrollToFloor]);
 
+  const handleIntentToShowroom = useCallback(() => {
+    void loadShowroomFloor().catch(() => {});
+    setShowroomMounted(true);
+    preloadGarmentImages();
+  }, []);
+
   const initialOffsetPx = initialHasProductUrl
     ? -(viewportHeightRef.current + FLOOR_EDGE_PX)
     : 0;
@@ -208,6 +222,7 @@ export function DesktopShowroomExperience() {
             <ErrorBoundary compact sectionName="Hero Runway">
               <HeroFloor
                 onViewCollection={handleViewCollection}
+                onIntentToShowroom={handleIntentToShowroom}
                 activeFloor={activeFloor}
                 onNavigateToFloor={scrollToFloor}
               />

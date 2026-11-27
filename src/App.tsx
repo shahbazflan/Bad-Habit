@@ -13,25 +13,8 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { preloadGarmentImages } from './utils/preloadImages';
 import { lazyWithRetry } from './utils/lazyWithRetry';
 import { OfflineIndicator } from './components/OfflineIndicator';
-
-const loadMobileExperience = () =>
-  import('./components/MobileExperience').then((m) => ({ default: m.MobileExperience }));
-const loadDesktopExperience = () =>
-  import('./components/DesktopShowroomExperience').then((m) => ({
-    default: m.DesktopShowroomExperience,
-  }));
-
-// Start downloading the active viewport experience immediately in parallel with boot
-if (typeof window !== 'undefined') {
-  if (window.innerWidth < 768) {
-    void loadMobileExperience().catch(() => {});
-  } else {
-    void loadDesktopExperience().catch(() => {});
-  }
-}
-
-const MobileExperience = lazyWithRetry(loadMobileExperience);
-const DesktopShowroomExperience = lazyWithRetry(loadDesktopExperience);
+import { MobileExperience } from './components/MobileExperience';
+import { DesktopShowroomExperience } from './components/DesktopShowroomExperience';
 const AddToCartModal = lazyWithRetry(() =>
   import('./components/AddToCartModal').then((m) => ({ default: m.AddToCartModal }))
 );

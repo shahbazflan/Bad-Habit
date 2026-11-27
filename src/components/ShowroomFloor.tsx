@@ -331,6 +331,14 @@ export function ShowroomFloor({
     setActiveSection('pair');
   };
 
+  const handlePrefetchSection = (cat: 'categories' | 'trousers' | 'hoodies' | 'shirts' | 'pair') => {
+    if (cat === 'categories') return;
+    preloadCategoryImages(cat, PRODUCTS);
+    if (cat === 'pair') {
+      void import('./PairStudio');
+    }
+  };
+
   const handleCategoryTileClick = (cat: CategoryItem) => {
     preloadCategoryImages(cat.id, PRODUCTS);
     if (cat.id === 'trousers') {
@@ -625,6 +633,8 @@ export function ShowroomFloor({
               <button
                 type="button"
                 onClick={() => handleSelectCategory('pair')}
+                onPointerEnter={() => handlePrefetchSection('pair')}
+                onFocus={() => handlePrefetchSection('pair')}
                 className={`px-3 lg:px-4 py-1.5 lg:py-2 rounded-[0.25rem] font-grotesk text-[13px] lg:text-[15px] font-semibold tracking-tight whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeSection === 'pair'
                     ? 'bg-white/28 border border-white/80 text-white font-bold shadow-sm'
@@ -641,6 +651,8 @@ export function ShowroomFloor({
               <button
                 type="button"
                 onClick={() => handleSelectCategory('trousers')}
+                onPointerEnter={() => handlePrefetchSection('trousers')}
+                onFocus={() => handlePrefetchSection('trousers')}
                 className={`px-3 lg:px-4 py-1.5 lg:py-2 rounded-[0.25rem] font-grotesk text-[13px] lg:text-[15px] font-semibold tracking-tight whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeSection === 'trousers'
                     ? 'bg-white/28 border border-white/80 text-white font-bold shadow-sm'
@@ -655,6 +667,8 @@ export function ShowroomFloor({
               <button
                 type="button"
                 onClick={() => handleSelectCategory('shirts')}
+                onPointerEnter={() => handlePrefetchSection('shirts')}
+                onFocus={() => handlePrefetchSection('shirts')}
                 className={`px-3 lg:px-4 py-1.5 lg:py-2 rounded-[0.25rem] font-grotesk text-[13px] lg:text-[15px] font-semibold tracking-tight whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeSection === 'shirts'
                     ? 'bg-white/28 border border-white/80 text-white font-bold shadow-sm'
@@ -669,6 +683,8 @@ export function ShowroomFloor({
               <button
                 type="button"
                 onClick={() => handleSelectCategory('hoodies')}
+                onPointerEnter={() => handlePrefetchSection('hoodies')}
+                onFocus={() => handlePrefetchSection('hoodies')}
                 className={`px-3 lg:px-4 py-1.5 lg:py-2 rounded-[0.25rem] font-grotesk text-[13px] lg:text-[15px] font-semibold tracking-tight whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeSection === 'hoodies'
                     ? 'bg-white/28 border border-white/80 text-white font-bold shadow-sm'
@@ -705,6 +721,8 @@ export function ShowroomFloor({
               <button
                 type="button"
                 onClick={() => handleCategoryTileClick(CATEGORY_ITEMS[0])}
+                onPointerEnter={() => handlePrefetchSection('pair')}
+                onFocus={() => handlePrefetchSection('pair')}
                 className="group relative w-full h-full overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset text-left bg-gradient-to-b from-[#5594cc]/35 via-transparent to-black/15"
                 aria-label="Make a pair — 15% off"
               >
@@ -772,6 +790,8 @@ export function ShowroomFloor({
               <button
                 type="button"
                 onClick={() => handleCategoryTileClick(CATEGORY_ITEMS[1])}
+                onPointerEnter={() => handlePrefetchSection('trousers')}
+                onFocus={() => handlePrefetchSection('trousers')}
                 className="group relative w-full h-full overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset text-left"
                 aria-label="Shop Trousers Category"
               >
@@ -806,6 +826,8 @@ export function ShowroomFloor({
               <button
                 type="button"
                 onClick={() => handleCategoryTileClick(CATEGORY_ITEMS[2])}
+                onPointerEnter={() => handlePrefetchSection('shirts')}
+                onFocus={() => handlePrefetchSection('shirts')}
                 className="group relative w-full h-full overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset text-left"
                 aria-label="Shop Shirts Category"
               >
@@ -839,6 +861,8 @@ export function ShowroomFloor({
               <button
                 type="button"
                 onClick={() => handleCategoryTileClick(CATEGORY_ITEMS[3])}
+                onPointerEnter={() => handlePrefetchSection('hoodies')}
+                onFocus={() => handlePrefetchSection('hoodies')}
                 className="group relative w-full h-full overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-inset text-left"
                 aria-label="Shop Hoodies & Sweatshirts Category"
               >

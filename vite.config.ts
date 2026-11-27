@@ -78,17 +78,23 @@ export default defineConfig(({ command }) => {
           skipWaiting: true,
           ignoreURLParametersMatching: [/^v$/, /^utm_/, /^fbclid$/, /^igshid$/],
           globPatterns: [
-            '**/*.{js,css,html}',
+            'index.html',
+            'assets/index-*.{js,css}',
+            'assets/vendor-react-*.js',
+            'assets/rolldown-runtime-*.js',
+            'assets/workbox-window*.js',
+            'assets/MobileCategorySection-*.js',
+            'assets/CleanPlatePicture-*.js',
+            'assets/SmartImage-*.js',
+            'assets/productRouting-*.js',
+            'assets/phone-*.js',
             'favicon.svg',
             'apple-touch-icon.png',
             'clean_plate_mobile_hd.webp',
             'clean_plate_thumb.webp',
             'clean_plate_1376.avif',
-            'clean_plate_1376.webp',
-            'bad_habit_transparent.webp',
             'bad_habit_transparent_sm.webp',
-            'assets/aistudio/hero_landing_model_cutout*.webp',
-            'assets/aistudio/hero_mobile_model_cutout*.webp',
+            'assets/aistudio/hero_landing_model_cutout.webp',
             'assets/categories/category_*_sm.webp',
           ],
           globIgnores: [
@@ -96,6 +102,7 @@ export default defineConfig(({ command }) => {
             '**/IMG_*',
             '**/BAD-HABIT-*',
             '**/Shop_by_category__*',
+            '**/hero_mobile_model_cutout*',
             '**/assets/aistudio/*.png',
             '**/assets/email-thumbs/**',
           ],
@@ -105,6 +112,23 @@ export default defineConfig(({ command }) => {
             {
               urlPattern: ({ url }) => url.origin === self.location.origin && url.pathname.startsWith('/api/'),
               handler: 'NetworkOnly',
+            },
+            {
+              urlPattern: ({ url }) =>
+                url.origin === self.location.origin &&
+                url.pathname.startsWith('/assets/') &&
+                /\.js$/i.test(url.pathname),
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'bad-habit-lazy-chunks-v1',
+                expiration: {
+                  maxEntries: 60,
+                  maxAgeSeconds: 60 * 60 * 24 * 30,
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
             },
             {
               urlPattern: ({ url }) =>

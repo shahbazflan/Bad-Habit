@@ -76,6 +76,17 @@ define(['./workbox-723e4bfa'], (function (workbox) { 'use strict';
 	}) => url.origin === self.location.origin && url.pathname.startsWith("/api/"), new workbox.NetworkOnly(), 'GET');
 	workbox.registerRoute(({
 	  url
+	}) => url.origin === self.location.origin && url.pathname.startsWith("/assets/") && /\.js$/i.test(url.pathname), new workbox.CacheFirst({
+	  "cacheName": "bad-habit-lazy-chunks-v1",
+	  plugins: [new workbox.ExpirationPlugin({
+	    maxEntries: 60,
+	    maxAgeSeconds: 2592000
+	  }), new workbox.CacheableResponsePlugin({
+	    statuses: [0, 200]
+	  })]
+	}), 'GET');
+	workbox.registerRoute(({
+	  url
 	}) => url.origin === self.location.origin && /\.(?:webp|avif|jpg|jpeg|png|svg)$/i.test(url.pathname), new workbox.CacheFirst({
 	  "cacheName": "bad-habit-images-v1",
 	  plugins: [new workbox.ExpirationPlugin({

@@ -150,9 +150,10 @@ export function preloadCategoryImages(
   }
 
   if (products && products.length > 0) {
+    const batchCount = typeof window !== 'undefined' && window.innerWidth >= 1024 ? 4 : 3;
     const firstBatch = products
       .filter((p) => p.category.toLowerCase() === category)
-      .slice(0, 3)
+      .slice(0, batchCount)
       .map((p) => p.image);
     preloadUrls(firstBatch, 2);
   }

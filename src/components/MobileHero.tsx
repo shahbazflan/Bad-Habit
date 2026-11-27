@@ -55,16 +55,19 @@ export const MobileHero: React.FC<MobileHeroProps> = ({
         aria-hidden="true"
       >
         <div className="w-[88vw] max-w-[420px] aspect-[1774/887] relative flex items-center justify-center opacity-85">
-          <img
-            src={HERO_LOGO_URL}
-            width={1000}
-            height={500}
-            alt="BAD HABIT"
-            className="w-full h-full object-contain select-none pointer-events-none"
-            loading="eager"
-            decoding="async"
-            fetchPriority="high"
-          />
+          <picture className="w-full h-full block">
+            <source media="(max-width: 767px)" srcSet="/bad_habit_transparent_sm.webp?v=opt26" type="image/webp" />
+            <img
+              src={HERO_LOGO_URL}
+              width={560}
+              height={280}
+              alt="BAD HABIT"
+              className="w-full h-full object-contain select-none pointer-events-none"
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
+            />
+          </picture>
         </div>
       </div>
 

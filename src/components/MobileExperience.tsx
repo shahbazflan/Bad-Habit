@@ -7,7 +7,7 @@ import { MobileHeader } from './MobileHeader';
 import { CleanPlatePicture } from './CleanPlatePicture';
 import { ErrorBoundary } from './ErrorBoundary';
 import type { PolicyType } from './PolicyModal';
-import { preloadCategoryImages, preloadProductDetailImages } from '../utils/preloadImages';
+import { isConstrainedNetwork, preloadCategoryImages, preloadProductDetailImages } from '../utils/preloadImages';
 import { trackPageView } from '../utils/metaPixel';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 import {
@@ -130,17 +130,20 @@ export const MobileExperience: React.FC = () => {
     };
   }, []);
 
-  // Pre-warm grid & detail chunks gently after initial hero mount so navigation is zero-wait
+  // Pre-warm grid chunk gently after landing paint so navigation feels instant without slowing initial hero load
   useEffect(() => {
+    if (isConstrainedNetwork()) return;
     const warmChunks = () => {
+      if (isConstrainedNetwork()) return;
       void import('./MobileProductGrid');
-      void import('./MobileProductDetail');
     };
-    if (typeof window.requestIdleCallback === 'function') {
-      const id = window.requestIdleCallback(warmChunks, { timeout: 600 });
-      return () => window.cancelIdleCallback(id);
-    }
-    const timer = globalThis.setTimeout(warmChunks, 250);
+    const timer = globalThis.setTimeout(() => {
+      if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(warmChunks, { timeout: 2000 });
+      } else {
+        warmChunks();
+      }
+    }, 1500);
     return () => globalThis.clearTimeout(timer);
   }, []);
 
