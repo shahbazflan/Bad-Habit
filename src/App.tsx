@@ -6,11 +6,12 @@
  * - Desktop (>= 768px): Signature Architectural Elevator Experience (Hero Floor -> Showroom Floor)
  */
 
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { CartProvider, useCart } from './context/CartContext';
 import { MemberProvider, useMember } from './context/MemberContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { preloadGarmentImages } from './utils/preloadImages';
+import { lazyWithRetry } from './utils/lazyWithRetry';
 
 const loadMobileExperience = () =>
   import('./components/MobileExperience').then((m) => ({ default: m.MobileExperience }));
@@ -22,32 +23,32 @@ const loadDesktopExperience = () =>
 // Start downloading the active viewport experience immediately in parallel with boot
 if (typeof window !== 'undefined') {
   if (window.innerWidth < 768) {
-    void loadMobileExperience();
+    void loadMobileExperience().catch(() => {});
   } else {
-    void loadDesktopExperience();
+    void loadDesktopExperience().catch(() => {});
   }
 }
 
-const MobileExperience = lazy(loadMobileExperience);
-const DesktopShowroomExperience = lazy(loadDesktopExperience);
-const AddToCartModal = lazy(() =>
+const MobileExperience = lazyWithRetry(loadMobileExperience);
+const DesktopShowroomExperience = lazyWithRetry(loadDesktopExperience);
+const AddToCartModal = lazyWithRetry(() =>
   import('./components/AddToCartModal').then((m) => ({ default: m.AddToCartModal }))
 );
-const ShoppingBagDrawer = lazy(() =>
+const ShoppingBagDrawer = lazyWithRetry(() =>
   import('./components/ShoppingBagDrawer').then((m) => ({ default: m.ShoppingBagDrawer }))
 );
-const CheckoutView = lazy(() =>
+const CheckoutView = lazyWithRetry(() =>
   import('./components/CheckoutView').then((m) => ({ default: m.CheckoutView }))
 );
-const OrderConfirmationView = lazy(() =>
+const OrderConfirmationView = lazyWithRetry(() =>
   import('./components/OrderConfirmationView').then((m) => ({
     default: m.OrderConfirmationView,
   }))
 );
-const MemberAuthModal = lazy(() =>
+const MemberAuthModal = lazyWithRetry(() =>
   import('./components/MemberAuthModal').then((m) => ({ default: m.MemberAuthModal }))
 );
-const WishlistDrawer = lazy(() =>
+const WishlistDrawer = lazyWithRetry(() =>
   import('./components/WishlistDrawer').then((m) => ({ default: m.WishlistDrawer }))
 );
 

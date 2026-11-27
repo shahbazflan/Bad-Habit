@@ -8,7 +8,7 @@
       "destination": "/api/index.ts"
     },
     {
-      "source": "/((?!api/|assets/|products/|.*\\..*).*)",
+      "source": "/((?!api/|assets/|.*\\..*).*)",
       "destination": "/index.html"
     }
   ],
@@ -40,7 +40,7 @@
       ]
     },
     {
-      "source": "/(clean_plate.*\\.(?:jpg|webp|avif)|bad_habit_transparent.*\\.webp|og-bad-habit\\.jpg)",
+      "source": "/(clean_plate_1376.avif|clean_plate_1376.webp|clean_plate_800.avif|clean_plate_800.webp|clean_plate_mobile_hd.avif|clean_plate_mobile_hd.webp|clean_plate.jpg|bad_habit_transparent.webp|bad_habit_transparent_sm.webp|og-bad-habit.jpg)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -82,15 +82,15 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
+          "value": "public, max-age=0, must-revalidate"
         },
         {
           "key": "CDN-Cache-Control",
-          "value": "no-store"
+          "value": "public, s-maxage=300, stale-while-revalidate=86400"
         },
         {
           "key": "Vercel-CDN-Cache-Control",
-          "value": "no-store"
+          "value": "public, s-maxage=300, stale-while-revalidate=86400"
         }
       ]
     },
@@ -99,32 +99,32 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
+          "value": "public, max-age=0, must-revalidate"
         },
         {
           "key": "CDN-Cache-Control",
-          "value": "no-store"
+          "value": "public, s-maxage=300, stale-while-revalidate=86400"
         },
         {
           "key": "Vercel-CDN-Cache-Control",
-          "value": "no-store"
+          "value": "public, s-maxage=300, stale-while-revalidate=86400"
         }
       ]
     },
     {
-      "source": "/((?!api/|assets/|products/|.*\\..*).*)",
+      "source": "/((?!api/|assets/|.*\\..*).*)",
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
+          "value": "public, max-age=0, must-revalidate"
         },
         {
           "key": "CDN-Cache-Control",
-          "value": "no-store"
+          "value": "public, s-maxage=300, stale-while-revalidate=86400"
         },
         {
           "key": "Vercel-CDN-Cache-Control",
-          "value": "no-store"
+          "value": "public, s-maxage=300, stale-while-revalidate=86400"
         }
       ]
     }

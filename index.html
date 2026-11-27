@@ -5,26 +5,29 @@
     <script>
       (function() {
         try {
-          var nativeFetch = window.fetch;
-          var activeFetch = nativeFetch ? nativeFetch.bind(window) : null;
-          Object.defineProperty(window, 'fetch', {
-            get: function() {
-              return activeFetch;
-            },
-            set: function(fn) {
-              activeFetch = fn;
-            },
-            configurable: true,
-            enumerable: true
-          });
+          var desc = Object.getOwnPropertyDescriptor(window, 'fetch');
+          if (desc && !desc.writable && !desc.set && desc.configurable) {
+            var nativeFetch = window.fetch;
+            var activeFetch = nativeFetch ? nativeFetch.bind(window) : null;
+            Object.defineProperty(window, 'fetch', {
+              get: function() { return activeFetch; },
+              set: function(fn) { activeFetch = fn; },
+              configurable: true,
+              enumerable: true
+            });
+          }
         } catch (e) {
-          // Fallback if window.fetch cannot be reconfigured
+          // Leave native fetch intact in strict social in-app webviews
         }
       })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#1f486d" />
+    <meta name="format-detection" content="telephone=no" />
     <title>BAD HABIT</title>
     <meta name="description" content="BAD HABIT — Luxury architectural fashion runway and clothing showroom. YOU KNOW YOU WANT IT." />
+    <link rel="canonical" href="https://storebadhabit.com/" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta property="og:site_name" content="BAD HABIT" />
     <meta property="og:title" content="BAD HABIT" />
     <meta property="og:description" content="BAD HABIT — Luxury architectural fashion runway and clothing showroom. YOU KNOW YOU WANT IT." />
@@ -41,6 +44,7 @@
     <meta name="twitter:image" content="https://storebadhabit.com/og-bad-habit.jpg" />
 
     <!-- Fast DNS resolution for Facebook / Instagram Pixel & In-App Browser -->
+    <link rel="preconnect" href="https://connect.facebook.net" crossorigin />
     <link rel="dns-prefetch" href="https://connect.facebook.net" />
     <link rel="dns-prefetch" href="https://www.facebook.com" />
 
@@ -115,24 +119,31 @@
             }
           }
         } catch (e) {
-          // Ignore storage read errors
+          // Ignore storage read errors in restricted social webviews
         }
 
-        !function(f,b,e,v,n,t,s)
-        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-        n.queue=[];t=b.createElement(e);t.async=!0;
-        t.src=v;s=b.getElementsByTagName(e)[0];
-        s.parentNode.insertBefore(t,s)}(window, document,'script',
-        'https://connect.facebook.net/en_US/fbevents.js');
-        if (consentDenied) {
-          fbq('consent', 'revoke');
-        }
-        fbq('init', '1876320856885682');
-        if (!consentDenied) {
-          fbq('track', 'PageView');
-          window.__bhMetaPixelInitialTracked = true;
+        try {
+          !function(f,b,e,v,n,t,s)
+          {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+          n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+          if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+          n.queue=[];t=b.createElement(e);t.async=!0;
+          t.src=v;s=b.getElementsByTagName(e)[0];
+          if(s&&s.parentNode)s.parentNode.insertBefore(t,s);
+          else if(b.head)b.head.appendChild(t);}(window, document,'script',
+          'https://connect.facebook.net/en_US/fbevents.js');
+          if (typeof window.fbq === 'function') {
+            if (consentDenied) {
+              window.fbq('consent', 'revoke');
+            }
+            window.fbq('init', '1876320856885682');
+            if (!consentDenied) {
+              window.fbq('track', 'PageView');
+              window.__bhMetaPixelInitialTracked = true;
+            }
+          }
+        } catch (e) {
+          // Never allow third-party pixel setup to interrupt initial render
         }
       })();
     </script>

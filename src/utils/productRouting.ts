@@ -90,16 +90,20 @@ export function pushProductUrl(
   stateExtra?: Record<string, unknown>
 ): void {
   if (typeof window === 'undefined') return;
-  const targetPath = getProductPath(product);
-  const nextState = {
-    ...(stateExtra || {}),
-    productId: product.id,
-    productSlug: getProductSlug(product),
-  };
-  if (window.location.pathname !== targetPath) {
-    window.history.pushState(nextState, '', targetPath);
-  } else {
-    window.history.replaceState(nextState, '', targetPath);
+  try {
+    const targetPath = getProductPath(product);
+    const nextState = {
+      ...(stateExtra || {}),
+      productId: product.id,
+      productSlug: getProductSlug(product),
+    };
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState(nextState, '', targetPath);
+    } else {
+      window.history.replaceState(nextState, '', targetPath);
+    }
+  } catch {
+    // Ignore history API errors in restricted embedded webviews
   }
 }
 
@@ -108,28 +112,36 @@ export function replaceProductUrl(
   stateExtra?: Record<string, unknown>
 ): void {
   if (typeof window === 'undefined') return;
-  const targetPath = getProductPath(product);
-  window.history.replaceState(
-    {
-      ...(stateExtra || {}),
-      productId: product.id,
-      productSlug: getProductSlug(product),
-    },
-    '',
-    targetPath
-  );
+  try {
+    const targetPath = getProductPath(product);
+    window.history.replaceState(
+      {
+        ...(stateExtra || {}),
+        productId: product.id,
+        productSlug: getProductSlug(product),
+      },
+      '',
+      targetPath
+    );
+  } catch {
+    // Ignore history API errors in restricted embedded webviews
+  }
 }
 
 export function pushHomeUrl(stateExtra?: Record<string, unknown>): void {
   if (typeof window === 'undefined') return;
-  const nextState = {
-    ...(stateExtra || {}),
-    productId: null,
-    productSlug: null,
-  };
-  if (window.location.pathname !== '/') {
-    window.history.pushState(nextState, '', '/');
-  } else if (stateExtra) {
-    window.history.pushState(nextState, '', '/');
+  try {
+    const nextState = {
+      ...(stateExtra || {}),
+      productId: null,
+      productSlug: null,
+    };
+    if (window.location.pathname !== '/') {
+      window.history.pushState(nextState, '', '/');
+    } else if (stateExtra) {
+      window.history.pushState(nextState, '', '/');
+    }
+  } catch {
+    // Ignore history API errors in restricted embedded webviews
   }
 }

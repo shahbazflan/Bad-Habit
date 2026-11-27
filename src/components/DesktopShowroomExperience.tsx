@@ -1,11 +1,12 @@
-import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { HeroFloor } from './HeroFloor';
 import { useCart } from '../context/CartContext';
 import { ErrorBoundary } from './ErrorBoundary';
 import { trackPageView } from '../utils/metaPixel';
 import { findProductByPath } from '../utils/productRouting';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
 
-const ShowroomFloor = lazy(() =>
+const ShowroomFloor = lazyWithRetry(() =>
   import('./ShowroomFloor').then((m) => ({ default: m.ShowroomFloor }))
 );
 

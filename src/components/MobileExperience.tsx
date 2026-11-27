@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import { PRODUCTS, Product } from '../data/products';
 import { useCart } from '../context/CartContext';
 import { MobileHero } from './MobileHero';
@@ -9,6 +9,7 @@ import { ErrorBoundary } from './ErrorBoundary';
 import type { PolicyType } from './PolicyModal';
 import { preloadCategoryImages, preloadProductDetailImages } from '../utils/preloadImages';
 import { trackPageView } from '../utils/metaPixel';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
 import {
   findProductByPath,
   getCategoryIdForProduct,
@@ -23,18 +24,18 @@ const loadMobileProductGrid = () =>
 const loadMobileProductDetail = () =>
   import('./MobileProductDetail').then((m) => ({ default: m.MobileProductDetail }));
 
-const MobileProductGrid = lazy(loadMobileProductGrid);
-const MobileProductDetail = lazy(loadMobileProductDetail);
-const MobileShoppingBag = lazy(() =>
+const MobileProductGrid = lazyWithRetry(loadMobileProductGrid);
+const MobileProductDetail = lazyWithRetry(loadMobileProductDetail);
+const MobileShoppingBag = lazyWithRetry(() =>
   import('./MobileShoppingBag').then((m) => ({ default: m.MobileShoppingBag }))
 );
-const MobileNavDrawer = lazy(() =>
+const MobileNavDrawer = lazyWithRetry(() =>
   import('./MobileNavDrawer').then((m) => ({ default: m.MobileNavDrawer }))
 );
-const PolicyModal = lazy(() =>
+const PolicyModal = lazyWithRetry(() =>
   import('./PolicyModal').then((m) => ({ default: m.PolicyModal }))
 );
-const PairStudio = lazy(() =>
+const PairStudio = lazyWithRetry(() =>
   import('./PairStudio').then((m) => ({ default: m.PairStudio }))
 );
 
@@ -42,7 +43,7 @@ const PairStudio = lazy(() =>
 if (typeof window !== 'undefined') {
   const deepLinkProduct = findProductByPath(window.location.pathname);
   if (deepLinkProduct) {
-    void loadMobileProductDetail();
+    void loadMobileProductDetail().catch(() => {});
     preloadProductDetailImages(deepLinkProduct);
   }
 }
@@ -358,7 +359,7 @@ export const MobileExperience: React.FC = () => {
       activeView === 'home' ? 'bg-[#244b70]' : 'bg-[#1a3a5a]'
     }`}>
       {/* GLOBAL BACKGROUND: Keyblue architectural sky runway matching desktop exactly */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden transform-gpu will-change-transform" aria-hidden="true">
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
         <CleanPlatePicture
           alt="Architectural sky runway"
           className="w-full h-full object-cover object-center"

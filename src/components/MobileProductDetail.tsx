@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { Product, getColorVariants, getShirtDetailImageClass } from '../data/products';
 import { useCart } from '../context/CartContext';
 import { useMember } from '../context/MemberContext';
@@ -7,8 +7,9 @@ import { ColorSwatchRail } from './ColorSwatchRail';
 import { preloadNextGalleryItem } from '../utils/preloadImages';
 import { SmartImage } from './SmartImage';
 import { clearLastViewContentKey, trackViewContent } from '../utils/metaPixel';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
 
-const SizeGuideModal = lazy(() =>
+const SizeGuideModal = lazyWithRetry(() =>
   import('./SizeGuideModal').then((m) => ({ default: m.SizeGuideModal }))
 );
 

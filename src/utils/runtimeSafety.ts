@@ -52,6 +52,21 @@ export function initGlobalErrorHandlers(): void {
     console.error('[BAD HABIT] Unhandled promise rejection captured:', message);
     event.preventDefault();
   });
+
+  window.addEventListener('vite:preloadError', (event) => {
+    try {
+      const key = 'bad_habit_preload_retry_ts';
+      const now = Date.now();
+      const lastRetry = Number(window.sessionStorage.getItem(key) || '0');
+      if (!lastRetry || now - lastRetry > 15000) {
+        window.sessionStorage.setItem(key, String(now));
+        event.preventDefault();
+        window.location.reload();
+      }
+    } catch {
+      // Ignore storage access restrictions in private webviews
+    }
+  });
 }
 
 export function safeStorageGet<T>(key: string, fallback: T): T {

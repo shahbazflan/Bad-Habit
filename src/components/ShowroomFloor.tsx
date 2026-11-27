@@ -13,7 +13,7 @@
  *   • Smooth touch swipe & responsive layout
  */
 
-import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import {
   PRODUCTS,
   MAIN_COLLECTION,
@@ -49,10 +49,12 @@ import {
   replaceProductUrl,
 } from '../utils/productRouting';
 
-const PairStudio = lazy(() =>
+import { lazyWithRetry } from '../utils/lazyWithRetry';
+
+const PairStudio = lazyWithRetry(() =>
   import('./PairStudio').then((m) => ({ default: m.PairStudio }))
 );
-const SizeGuideModal = lazy(() =>
+const SizeGuideModal = lazyWithRetry(() =>
   import('./SizeGuideModal').then((m) => ({ default: m.SizeGuideModal }))
 );
 

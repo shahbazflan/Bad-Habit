@@ -77,14 +77,15 @@ function resolveProductFromUrlPath(reqUrl: string): ProductSeoRecord | null {
 }
 
 function getRequestOrigin(req: express.Request): string {
-  const host = req.get('x-forwarded-host') || req.get('host');
+  const rawHost = req.get('x-forwarded-host') || req.get('host');
+  const host = rawHost ? rawHost.split(',')[0].trim() : '';
   if (!host) return 'https://storebadhabit.com';
   const rawProto = req.get('x-forwarded-proto') || req.protocol || 'https';
   const proto = rawProto.split(',')[0].trim() || 'https';
   return `${proto}://${host}`;
 }
 
-function injectSocialAndPreloadMeta(html: string, req: express.Request): { html: string; linkHeaders: string[] } {
+function injectSocialAndPreloadMeta(html: string, req: express.Request): string {
   const origin = getRequestOrigin(req);
   const reqPath = (req.originalUrl || '/').split('?')[0] || '/';
   const ogUrl = `${origin}${reqPath}`;
@@ -113,25 +114,24 @@ function injectSocialAndPreloadMeta(html: string, req: express.Request): { html:
         /<!-- HERO_PRELOAD_START -->[\s\S]*?<!-- HERO_PRELOAD_END -->/,
         `${productImagePreload}\n    <meta property="product:price:amount" content="${product.numericPrice}" />\n    <meta property="product:price:currency" content="PKR" />`
       );
-
-    return {
-      html: out,
-      linkHeaders: [`<${product.image}>; rel=preload; as=image; fetchpriority=high`],
-    };
   }
 
-  return {
-    html: out,
-    linkHeaders: [
-      '</assets/aistudio/hero_landing_model_cutout.webp?v=opt28>; rel=preload; as=image; fetchpriority=high',
-      '</bad_habit_transparent.webp?v=opt26>; rel=preload; as=image; fetchpriority=high',
-    ],
-  };
+  return out;
 }
 
 async function startServer() {
   const app = createApiApp();
+  app.disable('x-powered-by');
   const isProd = process.env.NODE_ENV === 'production';
+
+  // Return clean 204 for legacy browser icon probes when no binary .ico/.png exists
+  app.get(['/favicon.ico', '/apple-touch-icon.png', '/apple-touch-icon-precomposed.png'], (req, res) => {
+    const publicCandidate = path.join(__dirname, 'public', path.basename(req.path));
+    if (fs.existsSync(publicCandidate)) {
+      return res.sendFile(publicCandidate);
+    }
+    return res.status(204).end();
+  });
 
   // Parse CLI flags (--port, --host) passed by dev runner (e.g., npm run dev --port 3000 --host 0.0.0.0)
   const args = process.argv.slice(2);
@@ -223,6 +223,14 @@ async function startServer() {
       })
     );
 
+    // Never return SPA HTML for missing static file extensions
+    app.use((req, res, next) => {
+      if (/\.(?:js|mjs|css|map|png|jpe?g|webp|avif|gif|svg|ico|woff2?|ttf|json|txt|xml)$/i.test(req.path)) {
+        return res.status(404).end();
+      }
+      next();
+    });
+
     // Fallback for SPA routing in development
     app.use('*', async (req, res, next) => {
       const url = req.originalUrl;
@@ -232,15 +240,14 @@ async function startServer() {
         if (fs.existsSync(rootIndex)) {
           let template = fs.readFileSync(rootIndex, 'utf-8');
           template = await vite.transformIndexHtml(url, template);
-          const enhanced = injectSocialAndPreloadMeta(template, req);
-          res.setHeader('Link', enhanced.linkHeaders.join(', '));
+          const enhancedHtml = injectSocialAndPreloadMeta(template, req);
           return res
             .status(200)
             .set({
-              'Content-Type': 'text/html',
-              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Content-Type': 'text/html; charset=utf-8',
+              'Cache-Control': 'public, max-age=0, must-revalidate',
             })
-            .end(enhanced.html);
+            .send(enhancedHtml);
         }
         next();
       } catch (e) {
@@ -315,12 +322,17 @@ async function startServer() {
         },
       })
     );
+    app.use((req, res, next) => {
+      if (/\.(?:js|mjs|css|map|png|jpe?g|webp|avif|gif|svg|ico|woff2?|ttf|json|txt|xml)$/i.test(req.path)) {
+        return res.status(404).end();
+      }
+      next();
+    });
     app.get('*', (req, res) => {
       if (cachedProdHtml) {
-        const enhanced = injectSocialAndPreloadMeta(cachedProdHtml, req);
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        res.setHeader('Link', enhanced.linkHeaders.join(', '));
-        res.type('html').send(enhanced.html);
+        const enhancedHtml = injectSocialAndPreloadMeta(cachedProdHtml, req);
+        res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+        res.type('html').send(enhancedHtml);
       } else {
         res.status(200).send('BAD HABIT luxury streetwear store is starting up...');
       }
